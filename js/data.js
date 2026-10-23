@@ -264,6 +264,12 @@
     ]
   };
 
+  /* A loja vende a arma pronta. Forjar na classe atual continua mais barato. */
+  const SHOP_PRICES = [400, 1600, 2400, 3200];
+  Object.keys(WEAPONS).forEach(function (cls) {
+    WEAPONS[cls].forEach(function (w) { w.shopPrice = SHOP_PRICES[w.tier] || 400; });
+  });
+
   const DIFFICULTIES = [
     {
       id: "raiz", name: "Raiz", label: "Fácil", color: "#91c47c",

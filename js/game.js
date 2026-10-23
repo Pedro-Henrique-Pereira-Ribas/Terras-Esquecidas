@@ -40,16 +40,43 @@
     return a.x < b.x + b.w && a.x + a.w > b.x && a.y < b.y + b.h && a.y + a.h > b.y;
   }
   function fmt(n) { return String(n).replace(/\B(?=(\d{3})+(?!\d))/g, "."); }
-  function getWeapon(char, tier) {
-    const w = DATA.WEAPONS[char.weaponClass][tier];
+  function getWeapon(char, tier, cls) {
+    const weaponClass = cls || char.weaponClass;
+    const w = DATA.WEAPONS[weaponClass][tier];
     const rar = DATA.RARITIES[w.rarity];
     return {
       name: w.name, rarity: w.rarity, rarityLabel: rar.label, tier: w.tier,
       dmg: w.dmg, speed: w.speed, cooldown: w.cooldown, weight: w.weight,
       effect: w.effect, desc: w.desc, upgrade: w.upgrade, total: w.total,
-      className: DATA.WEAPON_CLASSES[char.weaponClass].name,
-      cls: char.weaponClass
+      shopPrice: w.shopPrice,
+      className: DATA.WEAPON_CLASSES[weaponClass].name,
+      cls: weaponClass
     };
+  }
+
+  function weaponKey(cls, tier) { return cls + ":" + tier; }
+
+  function ownsWeapon(run, cls, tier) {
+    return !!(run && run.ownedWeapons && run.ownedWeapons[weaponKey(cls, tier)]);
+  }
+
+  function equipRunWeapon(run, cls, tier) {
+    if (!ownsWeapon(run, cls, tier)) return false;
+    run.weaponClass = cls;
+    run.weaponTier = tier;
+    if (state.player) state.player.weapon = getWeapon(run.char, tier, cls);
+    return true;
+  }
+
+  function syncCamp() {
+    const run = state.run;
+    if (!run || !state.campData) return;
+    state.campData.weaponClass = run.weaponClass;
+    state.campData.tier = run.weaponTier;
+    state.campData.coins = run.coins;
+    state.campData.owned = run.ownedWeapons;
+    TP.ui.camp = state.campData;
+    TP.ui.refreshCamp();
   }
 
   const G = {
@@ -68,6 +95,8 @@
     returnToTitle: returnToTitle,
     continueFromCheckpoint: continueFromCheckpoint,
     buyUpgrade: buyUpgrade,
+    buyWeapon: buyWeapon,
+    equipWeapon: equipWeapon,
     campContinue: campContinue,
     chooseEnding: chooseEnding
   };
@@ -228,7 +257,9 @@
       diff: diff,
       levelIndex: 0,
       coins: 0,
+      weaponClass: char.weaponClass,
       weaponTier: 0,
+      ownedWeapons: {},
       memories: 0,
       memoryIds: [],
       checkpoints: {},
@@ -239,6 +270,7 @@
       startedAt: state.time,
       ending: null
     };
+    state.run.ownedWeapons[weaponKey(char.weaponClass, 0)] = true;
     state.campData = null;
     state.campContext = null;
     state.selectedDiff = diff.id;
@@ -248,7 +280,7 @@
 
   function createRunPlayer(run, x, y) {
     const char = run.char;
-    const weapon = getWeapon(char, run.weaponTier);
+    const weapon = getWeapon(char, run.weaponTier, run.weaponClass);
     const p = {
       char: char,
       weapon: weapon,
@@ -475,14 +507,16 @@
     state.campData = {
       type: context.type,
       char: char,
+      weaponClass: run.weaponClass,
       tier: run.weaponTier,
+      owned: run.ownedWeapons,
       coins: run.coins,
       speech: speech,
       kicker: isFinal ? "ENTRE O REI E A COROA" : "ACAMPAMENTO · " + level.def.name.toUpperCase(),
       title: isFinal ? "A Última Forja" : "A Forja de Pedro",
       hint: isFinal
-        ? "O ferreiro aquece o metal com pressa. O Rei espera do outro lado da fogueira."
-        : (nextDef ? "Próxima parada: " + nextDef.name + ". A estrada não vai a lugar nenhum sem você." : ""),
+        ? "O ferreiro aquece o metal com pressa. A loja também está aberta. O Rei espera do outro lado da fogueira."
+        : (nextDef ? "Próxima parada: " + nextDef.name + ". Forje, compre ou troque sua arma antes de seguir." : ""),
       continueLabel: isFinal ? "ENFRENTAR O REI" : (nextDef ? "SEGUIR PARA " + nextDef.name.toUpperCase() : "SEGUIR VIAGEM")
     };
     TP.ui.showCamp(state.campData);
@@ -491,24 +525,66 @@
   function buyUpgrade() {
     if (state.mode !== "camp" || !state.run) return;
     const run = state.run;
-    const char = run.char;
+    const cls = run.weaponClass;
     const nextTier = run.weaponTier + 1;
     if (nextTier > 3) return;
-    const next = DATA.WEAPONS[char.weaponClass][nextTier];
+    const next = DATA.WEAPONS[cls][nextTier];
     const cost = next.upgrade;
     if (run.coins < cost) {
       TP.ui.toast("Pedro assopra a brasa: “Ainda faltam " + fmt(cost - run.coins) + " moedas.”", "danger", 2200);
       return;
     }
     run.coins -= cost;
-    run.weaponTier = nextTier;
-    if (state.player) state.player.weapon = getWeapon(char, nextTier);
+    run.ownedWeapons[weaponKey(cls, nextTier)] = true;
+    equipRunWeapon(run, cls, nextTier);
     TP.audio.sfx("buy");
     TP.ui.toast('<strong>' + next.name + '</strong> forjada. ' + DATA.RARITIES[next.rarity].label + '. A brasa mudou de cor.', "memory", 3000);
-    state.campData.tier = run.weaponTier;
-    state.campData.coins = run.coins;
-    TP.ui.camp = state.campData;
-    TP.ui.refreshCamp();
+    syncCamp();
+    TP.ui.invalidateHUD();
+  }
+
+  function buyWeapon(cls, tier) {
+    if (state.mode !== "camp" || !state.run) return;
+    tier = Number(tier);
+    const run = state.run;
+    const weapons = DATA.WEAPONS[cls];
+    const def = weapons && weapons[tier];
+    if (!def) return;
+
+    if (ownsWeapon(run, cls, tier)) {
+      equipWeapon(cls, tier);
+      return;
+    }
+    if (tier > 0 && !ownsWeapon(run, cls, tier - 1)) {
+      TP.ui.toast("Pedro cruza os braços: “Essa só sai depois de você comprar a anterior.”", "danger", 2400);
+      return;
+    }
+    const price = def.shopPrice || 0;
+    if (run.coins < price) {
+      TP.ui.toast("Pedro conta as moedas: “Faltam " + fmt(price - run.coins) + " para essa arma.”", "danger", 2400);
+      return;
+    }
+
+    run.coins -= price;
+    run.ownedWeapons[weaponKey(cls, tier)] = true;
+    equipRunWeapon(run, cls, tier);
+    TP.audio.sfx("buy");
+    TP.ui.toast('<strong>' + def.name + '</strong> comprada e equipada. A loja cheira a óleo e brasa.', "memory", 3000);
+    syncCamp();
+    TP.ui.invalidateHUD();
+  }
+
+  function equipWeapon(cls, tier) {
+    if (state.mode !== "camp" || !state.run) return;
+    tier = Number(tier);
+    const run = state.run;
+    const def = DATA.WEAPONS[cls] && DATA.WEAPONS[cls][tier];
+    if (!def || !ownsWeapon(run, cls, tier)) return;
+    if (run.weaponClass === cls && run.weaponTier === tier) return;
+    equipRunWeapon(run, cls, tier);
+    TP.audio.sfx("click");
+    TP.ui.toast('<strong>' + def.name + '</strong> equipada.', "coin", 2000);
+    syncCamp();
     TP.ui.invalidateHUD();
   }
 

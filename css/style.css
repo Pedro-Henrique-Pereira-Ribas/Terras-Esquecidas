@@ -619,6 +619,50 @@ kbd {
 #camp-speech { color: #c9bea9; font-size: clamp(8px, .88vw, 11px); line-height: 1.7; font-style: italic; }
 .camp-sign { color: var(--gold); font-size: clamp(7px, .8vw, 10px); letter-spacing: .12em; text-align: right; margin-top: auto; }
 .forge { display: flex; flex-direction: column; }
+.camp-tabs { display: flex; gap: 4px; margin-bottom: 8px; border-bottom: 1px solid var(--line-soft); }
+.camp-tab {
+  border: 1px solid transparent;
+  border-bottom: 0;
+  background: transparent;
+  color: var(--muted);
+  padding: 7px 15px;
+  font-size: clamp(7px, .8vw, 10px);
+  letter-spacing: .16em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+.camp-tab:hover { color: var(--gold-bright); }
+.camp-tab.active {
+  color: var(--gold-bright);
+  border-color: var(--line-soft);
+  background: rgba(216, 176, 106, .07);
+}
+.camp-tab-panel { display: flex; flex-direction: column; flex: 1; min-height: 0; }
+.shop-class-tabs { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 5px; margin-top: 10px; }
+.shop-class-tab {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  min-width: 0;
+  border: 1px solid var(--line-soft);
+  background: rgba(7, 9, 7, .6);
+  color: var(--muted);
+  padding: 4px 6px;
+  font-size: clamp(6px, .68vw, 9px);
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+.shop-class-tab:hover { color: var(--gold-bright); border-color: var(--gold-soft); }
+.shop-class-tab.active { color: var(--gold-bright); border-color: var(--gold-soft); background: rgba(216, 176, 106, .09); }
+.shop-class-tab img { width: clamp(15px, 1.7vw, 22px); height: clamp(15px, 1.7vw, 22px); object-fit: contain; image-rendering: pixelated; flex: none; }
+.shop-class-tab span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.shop-class-tab small { margin-left: auto; color: var(--faint); font-size: .9em; }
+.shop-card { cursor: pointer; }
+.shop-card:hover { border-color: var(--gold-soft); }
+.shop-card.selected { border-color: var(--gold-bright); box-shadow: 0 0 0 1px rgba(216, 176, 106, .18), 0 0 16px rgba(216, 176, 106, .08); }
+.shop-card.equipped { background: rgba(216, 176, 106, .09); }
+.wp-price { margin-top: 3px; color: var(--gold); font-size: clamp(5px, .56vw, 7px); letter-spacing: .05em; }
 .forge-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; }
 .forge-head h3 { margin: 0; font-size: clamp(14px, 1.8vw, 22px); color: #e8dcc6; }
 .forge-current { border: 1px solid var(--gold-soft); color: var(--gold); padding: 3px 7px; font-size: clamp(7px, .78vw, 9px); letter-spacing: .12em; text-transform: uppercase; }
@@ -930,6 +974,7 @@ body.camp-mode .toast-layer { display: none; }
   .diff-modifiers { display: none; }
   .camp-body { grid-template-columns: 1fr; }
   .camp-pedro { border-right: 0; border-bottom: 1px solid var(--line-soft); padding-right: 0; padding-bottom: 10px; }
+  .shop-class-tabs { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .portrait-lg { width: 80px; }
   .camp-speech, #camp-speech { display: none; }
   .ending-choices { grid-template-columns: 1fr; }

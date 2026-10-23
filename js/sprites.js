@@ -213,7 +213,7 @@
 
   function drawHeroWeapon(ctx, char, p, prog, attacking, time) {
     const pal = char.palette;
-    const cls = char.weaponClass;
+    const cls = p.weapon.cls || char.weaponClass;
     const tier = p.weapon.tier;
     const rar = TP.DATA.RARITIES[p.weapon.rarity];
     const effect = p.weapon.effect;

@@ -16,6 +16,7 @@ Um jogo de plataforma 2D em pixel art, feito para rodar direto no navegador. Atr
 - **5 heróis jogáveis**, cada um com arma, passiva, peso e estilo de movimento diferentes.
 - **4 chefes** pelo caminho e o **Rei das Cinzas** no fim, com fases e padrões de ataque distintos.
 - **4 degraus de arma** por classe, forjados com as moedas deixadas pelos chefes.
+- **Loja no acampamento** para comprar armas de qualquer classe e trocar a equipada antes de seguir viagem.
 - **15 memórias** escondidas pelas fases. Elas não aumentam seu poder — mudam o que você pode dizer no final.
 - **3 dificuldades** (Raiz, Selva e Ruína) com ajustes reais de dano, vida, velocidade e cura.
 - **3 finais**, incluindo um final verdadeiro para quem encontrar todas as memórias.
@@ -40,6 +41,14 @@ Um jogo de plataforma 2D em pixel art, feito para rodar direto no navegador. Atr
 **Celular:** jogue na horizontal. Em modo retrato, o jogo mostra um aviso para girar o aparelho.
 
 O viajante tem um salto extra no ar. Nas fases com chefes voadores, pule e ataque no ar — o alcance vertical faz parte do combate.
+
+### Alcance das armas
+
+- **Espada e machado:** curto alcance, dano constante.
+- **Arco:** longa distância. Perto demais, a flecha perde força; no alcance máximo, causa mais dano.
+- **Cajado:** distância média. O feitiço é mais forte na faixa ideal e perde força de perto ou longe demais.
+
+As armas compradas na loja ficam na mochila da jornada. A forja melhora a classe atualmente equipada, então vale escolher bem antes de gastar as moedas.
 
 ## Como rodar localmente
 

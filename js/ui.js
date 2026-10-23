@@ -14,6 +14,9 @@
     diffsBuilt: false,
     dlg: null,
     camp: null,
+    campTab: "forge",
+    shopClass: null,
+    shopTier: 0,
     levelCardTimer: null,
     lastHud: "",
     lastProgress: -1,
@@ -62,6 +65,10 @@
       campCoins: q("camp-coins"), campSpeech: q("camp-speech"), campHint: q("camp-hint"),
       forgeClass: q("forge-weapon-class"), forgeCurrent: q("forge-current"),
       weaponPath: q("weapon-path"), forgeNext: q("forge-next"), forgeAction: q("forge-action"),
+      campTabs: q("camp-tabs"), campForgePanel: q("camp-forge-panel"),
+      campShopPanel: q("camp-shop-panel"), shopClassTabs: q("shop-class-tabs"),
+      shopCurrent: q("shop-current"), shopGrid: q("shop-grid"),
+      shopDetail: q("shop-detail"), shopAction: q("shop-action"),
       campContinue: q("btn-camp-continue"),
       endingChoiceView: q("ending-choice-view"), endingResultView: q("ending-result-view"),
       endingMemories: q("ending-memories"), endingCoins: q("ending-coins"), endingCls: q("ending-cls"),
@@ -91,8 +98,10 @@
   /* ============================================================
      BOTÕES
      ============================================================ */
-  function call(name, arg) {
-    if (TP.game && typeof TP.game[name] === "function") return TP.game[name](arg);
+  function call(name) {
+    if (!TP.game || typeof TP.game[name] !== "function") return;
+    const args = Array.prototype.slice.call(arguments, 1);
+    return TP.game[name].apply(TP.game, args);
   }
 
   function bindButtons() {
@@ -154,6 +163,39 @@
       if (!card) return;
       TP.audio.sfx("click");
       call("buyUpgrade");
+    });
+    UI.el.campTabs.addEventListener("click", function (e) {
+      const tab = e.target.closest("[data-camp-tab]");
+      if (!tab) return;
+      UI.campTab = tab.getAttribute("data-camp-tab");
+      TP.audio.sfx("click");
+      UI.refreshCamp();
+    });
+    UI.el.shopClassTabs.addEventListener("click", function (e) {
+      const tab = e.target.closest("[data-shop-class]");
+      if (!tab) return;
+      const cls = tab.getAttribute("data-shop-class");
+      if (!TP.DATA.WEAPONS[cls]) return;
+      UI.shopClass = cls;
+      UI.shopTier = UI.camp && UI.camp.weaponClass === cls ? UI.camp.tier : 0;
+      TP.audio.sfx("click");
+      UI.refreshCamp();
+    });
+    UI.el.shopGrid.addEventListener("click", function (e) {
+      const card = e.target.closest("[data-shop-tier]");
+      if (!card) return;
+      UI.shopTier = Number(card.getAttribute("data-shop-tier"));
+      TP.audio.sfx("click");
+      UI.refreshCamp();
+    });
+    UI.el.shopAction.addEventListener("click", function (e) {
+      const btn = e.target.closest("[data-shop-act]");
+      if (!btn) return;
+      const cls = btn.getAttribute("data-shop-class");
+      const tier = Number(btn.getAttribute("data-shop-tier"));
+      TP.audio.sfx("click");
+      if (btn.getAttribute("data-shop-act") === "buy") call("buyWeapon", cls, tier);
+      else call("equipWeapon", cls, tier);
     });
   }
 
@@ -218,7 +260,7 @@
       UI.el.progressGate.style.left = (level.arena.start / level.width * 100).toFixed(2) + "%";
     }
 
-    const key = p.char.id + ":" + p.hp + ":" + p.weapon.tier + ":" + run.coins + ":" + run.memories + ":" +
+    const key = p.char.id + ":" + p.hp + ":" + p.weapon.cls + ":" + p.weapon.tier + ":" + run.coins + ":" + run.memories + ":" +
       level.index + ":" + (level.bossActive ? 1 : 0) + ":" + (level.boss ? Math.ceil(level.boss.hp) : 0);
     if (key === UI.lastHud) return;
     UI.lastHud = key;
@@ -458,6 +500,9 @@
      ============================================================ */
   UI.showCamp = function (data) {
     UI.camp = data;
+    UI.campTab = "forge";
+    UI.shopClass = data.weaponClass || data.char.weaponClass;
+    UI.shopTier = data.tier || 0;
     UI.clearToasts();
     UI.showScreen("screen-camp");
     UI.showHUD(false);
@@ -465,11 +510,23 @@
     UI.refreshCamp();
   };
 
+  function ownedIn(d, cls, tier) {
+    return !!(d && d.owned && d.owned[cls + ":" + tier]);
+  }
+
+  function effectLabel(effect) {
+    if (effect === "burn") return "Incendeia o alvo por alguns segundos.";
+    if (effect === "lifesteal") return "Rouba um pouco de vida a cada acerto.";
+    if (effect === "spirit") return "Libera uma onda espiritual no golpe.";
+    return "Sem efeito elemental — só aço e intenção.";
+  }
+
   UI.refreshCamp = function () {
     const d = UI.camp;
     if (!d) return;
     const char = d.char;
-    const weapons = TP.DATA.WEAPONS[char.weaponClass];
+    const cls = d.weaponClass || char.weaponClass;
+    const weapons = TP.DATA.WEAPONS[cls];
     const tier = d.tier;
     const cur = weapons[tier];
     const next = tier < 3 ? weapons[tier + 1] : null;
@@ -478,18 +535,27 @@
     UI.el.campCoins.textContent = d.coins;
     UI.el.campSpeech.textContent = d.speech;
     UI.el.campHint.textContent = d.hint || "";
-    UI.el.forgeClass.textContent = TP.DATA.WEAPON_CLASSES[char.weaponClass].name + " · " + char.name;
+    UI.el.forgeClass.textContent = TP.DATA.WEAPON_CLASSES[cls].name + " · " + char.name;
     UI.el.forgeCurrent.textContent = rarLabel(cur);
 
+    const shopOpen = UI.campTab === "shop";
+    UI.el.campForgePanel.classList.toggle("hidden", shopOpen);
+    UI.el.campShopPanel.classList.toggle("hidden", !shopOpen);
+    UI.el.campTabs.querySelectorAll("[data-camp-tab]").forEach(function (tab) {
+      const active = tab.getAttribute("data-camp-tab") === UI.campTab;
+      tab.classList.toggle("active", active);
+      tab.setAttribute("aria-selected", active ? "true" : "false");
+    });
+
     UI.el.weaponPath.innerHTML = weapons.map(function (w, i) {
-      let cls = "wp-card";
-      if (i === tier) cls += " owned";
-      else if (i === tier + 1) cls += " next";
-      else if (i > tier + 1) cls += " locked";
+      let cardCls = "wp-card";
+      if (i === tier) cardCls += " owned";
+      else if (i === tier + 1) cardCls += " next";
+      else if (i > tier + 1) cardCls += " locked";
       const badge = i === tier ? '<span class="wp-badge">ATUAL</span>' : i === tier + 1 ? '<span class="wp-badge">PRÓXIMA</span>' : "";
       const buy = i === tier + 1 ? ' data-buy-tier="' + i + '"' : "";
-      return '<button class="' + cls + '" type="button"' + buy + '>' + badge +
-        '<img src="' + art.makeWeaponIcon(char.weaponClass, i) + '" alt="' + esc(w.name) + '">' +
+      return '<button class="' + cardCls + '" type="button"' + buy + '>' + badge +
+        '<img src="' + art.makeWeaponIcon(cls, i) + '" alt="' + esc(w.name) + '">' +
         '<div class="wp-rarity rarity-text ' + w.rarity + '">' + esc(rarLabel(w)) + '</div>' +
         '<div class="wp-name">' + esc(w.name) + '</div>' +
         '<div class="wp-stat">' + w.dmg + ' dano · ' + esc(w.speed) + '</div>' +
@@ -497,17 +563,12 @@
     }).join("");
 
     if (next) {
-      let effect = "";
-      if (next.effect === "burn") effect = "Incendeia o alvo por alguns segundos.";
-      else if (next.effect === "lifesteal") effect = "Rouba um pouco de vida a cada acerto.";
-      else if (next.effect === "spirit") effect = "Libera uma onda espiritual no golpe.";
-      else effect = "Sem efeito elemental — só aço e intenção.";
       const missing = Math.max(0, next.upgrade - d.coins);
       const can = d.coins >= next.upgrade;
       UI.el.forgeNext.innerHTML =
         'Próximo degrau: <b>' + esc(next.name) + '</b> · ' + esc(rarLabel(next)) +
         ' · <b>' + next.dmg + ' dano</b> · ' + esc(next.speed) + '.<br>' + esc(next.desc) +
-        '<div class="forge-diff"><span>Efeito: ' + esc(effect) + '</span><span>Peso: ' + next.weight + '</span></div>';
+        '<div class="forge-diff"><span>Efeito: ' + esc(effectLabel(next.effect)) + '</span><span>Peso: ' + next.weight + '</span></div>';
       if (can) {
         UI.el.forgeAction.innerHTML = '<span class="forge-price">CUSTO: ' + formatCoins(next.upgrade) + '</span>' +
           '<button class="btn btn-primary" type="button" data-buy-tier="' + (tier + 1) + '">FORJAR ' + esc(rarLabel(next).toUpperCase()) + ' <span>›</span></button>';
@@ -519,10 +580,87 @@
       UI.el.forgeNext.innerHTML = '<b>' + esc(cur.name) + '</b> é o último degrau da sua classe. A lâmina já não pede mais nada a Pedro — só a você.';
       UI.el.forgeAction.innerHTML = '<span class="forge-price">ARMA MÍTICA · ' + cur.dmg + ' DANO</span>';
     }
+
+    refreshShop(d);
+
     UI.el.campContinue.textContent = d.continueLabel || "SEGUIR VIAGEM";
     UI.el.campContinue.innerHTML = esc(d.continueLabel || "SEGUIR VIAGEM") + ' <span>›</span>';
     UI.updateSoundLabels();
   };
+
+  function refreshShop(d) {
+    const classes = Object.keys(TP.DATA.WEAPONS);
+    let shopClass = UI.shopClass;
+    if (!TP.DATA.WEAPONS[shopClass]) shopClass = d.weaponClass;
+    UI.shopClass = shopClass;
+    const weapons = TP.DATA.WEAPONS[shopClass];
+    const classDef = TP.DATA.WEAPON_CLASSES[shopClass];
+    const equippedClass = d.weaponClass || d.char.weaponClass;
+    const equippedWeapon = TP.DATA.WEAPONS[equippedClass][d.tier];
+    if (UI.shopTier == null || UI.shopTier < 0 || UI.shopTier > 3) UI.shopTier = 0;
+
+    UI.el.shopClassTabs.innerHTML = classes.map(function (c) {
+      const ownedCount = TP.DATA.WEAPONS[c].filter(function (_, i) { return ownedIn(d, c, i); }).length;
+      return '<button class="shop-class-tab' + (c === shopClass ? " active" : "") + '" type="button"' +
+        ' data-shop-class="' + c + '" role="tab" aria-selected="' + (c === shopClass ? "true" : "false") + '">' +
+        '<img src="' + art.makeWeaponIcon(c, 0) + '" alt="">' +
+        '<span>' + esc(TP.DATA.WEAPON_CLASSES[c].name) + '</span>' +
+        '<small>' + ownedCount + '/4</small>' +
+      '</button>';
+    }).join("");
+    UI.el.shopCurrent.textContent = TP.DATA.WEAPON_CLASSES[equippedClass].name + " · " + rarLabel(equippedWeapon);
+
+    UI.el.shopGrid.innerHTML = weapons.map(function (w, i) {
+      const owned = ownedIn(d, shopClass, i);
+      const equipped = equippedClass === shopClass && d.tier === i;
+      const locked = !owned && i > 0 && !ownedIn(d, shopClass, i - 1);
+      let cardCls = "wp-card shop-card";
+      if (owned) cardCls += " owned";
+      if (equipped) cardCls += " equipped";
+      if (locked) cardCls += " locked";
+      if (UI.shopTier === i) cardCls += " selected";
+      const badge = equipped ? "EM USO" : owned ? "SUA" : locked ? "BLOQUEADA" : "À VENDA";
+      return '<button class="' + cardCls + '" type="button" data-shop-tier="' + i + '" aria-pressed="' + (UI.shopTier === i ? "true" : "false") + '">' +
+        '<span class="wp-badge">' + badge + '</span>' +
+        '<img src="' + art.makeWeaponIcon(shopClass, i) + '" alt="' + esc(w.name) + '">' +
+        '<div class="wp-rarity rarity-text ' + w.rarity + '">' + esc(rarLabel(w)) + '</div>' +
+        '<div class="wp-name">' + esc(w.name) + '</div>' +
+        '<div class="wp-stat">' + w.dmg + ' dano · ' + esc(w.speed) + '</div>' +
+        (owned ? '' : '<div class="wp-price">' + (locked ? 'domine a anterior' : formatCoins(w.shopPrice) + ' moedas') + '</div>') +
+      '</button>';
+    }).join("");
+
+    const selected = weapons[UI.shopTier];
+    const owned = ownedIn(d, shopClass, UI.shopTier);
+    const equipped = equippedClass === shopClass && d.tier === UI.shopTier;
+    const unlocked = UI.shopTier === 0 || ownedIn(d, shopClass, UI.shopTier - 1);
+    const price = selected.shopPrice;
+    const range = (classDef.rangeLabel || "curto").toLowerCase();
+    UI.el.shopDetail.innerHTML =
+      '<b>' + esc(selected.name) + '</b> · ' + esc(rarLabel(selected)) +
+      ' · <b>' + selected.dmg + ' dano</b> · ' + esc(selected.speed) + ' · alcance ' + esc(range) + '.<br>' + esc(selected.desc) +
+      '<div class="forge-diff"><span>Efeito: ' + esc(effectLabel(selected.effect)) + '</span>' +
+      '<span>Peso: ' + selected.weight + '</span>' +
+      '<span>' + (owned ? 'Já está na sua mochila' : 'Preço: ' + formatCoins(price) + ' moedas') + '</span></div>';
+
+    const attrs = ' data-shop-class="' + shopClass + '" data-shop-tier="' + UI.shopTier + '"';
+    if (equipped) {
+      UI.el.shopAction.innerHTML = '<span class="forge-price">EQUIPADA AGORA</span>' +
+        '<button class="btn" type="button" disabled>EM USO</button>';
+    } else if (owned) {
+      UI.el.shopAction.innerHTML = '<span class="forge-price">JÁ COMPRADA</span>' +
+        '<button class="btn btn-primary" type="button" data-shop-act="equip"' + attrs + '>EQUIPAR <span>›</span></button>';
+    } else if (!unlocked) {
+      UI.el.shopAction.innerHTML = '<span class="forge-price missing">REQUER ' + esc(TP.DATA.WEAPONS[shopClass][UI.shopTier - 1].name.toUpperCase()) + '</span>' +
+        '<button class="btn" type="button" disabled>BLOQUEADA</button>';
+    } else if (d.coins >= price) {
+      UI.el.shopAction.innerHTML = '<span class="forge-price">CUSTO: ' + formatCoins(price) + '</span>' +
+        '<button class="btn btn-primary" type="button" data-shop-act="buy"' + attrs + '>COMPRAR E EQUIPAR <span>›</span></button>';
+    } else {
+      UI.el.shopAction.innerHTML = '<span class="forge-price missing">FALTAM ' + formatCoins(price - d.coins) + ' MOEDAS</span>' +
+        '<button class="btn" type="button" disabled>SEM MOEDAS</button>';
+    }
+  }
 
   UI.updateCampCoins = function (coins) {
     if (UI.camp) UI.camp.coins = coins;

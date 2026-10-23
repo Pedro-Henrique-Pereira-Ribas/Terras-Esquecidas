@@ -178,7 +178,8 @@
               <article class="how-card">
                 <h3>Combate</h3>
                 <p><kbd>J</kbd> ou <kbd>X</kbd> para atacar. Clique esquerdo no canvas também ataca.</p>
-                <p>Espada e machado são corpo a corpo. Arco e cajado disparam à distância. A arma define o alcance, o dano e o efeito.</p>
+                <p>Espada e machado são corpo a corpo. O arco fere mais longe; o cajado é mais forte na distância média. A arma define o alcance, o dano e o efeito.</p>
+                <p>No acampamento, use a <b>Forja</b> para subir a raridade da arma equipada ou a <b>Loja</b> para comprar armas de outras classes e trocar a que está em uso.</p>
               </article>
               <article class="how-card">
                 <h3>Forja de Pedro</h3>
@@ -232,16 +233,35 @@
                 <p class="camp-sign">— Pedro</p>
               </div>
               <div class="forge">
-                <div class="forge-head">
-                  <div>
-                    <p class="kicker">FORJA DE CLASSE</p>
-                    <h3 id="forge-weapon-class">Espada</h3>
-                  </div>
-                  <span id="forge-current" class="forge-current">Rara</span>
+                <div id="camp-tabs" class="camp-tabs" role="tablist" aria-label="Forja e loja">
+                  <button id="camp-tab-forge" class="camp-tab active" type="button" role="tab" aria-selected="true" data-camp-tab="forge">FORJA</button>
+                  <button id="camp-tab-shop" class="camp-tab" type="button" role="tab" aria-selected="false" data-camp-tab="shop">LOJA</button>
                 </div>
-                <div id="weapon-path" class="weapon-path"></div>
-                <div id="forge-next" class="forge-next"></div>
-                <div id="forge-action" class="forge-action"></div>
+                <div id="camp-forge-panel" class="camp-tab-panel">
+                  <div class="forge-head">
+                    <div>
+                      <p class="kicker">FORJA DE CLASSE</p>
+                      <h3 id="forge-weapon-class">Espada</h3>
+                    </div>
+                    <span id="forge-current" class="forge-current">Rara</span>
+                  </div>
+                  <div id="weapon-path" class="weapon-path"></div>
+                  <div id="forge-next" class="forge-next"></div>
+                  <div id="forge-action" class="forge-action"></div>
+                </div>
+                <div id="camp-shop-panel" class="camp-tab-panel hidden">
+                  <div class="forge-head">
+                    <div>
+                      <p class="kicker">LOJA DE PEDRO</p>
+                      <h3>Armas à venda</h3>
+                    </div>
+                    <span id="shop-current" class="forge-current">Rara</span>
+                  </div>
+                  <div id="shop-class-tabs" class="shop-class-tabs" role="tablist" aria-label="Classes de arma"></div>
+                  <div id="shop-grid" class="weapon-path shop-grid"></div>
+                  <div id="shop-detail" class="forge-next"></div>
+                  <div id="shop-action" class="forge-action"></div>
+                </div>
               </div>
             </div>
             <footer class="camp-foot">
