@@ -617,7 +617,7 @@
     UI.el.endingResultView.classList.remove("hidden");
     UI.el.endingResultKicker.textContent = tone === "gold" ? "FINAL VERDADEIRO" : "FINAL";
     UI.el.endingResultTitle.textContent = ending.title;
-    UI.el.endingResultText.innerHTML = ending.text.map(function (p) { return "<p>" + esc(p) + "</p>"; }).join("");
+    UI.el.endingResultText.innerHTML = ending.text.map(function (p) { return "<p>" + esc(p) + "</p>"; }).join(" ");
     UI.el.endingResultNote.innerHTML = note || "";
     void key;
   };
