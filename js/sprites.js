@@ -200,6 +200,8 @@
     }
     ctx.restore();
 
+    drawOutfitFx(ctx, p, time);
+
     // escudo de invulnerabilidade logo após o dano
     if (p.invuln > 50 && p.invuln % 8 < 4) {
       ctx.save();
@@ -210,6 +212,49 @@
       ctx.restore();
     }
   };
+
+  function drawOutfitFx(ctx, p, time) {
+    const fx = p.char && p.char.outfitFx;
+    if (!fx) return;
+    const final = !!p.char.outfitFinal;
+    const cx = p.x + p.w / 2;
+    const cy = p.y + p.h / 2;
+    const count = final ? 8 : 4;
+    ctx.save();
+    ctx.globalCompositeOperation = "lighter";
+    if (final) {
+      art.glow(ctx, cx, cy, 34, fx.glow || fx.color, 0.13 + Math.sin(time * 0.05) * 0.03);
+      ctx.globalAlpha = 0.18 + Math.sin(time * 0.06) * 0.04;
+      ctx.strokeStyle = fx.color;
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.arc(cx, cy, 23 + Math.sin(time * 0.07) * 2, 0, Math.PI * 2);
+      ctx.stroke();
+    }
+    for (let i = 0; i < count; i++) {
+      const a = time * (final ? 0.045 : 0.06) + i * (Math.PI * 2 / count);
+      const r = (final ? 20 : 12) + Math.sin(time * 0.07 + i) * 3;
+      const x = Math.round(cx + Math.cos(a) * r);
+      const y = Math.round(cy + Math.sin(a * 1.2) * r * 0.7);
+      const s = final ? 2 : 1;
+      ctx.globalAlpha = 0.5 + Math.sin(time * 0.1 + i) * 0.25;
+      ctx.fillStyle = i % 3 === 0 ? (fx.glow || fx.color) : fx.color;
+      ctx.fillRect(x, y, s, s);
+    }
+    if (final) {
+      ctx.globalAlpha = 0.5 + Math.sin(time * 0.08) * 0.12;
+      ctx.strokeStyle = fx.glow || fx.color;
+      ctx.lineWidth = 1;
+      const topY = p.y - 7;
+      for (let i = -2; i <= 2; i++) {
+        ctx.beginPath();
+        ctx.moveTo(cx + i * 4, topY + 4);
+        ctx.lineTo(cx + i * 6, topY - 4 - Math.abs(i));
+        ctx.stroke();
+      }
+    }
+    ctx.restore();
+  }
 
   function drawHeroWeapon(ctx, char, p, prog, attacking, time) {
     const pal = char.palette;
@@ -311,7 +356,7 @@
      ============================================================ */
   S.drawEnemy = function (ctx, e, theme) {
     const x = e.x, y = e.y, w = e.w, h = e.h;
-    const pal = enemyPalette(theme);
+    const pal = e.palette || enemyPalette(theme);
     art.shadow(ctx, x + w / 2, y + h + 1, w * 0.45, 0.25);
     ctx.save();
     ctx.translate(Math.round(x + w / 2), Math.round(y));
@@ -388,6 +433,104 @@
       ctx.globalAlpha = 1;
     }
     ctx.restore();
+
+    if (e.questTarget) {
+      const cx = x + w / 2;
+      const cy = y + h / 2;
+      art.glow(ctx, cx, cy, Math.max(20, w * 0.9), pal.glow || pal.eye, 0.18 + Math.sin((e.t || 0) * 0.08) * 0.05);
+      ctx.save();
+      ctx.globalAlpha = 0.9;
+      ctx.fillStyle = pal.glow || pal.eye;
+      ctx.fillRect(Math.round(cx) - 2, Math.round(y) - 9, 4, 4);
+      ctx.globalAlpha = 0.7;
+      ctx.fillStyle = "#f8e6bd";
+      ctx.font = "7px 'Courier New', monospace";
+      ctx.textAlign = "center";
+      ctx.fillText(String(e.name || "ALVO").toUpperCase(), Math.round(cx), Math.round(y) - 14);
+      ctx.restore();
+    }
+  };
+
+  S.drawNpc = function (ctx, npc, time, questState) {
+    const pal = npc.palette || {
+      skin: "#a66b4b", hair: "#2b1b17", cloth: "#5c4a3a", accent: "#7de7d8", dark: "#241a16"
+    };
+    const x = npc.x, y = npc.y, w = npc.w, h = npc.h;
+    const bob = Math.sin((time || 0) * 0.045) * 1;
+    art.shadow(ctx, x + w / 2, y + h + 1, 10, 0.28);
+    ctx.save();
+    ctx.translate(Math.round(x + w / 2), Math.round(y + bob));
+
+    // corpo / casaco
+    art.rect(ctx, -9, 12, 18, 18, pal.dark);
+    art.rect(ctx, -7, 12, 14, 17, pal.cloth);
+    art.rect(ctx, -8, 25, 16, 5, pal.dark);
+    art.rect(ctx, -6, 16, 12, 3, pal.accent);
+
+    // cabeça
+    art.rect(ctx, -5, 3, 10, 9, pal.skin);
+    art.rect(ctx, -6, 1, 12, 4, pal.hair);
+    art.rect(ctx, -7, 4, 2, 5, pal.hair);
+    art.rect(ctx, 5, 4, 2, 5, pal.hair);
+    art.rect(ctx, -4, 7, 2, 1, "#1b130f");
+    art.rect(ctx, 2, 7, 2, 1, "#1b130f");
+
+    if (npc.kind === "scholar") {
+      art.rect(ctx, -10, 0, 20, 5, pal.cloth);
+      art.rect(ctx, -11, 4, 4, 13, pal.cloth);
+      art.rect(ctx, 7, 4, 4, 13, pal.cloth);
+      art.rect(ctx, -9, 19, 18, 2, pal.accent);
+      art.rect(ctx, 8, 16, 4, 12, "#6b4f3a");
+      art.pixelCircle(ctx, 10, 14, 3, pal.accent);
+    } else if (npc.kind === "hunter") {
+      art.rect(ctx, -9, 0, 18, 4, pal.cloth);
+      art.rect(ctx, -10, 3, 3, 9, pal.cloth);
+      art.rect(ctx, 7, 3, 3, 9, pal.cloth);
+      art.rect(ctx, 3, -4, 3, 7, pal.accent);
+      art.rect(ctx, 5, -2, 4, 2, pal.accent);
+      ctx.strokeStyle = "#8c6a44";
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.arc(-10, 20, 8, -1.2, 1.2);
+      ctx.stroke();
+    } else if (npc.kind === "climber") {
+      art.rect(ctx, -7, 1, 14, 3, pal.cloth);
+      art.rect(ctx, -6, 6, 12, 3, pal.accent);
+      art.rect(ctx, -10, 10, 4, 17, pal.dark);
+      art.rect(ctx, 6, 10, 4, 17, pal.dark);
+      art.rect(ctx, 9, 6, 2, 28, "#6b4f3a");
+    } else if (npc.kind === "miner") {
+      art.rect(ctx, -7, 0, 14, 4, pal.cloth);
+      art.rect(ctx, -4, -3, 8, 3, "#6b4f3a");
+      art.pixelCircle(ctx, 0, 0, 3, pal.accent);
+      art.glow(ctx, 0, 0, 9, pal.accent, 0.28);
+      art.rect(ctx, -9, 22, 18, 3, pal.accent);
+    } else {
+      art.rect(ctx, -8, 0, 16, 5, pal.dark);
+      art.rect(ctx, -9, 3, 3, 9, pal.dark);
+      art.rect(ctx, 6, 3, 3, 9, pal.dark);
+      art.rect(ctx, -2, -7, 4, 8, pal.accent);
+      art.rect(ctx, -8, 18, 16, 2, pal.accent);
+      art.rect(ctx, 9, 5, 2, 28, "#8a6a3f");
+    }
+    ctx.restore();
+
+    if (questState) {
+      const done = !!questState.complete;
+      const accepted = !!questState.accepted;
+      const mark = done ? "✦" : "!";
+      const color = done ? "#a8d68c" : accepted ? "#ffb066" : "#ffd27a";
+      const cx = npc.x + npc.w / 2;
+      const cy = npc.y - 9 + Math.sin((time || 0) * 0.08) * 1.5;
+      art.glow(ctx, cx, cy + 2, 11, color, 0.16);
+      ctx.save();
+      ctx.globalAlpha = 0.95;
+      ctx.fillStyle = color;
+      ctx.font = "bold 11px 'Courier New', monospace";
+      ctx.textAlign = "center";
+      ctx.fillText(mark, cx, cy + 3);
+      ctx.restore();
+    }
   };
 
   function enemyPalette(theme) {

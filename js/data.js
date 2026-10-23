@@ -141,113 +141,219 @@
     }
   ];
 
-  /* Roupas de cada herói. O traje inicial é gratuito; os demais são
-     comprados com as moedas deixadas pelos chefes. As cores são aplicadas
-     sobre a paleta base sem mudar o corpo, os rostos ou as armas. */
+  /* Sete trajes por herói. O inicial é gratuito; os outros são comprados
+     uma única vez com moedas dos chefes. Os trajes 2 a 6 dão bônus leves
+     (2%, 2%, 2%, 3% e 4%). O sétimo é o traje final: 250 de vida máxima,
+     sem outro bônus. As cores são aplicadas sobre a paleta base. */
   const OUTFITS = {
     viajante: [
       {
-        id: "base", name: "Traje de Estrada", price: 0, colors: {},
+        id: "base", name: "Traje de Estrada", price: 0, colors: {}, bonus: null, fx: null,
         desc: "O casaco gasto de quem já dormiu em todas as encruzilhadas."
       },
       {
         id: "brasa", name: "Manto da Brasa", price: 500,
         colors: { hood: "#55251e", cloak: "#6b2f25", tunic: "#8d4a32", accent: "#ffb45e", metal: "#b98457", dark: "#2a1712", boot: "#3b241b" },
-        desc: "Tecido tingido no fogo de Pedro. A estrada fica mais quente."
+        bonus: { damage: 0.02 }, fx: { type: "embers", color: "#ff9b52", glow: "#ffd39a" },
+        desc: "Tecido tingido no fogo de Pedro. A brasa esquenta o corte: +2% de dano."
       },
       {
         id: "lua", name: "Manto da Lua", price: 1000,
         colors: { hood: "#2b3652", cloak: "#33415f", tunic: "#4a5878", accent: "#a9c9e8", metal: "#c7d2dd", dark: "#1a2030", boot: "#293247" },
-        desc: "Um manto da cor das noites em que o Reino esquece de amanhecer."
+        bonus: { speed: 0.02 }, fx: { type: "moon", color: "#a9c9e8", glow: "#e6f3ff" },
+        desc: "Um manto da cor das noites em que o Reino esquece de amanhecer. Passos mais leves: +2% de velocidade."
       },
       {
         id: "raiz", name: "Manto de Raiz", price: 1600,
         colors: { hood: "#30442a", cloak: "#3a4e30", tunic: "#576d40", accent: "#b9c96e", metal: "#89936d", dark: "#1d271a", boot: "#2e3b24" },
-        desc: "Fibras antigas costuradas com paciência. Cheira a chuva e a floresta."
+        bonus: { defense: 0.02 }, fx: { type: "leaves", color: "#a9d88e", glow: "#e0ffc0" },
+        desc: "Fibras antigas costuradas com paciência. A terra segura o golpe: +2% de defesa."
+      },
+      {
+        id: "vento", name: "Manto do Vento", price: 2000,
+        colors: { hood: "#2c4a46", cloak: "#37605a", tunic: "#4f7a6e", accent: "#d9f2df", metal: "#a9c9b8", dark: "#182a27", boot: "#28413a" },
+        bonus: { speed: 0.03 }, fx: { type: "wind", color: "#cfe7df", glow: "#f0fff8" },
+        desc: "O tecido não pesa; a estrada é que parece correr para trás. +3% de velocidade."
+      },
+      {
+        id: "tempestade", name: "Manto da Tempestade", price: 2600,
+        colors: { hood: "#26364f", cloak: "#31496b", tunic: "#41618a", accent: "#9fc6ff", metal: "#b9cde0", dark: "#141d2d", boot: "#22334d" },
+        bonus: { damage: 0.04 }, fx: { type: "storm", color: "#8fb8ff", glow: "#d9e8ff" },
+        desc: "Cada trovão dentro do capuz é uma promessa de corte. +4% de dano."
+      },
+      {
+        id: "horizonte", name: "Manto do Horizonte", price: 3200, final: true, maxHp: 250,
+        colors: { hood: "#4a2f1d", cloak: "#6b4326", tunic: "#9a6433", accent: "#ffe0a0", metal: "#e0b45e", dark: "#2a1810", boot: "#4a2e1c" },
+        bonus: null, fx: { type: "horizon", color: "#ffd27a", glow: "#fff1c2" },
+        desc: "O último traje de quem já viu o fim da estrada. Não dá mais força: dá mais vida. 250 de vida máxima."
       }
     ],
     arqueira: [
       {
-        id: "base", name: "Traje de Trilha", price: 0, colors: {},
+        id: "base", name: "Traje de Trilha", price: 0, colors: {}, bonus: null, fx: null,
         desc: "O manto leve de quem aprendeu a desaparecer entre as árvores."
       },
       {
         id: "musgo", name: "Musgo Antigo", price: 500,
         colors: { hood: "#3d5b3f", tunic: "#5b7b4a", accent: "#d8b76a", metal: "#9aaa8d", dark: "#1c2a1c", boot: "#33452d" },
-        desc: "O verde que só existe onde a floresta ainda se lembra de ser jovem."
+        bonus: { defense: 0.02 }, fx: { type: "leaves", color: "#8fbf6a", glow: "#d8f0b0" },
+        desc: "O verde que só existe onde a floresta ainda se lembra de ser jovem. +2% de defesa."
       },
       {
         id: "crepusculo", name: "Crepúsculo", price: 1000,
         colors: { hood: "#413354", tunic: "#5a4672", accent: "#c9a5e4", metal: "#9c8bb5", dark: "#221b2e", boot: "#372c47" },
-        desc: "A última luz da tarde presa nas dobras do capuz."
+        bonus: { speed: 0.02 }, fx: { type: "dusk", color: "#c9a5e4", glow: "#f0dcff" },
+        desc: "A última luz da tarde presa nas dobras do capuz. +2% de velocidade."
       },
       {
         id: "neve", name: "Neve Silenciosa", price: 1600,
         colors: { hood: "#c8d7d3", tunic: "#a6bbb7", accent: "#e5c77c", metal: "#dbe6e3", dark: "#687c78", boot: "#7d918d" },
-        desc: "O traje dos caçadores da serra. Branco o bastante para perdoar o inverno."
+        bonus: { damage: 0.02 }, fx: { type: "snow", color: "#dff3ff", glow: "#ffffff" },
+        desc: "O traje dos caçadores da serra. Branco o bastante para perdoar o inverno. +2% de dano."
+      },
+      {
+        id: "orvalho", name: "Orvalho", price: 2000,
+        colors: { hood: "#2f5a4f", tunic: "#4f7f6a", accent: "#a9ffe0", metal: "#b7d8c8", dark: "#18302a", boot: "#2a4a3f" },
+        bonus: { defense: 0.03 }, fx: { type: "dew", color: "#8fe3c9", glow: "#d8fff2" },
+        desc: "A primeira gota da manhã escorre pela flecha antes de partir. +3% de defesa."
+      },
+      {
+        id: "aurora", name: "Aurora", price: 2600,
+        colors: { hood: "#3b2d55", tunic: "#5a4a7a", accent: "#a9ffd0", metal: "#c9b9e8", dark: "#20162e", boot: "#35284a" },
+        bonus: { speed: 0.04 }, fx: { type: "aurora", color: "#9fffd2", glow: "#d9ffe9" },
+        desc: "Um céu inteiro costurado nas costas. A flecha chega antes do frio. +4% de velocidade."
+      },
+      {
+        id: "coracao", name: "Coração da Floresta", price: 3200, final: true, maxHp: 250,
+        colors: { hood: "#234a2a", tunic: "#3f6b3a", accent: "#c8ff9a", metal: "#b8d88f", dark: "#122414", boot: "#28402a" },
+        bonus: null, fx: { type: "forestheart", color: "#b6ff8a", glow: "#e6ffd0" },
+        desc: "O traje que a própria Trilha ofereceu. Não pede pontaria: pede fôlego. 250 de vida máxima."
       }
     ],
     guerreiro: [
       {
-        id: "base", name: "Armadura do Muro", price: 0, colors: {},
+        id: "base", name: "Armadura do Muro", price: 0, colors: {}, bonus: null, fx: null,
         desc: "Metal amassado em mais noites do que qualquer canção consegue contar."
       },
       {
         id: "ferro", name: "Ferro Negro", price: 500,
         colors: { armor: "#383d44", metal: "#727c86", accent: "#b33f38", plume: "#c04b43", dark: "#1d2024", boot: "#2c3036" },
-        desc: "A armadura dos que preferem ser difíceis de derrubar."
+        bonus: { defense: 0.02 }, fx: { type: "sparks", color: "#b7c2cc", glow: "#e8f1f8" },
+        desc: "A armadura dos que preferem ser difíceis de derrubar. +2% de defesa."
       },
       {
         id: "ouro", name: "Ouro do Rei", price: 1000,
         colors: { armor: "#6f5a2e", metal: "#d4b05a", accent: "#e5c06a", plume: "#e5c06a", dark: "#2e2718", boot: "#3b3020" },
-        desc: "Uma armadura que já serviu a um trono. Agora serve a uma promessa."
+        bonus: { damage: 0.02 }, fx: { type: "gold", color: "#ffd36e", glow: "#fff0b0" },
+        desc: "Uma armadura que já serviu a um trono. Agora serve a uma promessa. +2% de dano."
       },
       {
         id: "sangue", name: "Sangue Antigo", price: 1600,
         colors: { armor: "#5a2a28", metal: "#a9675a", accent: "#e26a56", plume: "#e26a56", dark: "#2a1515", boot: "#3a2020" },
-        desc: "Vermelho escuro como o ferro depois da batalha. Ainda não pede descanso."
+        bonus: { speed: 0.02 }, fx: { type: "embers", color: "#ff7b62", glow: "#ffc0a8" },
+        desc: "Vermelho escuro como o ferro depois da batalha. Ainda não pede descanso. +2% de velocidade."
+      },
+      {
+        id: "aco", name: "Aço Tempestuoso", price: 2000,
+        colors: { armor: "#3b4a57", metal: "#8fa6b8", accent: "#9fd8ff", plume: "#b9e6ff", dark: "#1b242b", boot: "#2a3640" },
+        bonus: { defense: 0.03 }, fx: { type: "steel", color: "#9fd8ff", glow: "#e0f4ff" },
+        desc: "O metal foi temperado no vento da serra. +3% de defesa."
+      },
+      {
+        id: "trovao", name: "Trovão", price: 2600,
+        colors: { armor: "#303a5a", metal: "#8f9fd0", accent: "#c9d8ff", plume: "#e0e8ff", dark: "#171c2e", boot: "#252d47" },
+        bonus: { damage: 0.04 }, fx: { type: "storm", color: "#b6c8ff", glow: "#eef3ff" },
+        desc: "A armadura que responde antes do trovão. +4% de dano."
+      },
+      {
+        id: "muralha", name: "Muralha do Amanhecer", price: 3200, final: true, maxHp: 250,
+        colors: { armor: "#6b542e", metal: "#d8b56a", accent: "#ffe0a0", plume: "#ffcf7a", dark: "#2e2416", boot: "#4a3820" },
+        bonus: null, fx: { type: "dawnwall", color: "#ffd28a", glow: "#fff0c8" },
+        desc: "A última armadura não é para atacar. É para continuar de pé quando o sol nascer. 250 de vida máxima."
       }
     ],
     mago: [
       {
-        id: "base", name: "Manto de Cinzas", price: 0, colors: {},
+        id: "base", name: "Manto de Cinzas", price: 0, colors: {}, bonus: null, fx: null,
         desc: "O robe de quem passou a vida catalogando ruínas e perdendo o medo delas."
       },
       {
         id: "cinza", name: "Cinza Fria", price: 500,
         colors: { robe: "#3f474f", robe2: "#2d3339", accent: "#b9c4d0", dark: "#1d2226", staff: "#6b5b4c", boot: "#2a3035" },
-        desc: "Um manto sóbrio, da cor do que sobra quando a magia termina."
+        bonus: { defense: 0.02 }, fx: { type: "ash", color: "#c3ccd6", glow: "#eef3f8" },
+        desc: "Um manto sóbrio, da cor do que sobra quando a magia termina. +2% de defesa."
       },
       {
         id: "estrela", name: "Estrela Partida", price: 1000,
         colors: { robe: "#2d3f63", robe2: "#202f4c", accent: "#8ec7ff", dark: "#141c2d", staff: "#6b4f3a", boot: "#22324d" },
-        desc: "Os fios guardam uma luz azul que não ilumina nada além do caminho."
+        bonus: { speed: 0.02 }, fx: { type: "stars", color: "#9ecbff", glow: "#e0efff" },
+        desc: "Os fios guardam uma luz azul que não ilumina nada além do caminho. +2% de velocidade."
       },
       {
         id: "abismo", name: "Abismo", price: 1600,
         colors: { robe: "#432c4c", robe2: "#2d1e36", accent: "#d58ae6", dark: "#1a1220", staff: "#4b3547", boot: "#30213a" },
-        desc: "Roupas que parecem feitas de uma pergunta. A resposta é melhor não vestir."
+        bonus: { damage: 0.02 }, fx: { type: "void", color: "#d58ae6", glow: "#f2d8ff" },
+        desc: "Roupas que parecem feitas de uma pergunta. A resposta é melhor não vestir. +2% de dano."
+      },
+      {
+        id: "neblina", name: "Neblina", price: 2000,
+        colors: { robe: "#4a5f5e", robe2: "#354746", accent: "#c6e7e3", dark: "#1e2b2a", staff: "#6b5b4c", boot: "#2a3837" },
+        bonus: { defense: 0.03 }, fx: { type: "mist", color: "#c6e7e3", glow: "#effffc" },
+        desc: "O ar fica espesso antes do feitiço. O golpe chega mais devagar. +3% de defesa."
+      },
+      {
+        id: "eclipse", name: "Eclipse", price: 2600,
+        colors: { robe: "#2e2340", robe2: "#20182e", accent: "#d8b6ff", dark: "#120d1a", staff: "#4b3547", boot: "#241a30" },
+        bonus: { damage: 0.04 }, fx: { type: "eclipse", color: "#d8b6ff", glow: "#f5e6ff" },
+        desc: "Uma sombra passou pelo sol e não devolveu a luz. +4% de dano."
+      },
+      {
+        id: "coroa", name: "Coroa de Cinzas", price: 3200, final: true, maxHp: 250,
+        colors: { robe: "#4a3a28", robe2: "#33281c", accent: "#ffe0a0", dark: "#1e1710", staff: "#6b4f3a", boot: "#30241a" },
+        bonus: null, fx: { type: "ashcrown", color: "#ffe0a0", glow: "#fff4d0" },
+        desc: "O manto que o Reino tentou queimar. Ele ainda cabe em você. 250 de vida máxima."
       }
     ],
     minerador: [
       {
-        id: "base", name: "Traje de Fundo", price: 0, colors: {},
+        id: "base", name: "Traje de Fundo", price: 0, colors: {}, bonus: null, fx: null,
         desc: "Lona, couro e poeira. O uniforme de quem voltou de onde o mapa termina."
       },
       {
         id: "cobre", name: "Cobre Velho", price: 500,
         colors: { armor: "#6b432d", helmet: "#b0703e", accent: "#e0a84e", metal: "#bd854e", dark: "#2a1a12", boot: "#42291b" },
-        desc: "As placas de cobre que a mina deixou como lembrança."
+        bonus: { defense: 0.02 }, fx: { type: "embers", color: "#e0a84e", glow: "#ffe0a0" },
+        desc: "As placas de cobre que a mina deixou como lembrança. +2% de defesa."
       },
       {
         id: "cristal", name: "Cristal da Mina", price: 1000,
         colors: { armor: "#3b4a55", helmet: "#7fa2b0", accent: "#8fe3df", metal: "#9dbac4", dark: "#1c262d", boot: "#2a363f" },
-        desc: "Pedra clara o bastante para devolver a luz que o fundo engoliu."
+        bonus: { speed: 0.02 }, fx: { type: "crystal", color: "#8fe3df", glow: "#d8fffb" },
+        desc: "Pedra clara o bastante para devolver a luz que o fundo engoliu. +2% de velocidade."
       },
       {
         id: "obsidiana", name: "Obsidiana", price: 1600,
         colors: { armor: "#2c2435", helmet: "#4a3e5c", accent: "#b98add", metal: "#6f5a85", dark: "#18131f", boot: "#241d2d" },
-        desc: "Vidro vulcânico polido pelo tempo. Corta a escuridão antes de cortar a pedra."
+        bonus: { damage: 0.02 }, fx: { type: "void", color: "#b98add", glow: "#e7ccff" },
+        desc: "Vidro vulcânico polido pelo tempo. Corta a escuridão antes de cortar a pedra. +2% de dano."
+      },
+      {
+        id: "veio", name: "Veio de Ouro", price: 2000,
+        colors: { armor: "#6b542e", helmet: "#c9a44e", accent: "#ffe08a", metal: "#d8b56a", dark: "#2e2416", boot: "#4a3820" },
+        bonus: { defense: 0.03 }, fx: { type: "gold", color: "#ffd36e", glow: "#fff0b0" },
+        desc: "O ouro que a mina escondeu do Rei. A rocha agora protege você. +3% de defesa."
+      },
+      {
+        id: "magma", name: "Magma", price: 2600,
+        colors: { armor: "#4a2420", helmet: "#8a3a2a", accent: "#ff8a4e", metal: "#c96a45", dark: "#24100e", boot: "#3a1a16" },
+        bonus: { damage: 0.04 }, fx: { type: "magma", color: "#ff8a4e", glow: "#ffd0a0" },
+        desc: "A pedra ainda não esfriou. A picareta também não. +4% de dano."
+      },
+      {
+        id: "coracao", name: "Coração da Montanha", price: 3200, final: true, maxHp: 250,
+        colors: { armor: "#3a3a42", helmet: "#8a8a98", accent: "#ffcf7a", metal: "#c9c9d8", dark: "#1c1c22", boot: "#2e2e38" },
+        bonus: null, fx: { type: "mountainheart", color: "#ffcf7a", glow: "#fff0c8" },
+        desc: "A montanha inteira bate dentro do peito. O fundo não assusta mais. 250 de vida máxima."
       }
     ]
   };
@@ -470,6 +576,115 @@
   ];
 
   /* ============================================================
+     TAREFAS DE FASE
+     Cada fase tem um NPC único e um alvo único. Falar com o NPC
+     aceita a tarefa; derrotar o alvo entrega as moedas. As tarefas
+     voltam a cada Nova Jornada.
+     ============================================================ */
+  const QUESTS = [
+    {
+      id: "eco", levelId: "ruinas", reward: 200,
+      npc: {
+        name: "Iara", role: "Catadora de Ecos", x: 800, kind: "scholar",
+        palette: { skin: "#a66b4b", hair: "#2b1b17", cloth: "#5c4a3a", accent: "#7de7d8", dark: "#241a16" }
+      },
+      target: {
+        name: "Eco do Colosso", type: "walker", x: 1250, range: 120,
+        hpMul: 2.35, dmgMul: 1.1,
+        palette: { body: "#6f7a68", body2: "#8a947c", dark: "#3a4035", eye: "#7de7d8", glow: "#7de7d8", accent: "#a9b89a" }
+      },
+      lines: {
+        intro: [
+          "Você não é o primeiro a passar por aqui. O Colosso deixou um eco para trás — uma pedra que aprendeu a andar e a contar moedas.",
+          "Se você derrotar o Eco do Colosso, eu tomo conta do que ele carrega. Duascentas moedas para você, e uma memória a menos para a ruína."
+        ],
+        active: "O Eco ainda anda entre as pedras. Ele não é o Colosso, mas também não é só uma sombra.",
+        done: "Você o derrotou. As moedas já estão com você. A ruína ficou um pouco mais silenciosa."
+      }
+    },
+    {
+      id: "lobo", levelId: "trilha", reward: 200,
+      npc: {
+        name: "Bento", role: "Vigia das Raízes", x: 980, kind: "hunter",
+        palette: { skin: "#8b5a3c", hair: "#3a2a1c", cloth: "#3f5a3a", accent: "#a9d88e", dark: "#1e2a1a" }
+      },
+      target: {
+        name: "Lobo de Musgo", type: "walker", x: 1600, range: 150,
+        hpMul: 2.45, dmgMul: 1.15,
+        palette: { body: "#5e7d4d", body2: "#78935c", dark: "#2c3d27", eye: "#c9e982", glow: "#a9d88e", accent: "#8fb16a" }
+      },
+      lines: {
+        intro: [
+          "A floresta não odeia você. Ela só não sabe mais distinguir fome de saudade. O Lobo de Musgo é o que sobrou dessa confusão.",
+          "Ele guarda moedas de viajantes que não voltaram. Derrote-o e eu levo as moedas para a fogueira. Duascentas para você."
+        ],
+        active: "O Lobo ainda fareja a trilha. Não deixe que ele fareje você primeiro.",
+        done: "O musgo parou de se mexer. A floresta respirou. As moedas são suas."
+      }
+    },
+    {
+      id: "pena", levelId: "serra", reward: 250,
+      npc: {
+        name: "Sora", role: "Alpinista Cega", x: 1180, kind: "climber",
+        palette: { skin: "#c08a63", hair: "#d8d0c0", cloth: "#4a5a70", accent: "#a9c7ee", dark: "#232b38" }
+      },
+      target: {
+        name: "Pena Negra", type: "flyer", x: 1700, y: 220, range: 150,
+        hpMul: 2.3, dmgMul: 1.15,
+        palette: { body: "#303b54", body2: "#45536f", dark: "#1d2438", eye: "#ff5d54", glow: "#a9c7ee", accent: "#b8a56e" }
+      },
+      lines: {
+        intro: [
+          "Eu não vejo o vale, mas ouço o que cai nele. Uma Pena Negra está roubando o vento dos viajantes.",
+          "Ela carrega duzentas e cinquenta moedas no bico. Se você a derrubar, eu as conto para você."
+        ],
+        active: "A Pena ainda corta o céu. Escute o bater de asas antes de saltar.",
+        done: "O céu ficou mais leve. As moedas estão com você, e o vale pode dormir."
+      }
+    },
+    {
+      id: "sombra", levelId: "mina", reward: 250,
+      npc: {
+        name: "Tino", role: "Aprendiz de Fundo", x: 1250, kind: "miner",
+        palette: { skin: "#9a6a4a", hair: "#2a1a12", cloth: "#6b4a32", accent: "#ffb066", dark: "#2a1a12" }
+      },
+      target: {
+        name: "Sombra de Ferrugem", type: "spitter", x: 1720, range: 100,
+        hpMul: 2.5, dmgMul: 1.1,
+        palette: { body: "#8c583e", body2: "#aa6f4b", dark: "#432b22", eye: "#ffb05a", glow: "#ff8b45", accent: "#c99463" }
+      },
+      lines: {
+        intro: [
+          "Ferrugem teve filhos de ferrugem. Um deles ainda anda no fundo, cuspindo ácido e guardando moedas que não são dele.",
+          "Duzentas e cinquenta moedas se você apagar a Sombra de Ferrugem. Eu não vou descer lá para conferir."
+        ],
+        active: "A Sombra ainda está no fundo. Se o chão brilhar, saia do caminho.",
+        done: "O fundo ficou quieto. Você trouxe as moedas e eu trouxe a coragem de volta."
+      }
+    },
+    {
+      id: "cinza", levelId: "fronteira", reward: 300,
+      npc: {
+        name: "Clara", role: "Última Sentinela", x: 1280, kind: "sentinel",
+        palette: { skin: "#7a4a3a", hair: "#1b1310", cloth: "#5a2a2a", accent: "#ff8a5c", dark: "#241012" }
+      },
+      target: {
+        name: "Cinza do Rei", type: "walker", x: 1850, range: 170,
+        hpMul: 2.65, dmgMul: 1.2,
+        palette: { body: "#6a4540", body2: "#85564c", dark: "#2c1b1c", eye: "#ff825f", glow: "#ff6e4a", accent: "#9b5e4b" }
+      },
+      lines: {
+        intro: [
+          "O Rei deixou um pedaço de si na estrada. Uma cinza que ainda acredita ser coroa. Ela não pode chegar ao trono.",
+          "Trezentas moedas para quem apagar a Cinza do Rei. É o último pagamento que esta sentinela pode fazer."
+        ],
+        active: "A Cinza ainda queima. Não deixe que ela veja o trono.",
+        done: "A estrada está limpa. As moedas são suas, e a última sentinela pode descansar."
+      }
+    }
+  ];
+
+  /* ============================================================
      FASES
      Coordenadas em um mundo de 640x360, chão em y=320.
      ============================================================ */
@@ -477,7 +692,7 @@
     {
       id: "ruinas", name: "Ruínas Antigas", numeral: "I",
       subtitle: "Onde a pedra aprendeu a ficar em silêncio",
-      theme: "ruins", bossKey: "colosso", width: 2940, arenaStart: 2580,
+      theme: "ruins", bossKey: "colosso", quest: "eco", width: 2940, arenaStart: 2580,
       groundGaps: [[640, 750], [1430, 1550], [2110, 2210]],
       platforms: [
         { x: 380, y: 265, w: 95 }, { x: 520, y: 215, w: 80 },
@@ -512,7 +727,7 @@
     {
       id: "trilha", name: "Trilha Perdida", numeral: "II",
       subtitle: "Onde até as raízes esquecem o caminho",
-      theme: "forest", bossKey: "vulto", width: 3140, arenaStart: 2780,
+      theme: "forest", bossKey: "vulto", quest: "lobo", width: 3140, arenaStart: 2780,
       groundGaps: [[560, 680], [1290, 1410], [1970, 2080], [2380, 2470]],
       platforms: [
         { x: 340, y: 250, w: 100 }, { x: 620, y: 230, w: 90 }, { x: 780, y: 280, w: 90 },
@@ -549,7 +764,7 @@
     {
       id: "serra", name: "Serra Sombria", numeral: "III",
       subtitle: "Onde o inverno guarda o que o Rei esqueceu",
-      theme: "mountain", bossKey: "corvo", width: 3300, arenaStart: 2940,
+      theme: "mountain", bossKey: "corvo", quest: "pena", width: 3300, arenaStart: 2940,
       groundGaps: [[720, 850], [1380, 1500], [2140, 2250], [2570, 2660]],
       platforms: [
         { x: 380, y: 255, w: 100 }, { x: 540, y: 205, w: 80 },
@@ -586,7 +801,7 @@
     {
       id: "mina", name: "Mina Enferrujada", numeral: "IV",
       subtitle: "Onde a máquina aprendeu a sentir dor",
-      theme: "mine", bossKey: "ferrugem", width: 3400, arenaStart: 3020,
+      theme: "mine", bossKey: "ferrugem", quest: "sombra", width: 3400, arenaStart: 3020,
       groundGaps: [[480, 600], [1040, 1160], [1800, 1920], [2350, 2460]],
       platforms: [
         { x: 300, y: 250, w: 90 }, { x: 620, y: 230, w: 100 }, { x: 780, y: 185, w: 80 },
@@ -624,7 +839,7 @@
     {
       id: "fronteira", name: "Última Fronteira", numeral: "V",
       subtitle: "Onde a coroa pesa mais que o Reino",
-      theme: "frontier", bossKey: "rei", width: 3500, arenaStart: 3100,
+      theme: "frontier", bossKey: "rei", quest: "cinza", width: 3500, arenaStart: 3100,
       groundGaps: [[620, 750], [1320, 1450], [2070, 2190], [2670, 2810]],
       platforms: [
         { x: 350, y: 250, w: 100 }, { x: 520, y: 200, w: 80 },
@@ -696,6 +911,6 @@
 
   TP.DATA = {
     RARITIES, CHARACTERS, OUTFITS, WEAPON_CLASSES, WEAPONS, DIFFICULTIES,
-    BOSSES, MEMORIES, LEVELS, ENDINGS
+    BOSSES, MEMORIES, QUESTS, LEVELS, ENDINGS
   };
 })();

@@ -7,7 +7,7 @@
 
   const art = {
     W: 640, H: 360, GROUND_Y: 320,
-    portraitCache: {}, weaponCache: {}, pedroCache: null,
+    portraitCache: {}, weaponCache: {}, pedroCache: null, npcPortraitCache: {},
     THEMES: {
       ruins: {
         skyTop: "#31475e", skyMid: "#68899c", skyLow: "#c5b38e",
@@ -158,6 +158,32 @@
     ctx.fillRect(-48, 0, 96, 96);
     art.pixelCircle(ctx, 0, 30, 27, "rgba(216,176,106,.055)");
 
+    // aura do traje: o retrato também veste a peça equipada.
+    if (char.outfitFx) {
+      const fx = char.outfitFx;
+      art.glow(ctx, 0, 48, char.outfitFinal ? 52 : 38, fx.glow || fx.color, char.outfitFinal ? 0.2 : 0.1);
+      if (char.outfitFinal) {
+        ctx.save();
+        ctx.globalAlpha = 0.28;
+        ctx.strokeStyle = fx.glow || fx.color;
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.arc(0, 30, 31, 0, Math.PI * 2);
+        ctx.stroke();
+        ctx.globalAlpha = 0.5;
+        for (let i = 0; i < 10; i++) {
+          const a = i * (Math.PI * 2 / 10);
+          art.rect(ctx, Math.round(Math.cos(a) * 36) - 1, Math.round(32 + Math.sin(a) * 32) - 1, 2, 2, fx.color);
+        }
+        ctx.restore();
+      } else {
+        for (let i = 0; i < 5; i++) {
+          const a = i * 1.7;
+          art.rect(ctx, Math.round(Math.cos(a) * 30) - 1, Math.round(46 + Math.sin(a) * 24) - 1, 2, 2, fx.color);
+        }
+      }
+    }
+
     // ombros / corpo
     art.rect(ctx, -30, 70, 60, 26, pal.dark);
     art.rect(ctx, -25, 64, 50, 22, pal.cloak || pal.armor || pal.robe);
@@ -258,6 +284,22 @@
 
     // brilho de fogueira
     art.glow(ctx, -30, 85, 55, "#ff9d54", 0.1);
+
+    // Coroa de luz do traje final, desenhada depois do corpo.
+    if (char.outfitFinal && char.outfitFx) {
+      const fx = char.outfitFx;
+      ctx.save();
+      ctx.globalAlpha = 0.7;
+      ctx.strokeStyle = fx.glow || fx.color;
+      ctx.lineWidth = 1;
+      for (let i = -3; i <= 3; i++) {
+        ctx.beginPath();
+        ctx.moveTo(i * 5, 13);
+        ctx.lineTo(i * 7, 2 - Math.abs(i) * 2);
+        ctx.stroke();
+      }
+      ctx.restore();
+    }
     ctx.restore();
   };
 
@@ -337,6 +379,89 @@
     art.rect(ctx, 13, 46, 3, 3, "#8a6a3f");
 
     ctx.restore();
+  };
+
+  art.drawNpcBust = function (ctx, npc, w, h) {
+    const pal = npc.palette || {
+      skin: "#a66b4b", hair: "#2b1b17", cloth: "#5c4a3a", accent: "#7de7d8", dark: "#241a16"
+    };
+    ctx.save();
+    ctx.translate(Math.round(w / 2), 0);
+    const scale = w / 96;
+    ctx.scale(scale, scale);
+
+    const bg = ctx.createLinearGradient(0, 0, 0, 96);
+    bg.addColorStop(0, "#141713");
+    bg.addColorStop(1, "#2b261d");
+    ctx.fillStyle = bg;
+    ctx.fillRect(-48, 0, 96, 96);
+    art.glow(ctx, 0, 52, 42, pal.accent, 0.09);
+    art.pixelCircle(ctx, 0, 30, 28, "rgba(216,176,106,.06)");
+
+    // ombros
+    art.rect(ctx, -31, 71, 62, 25, pal.dark);
+    art.rect(ctx, -26, 64, 52, 22, pal.cloth);
+    art.rect(ctx, -19, 67, 38, 18, pal.dark);
+    art.rect(ctx, -9, 74, 18, 22, pal.accent);
+
+    // cabeça
+    drawFace(ctx, 0, 32, pal.skin, pal.accent, { smile: true });
+
+    if (npc.kind === "scholar") {
+      art.rect(ctx, -23, 22, 46, 6, pal.cloth);
+      art.rect(ctx, -27, 27, 8, 31, pal.cloth);
+      art.rect(ctx, 19, 27, 8, 31, pal.cloth);
+      art.rect(ctx, -13, 18, 26, 5, pal.dark);
+      art.rect(ctx, -18, 75, 36, 4, pal.accent);
+      art.rect(ctx, 28, 55, 3, 37, "#6b4f3a");
+      art.pixelCircle(ctx, 29, 50, 5, "rgba(125,231,216,.22)");
+      art.pixelCircle(ctx, 29, 50, 3, pal.accent);
+    } else if (npc.kind === "hunter") {
+      art.rect(ctx, -22, 23, 44, 6, pal.cloth);
+      art.rect(ctx, -26, 28, 7, 27, pal.cloth);
+      art.rect(ctx, 19, 28, 7, 27, pal.cloth);
+      art.rect(ctx, 9, 14, 4, 15, pal.accent);
+      art.rect(ctx, 12, 17, 7, 3, pal.accent);
+      art.rect(ctx, -17, 73, 34, 4, "#8a6a3f");
+    } else if (npc.kind === "climber") {
+      art.rect(ctx, -21, 23, 42, 5, pal.cloth);
+      art.rect(ctx, -23, 28, 7, 24, pal.cloth);
+      art.rect(ctx, 16, 28, 7, 24, pal.cloth);
+      art.rect(ctx, -12, 39, 24, 4, pal.accent);
+      art.rect(ctx, -8, 36, 4, 2, pal.dark);
+      art.rect(ctx, 4, 36, 4, 2, pal.dark);
+      art.rect(ctx, 27, 40, 3, 52, "#6b4f3a");
+    } else if (npc.kind === "miner") {
+      art.rect(ctx, -19, 16, 38, 8, pal.cloth);
+      art.rect(ctx, -15, 10, 30, 8, pal.cloth);
+      art.rect(ctx, -6, 8, 12, 4, pal.accent);
+      art.pixelCircle(ctx, 0, 13, 6, "rgba(255,176,102,.2)");
+      art.rect(ctx, -29, 70, 12, 21, pal.dark);
+      art.rect(ctx, 17, 70, 12, 21, pal.dark);
+    } else {
+      art.rect(ctx, -21, 21, 42, 6, pal.dark);
+      art.rect(ctx, -24, 26, 7, 30, pal.dark);
+      art.rect(ctx, 17, 26, 7, 30, pal.dark);
+      art.rect(ctx, -4, 8, 8, 13, pal.accent);
+      art.rect(ctx, -11, 74, 22, 3, pal.accent);
+      art.rect(ctx, 30, 38, 3, 55, "#8a6a3f");
+      art.rect(ctx, 27, 35, 9, 3, "#c6c8c4");
+    }
+
+    art.glow(ctx, -32, 86, 52, "#ff9d54", 0.08);
+    ctx.restore();
+  };
+
+  art.makeNpcPortrait = function (npc) {
+    const key = npc.id || npc.name || "npc";
+    if (art.npcPortraitCache[key]) return art.npcPortraitCache[key];
+    const c = document.createElement("canvas");
+    c.width = 96; c.height = 96;
+    const ctx = c.getContext("2d");
+    ctx.imageSmoothingEnabled = false;
+    art.drawNpcBust(ctx, npc, 96, 96);
+    art.npcPortraitCache[key] = c.toDataURL("image/png");
+    return art.npcPortraitCache[key];
   };
 
   art.makePedro = function () {

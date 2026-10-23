@@ -8,7 +8,7 @@
   const input = {
     left: false, right: false, jumpDown: false, jumpPressed: false,
     attackDown: false, attackPressed: false, dashPressed: false,
-    pausePressed: false, advancePressed: false,
+    pausePressed: false, advancePressed: false, interactPressed: false,
     usingGamepad: false, hasTouch: false,
     _mouseHeld: false, _touchLeft: false, _touchRight: false,
     _touchJump: false, _touchAttack: false
@@ -57,6 +57,8 @@
       input.advancePressed = true;
       if (TP.ui && TP.game && TP.game.getMode && TP.game.getMode() === "dialogue") {
         TP.ui.advanceDialogue();
+      } else if (code === "KeyE" && TP.game && TP.game.getMode && TP.game.getMode() === "playing") {
+        input.interactPressed = true;
       }
     }
   }
@@ -83,6 +85,7 @@
     input.dashPressed = false;
     input.pausePressed = false;
     input.advancePressed = false;
+    input.interactPressed = false;
     held = Object.create(null);
   }
   input.releaseAll = releaseAll;
@@ -91,6 +94,7 @@
   window.addEventListener("blur", function () {
     for (const k in held) held[k] = false;
     input.left = input.right = input.jumpDown = input.attackDown = false;
+    input.interactPressed = false;
     input._mouseHeld = false;
     input._touchLeft = input._touchRight = false;
     input._touchJump = input._touchAttack = false;
@@ -135,6 +139,7 @@
     }
     if (action === "dash" && down) input.dashPressed = true;
     if (action === "pause" && down) input.pausePressed = true;
+    if (action === "interact" && down) input.interactPressed = true;
   }
 
   input.bindTouch = function (buttons) {
@@ -284,6 +289,11 @@
     if (jump && !prev[0] && TP.game && TP.game.getMode && TP.game.getMode() === "dialogue") {
       if (TP.ui) TP.ui.advanceDialogue();
     }
+    if (pressed(3) && !prev[3]) {
+      const mode = TP.game && TP.game.getMode ? TP.game.getMode() : "";
+      if (mode === "playing") input.interactPressed = true;
+      else if (mode === "dialogue" && TP.ui) TP.ui.advanceDialogue();
+    }
     if (!jump && prev[0] && !held.Space) input.jumpDown = input._touchJump;
     if (!attack && prev[2] && !held.KeyJ) input.attackDown = input._mouseHeld || input._touchAttack;
 
@@ -320,6 +330,7 @@
     input.dashPressed = false;
     input.pausePressed = false;
     input.advancePressed = false;
+    input.interactPressed = false;
   };
 
   // Converte toque em cliques de interface quando o alvo é um botão.

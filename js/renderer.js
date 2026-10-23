@@ -72,6 +72,12 @@
     drawCheckpoints(ctx, level, t);
     drawPickups(ctx, level, t);
 
+    // NPC da tarefa
+    if (level.questNpc) {
+      const qs = state.run && state.run.quests ? state.run.quests[level.questNpc.questId] : null;
+      TP.sprites.drawNpc(ctx, level.questNpc, t, qs);
+    }
+
     // inimigos
     for (let i = 0; i < level.enemies.length; i++) {
       const e = level.enemies[i];

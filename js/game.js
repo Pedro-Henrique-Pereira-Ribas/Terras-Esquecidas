@@ -27,6 +27,7 @@
     endingTone: "dark",
     campData: null,
     campContext: null,
+    nearNpc: null,
     deathTimer: 0
   };
   TP.state = state;
@@ -67,6 +68,38 @@
     return true;
   }
 
+  function saveWallet(run) {
+    if (!run || !run.char) return;
+    TP.ui.saveWalletFor(run.char.id, run.coins);
+  }
+
+  function addCoins(run, amount) {
+    if (!run) return;
+    run.coins += amount;
+    saveWallet(run);
+  }
+
+  function spendCoins(run, amount) {
+    if (!run) return false;
+    if (run.coins < amount) return false;
+    run.coins -= amount;
+    saveWallet(run);
+    return true;
+  }
+
+  function persistArmory(run) {
+    if (!run || !run.char) return;
+    TP.ui.saveArmoryFor(run.char.id, run.ownedWeapons, run.weaponClass, run.weaponTier);
+  }
+
+  function createQuestState() {
+    const quests = {};
+    DATA.QUESTS.forEach(function (quest) {
+      quests[quest.id] = { accepted: false, complete: false, targetDead: false };
+    });
+    return quests;
+  }
+
   function dropBossWeapon(run, boss) {
     const tier = boss.cfg.dropTier;
     if (tier == null || !run) return null;
@@ -77,6 +110,7 @@
     if (tier > 0 && !ownsWeapon(run, cls, tier - 1)) return null;
     run.ownedWeapons[weaponKey(cls, tier)] = true;
     equipRunWeapon(run, cls, tier);
+    persistArmory(run);
     const rar = DATA.RARITIES[def.rarity];
     return {
       name: def.name,
@@ -97,6 +131,7 @@
   function syncCamp() {
     const run = state.run;
     if (!run || !state.campData) return;
+    saveWallet(run);
     state.campData.weaponClass = run.weaponClass;
     state.campData.tier = run.weaponTier;
     state.campData.coins = run.coins;
@@ -123,8 +158,10 @@
     continueFromCheckpoint: continueFromCheckpoint,
     buyOutfit: buyOutfit,
     equipOutfit: equipOutfit,
+    equipWeapon: equipWeapon,
     campContinue: campContinue,
-    chooseEnding: chooseEnding
+    chooseEnding: chooseEnding,
+    newJourney: newJourney
   };
   TP.game = G;
 
@@ -214,6 +251,7 @@
     state.bossIntro = 0;
     state.campData = null;
     state.campContext = null;
+    state.nearNpc = null;
     state.endingTone = "dark";
     state.camera.x = 0;
     state.camera.shake = 0;
@@ -241,6 +279,7 @@
     TP.ui.hideScreens();
     TP.ui.showScreen("screen-title");
     TP.ui.resetEnding();
+    TP.ui.refreshCharacterCards();
     TP.ui.updateSoundLabels();
     TP.ui.renderAccountBadge();
     if (TP.audio) TP.audio.startTheme(0);
@@ -294,16 +333,23 @@
     const diff = DATA.DIFFICULTIES.find(function (d) { return d.id === state.selectedDiff; });
     if (!baseChar || !diff) return;
     const char = TP.ui.characterWithOutfit ? TP.ui.characterWithOutfit(baseChar) : baseChar;
+    const armory = TP.ui.armoryFor(char.id);
+    const ownedWeapons = {};
+    Object.keys(armory.owned || {}).forEach(function (key) {
+      if (armory.owned[key]) ownedWeapons[key] = true;
+    });
+    ownedWeapons[weaponKey(char.weaponClass, 0)] = true;
+    const loadedTier = armory.tier != null ? armory.tier : 0;
     state.run = {
       char: char,
       diff: diff,
       playerName: TP.ui.account ? TP.ui.account.name : "Viajante",
       serverName: TP.ui.account ? TP.ui.account.server : "Reino Sem Nome",
       levelIndex: 0,
-      coins: 0,
+      coins: TP.ui.walletFor(char.id),
       weaponClass: char.weaponClass,
-      weaponTier: 0,
-      ownedWeapons: {},
+      weaponTier: ownedWeapons[weaponKey(char.weaponClass, loadedTier)] ? loadedTier : 0,
+      ownedWeapons: ownedWeapons,
       memories: 0,
       memoryIds: [],
       checkpoints: {},
@@ -312,12 +358,13 @@
       finalForgeDone: false,
       lastDrop: null,
       deaths: 0,
+      quests: createQuestState(),
       startedAt: state.time,
       ending: null
     };
-    state.run.ownedWeapons[weaponKey(char.weaponClass, 0)] = true;
     state.campData = null;
     state.campContext = null;
+    state.nearNpc = null;
     state.selectedDiff = diff.id;
     TP.audio.init();
     startLevel(0, false);
@@ -326,12 +373,13 @@
   function createRunPlayer(run, x, y) {
     const char = run.char;
     const weapon = getWeapon(char, run.weaponTier, run.weaponClass);
+    const maxHp = char.maxHp || char.hp || 100;
     const p = {
       char: char,
       weapon: weapon,
       x: x, y: y, w: 20, h: 36,
       vx: 0, vy: 0, facing: 1,
-      hp: char.hp, maxHp: char.hp,
+      hp: maxHp, maxHp: maxHp,
       onGround: false, jumpsLeft: char.maxJumps,
       jumpBuffer: 0, coyote: 0,
       attackCd: 0, attackTimer: 0, attackDuration: 16, attackHitDone: false,
@@ -434,6 +482,39 @@
     });
     const heals = (def.heals || []).map(function (h) { return { x: h.x, y: h.y, taken: false }; });
 
+    const questDef = DATA.QUESTS.find(function (q) { return q.id === def.quest; }) || null;
+    const questState = questDef && run.quests ? run.quests[questDef.id] : null;
+    let questNpc = null;
+    let questTarget = null;
+    if (questDef) {
+      questNpc = {
+        id: questDef.id,
+        questId: questDef.id,
+        name: questDef.npc.name,
+        role: questDef.npc.role,
+        kind: questDef.npc.kind,
+        palette: questDef.npc.palette,
+        x: questDef.npc.x,
+        y: GROUND_Y - 34,
+        w: 20,
+        h: 34
+      };
+      if (!questState || (!questState.targetDead && !questState.complete)) {
+        questTarget = createEnemy({
+          type: questDef.target.type,
+          x: questDef.target.x,
+          y: questDef.target.y,
+          range: questDef.target.range,
+          hpMul: questDef.target.hpMul,
+          dmgMul: questDef.target.dmgMul,
+          palette: questDef.target.palette,
+          name: questDef.target.name,
+          questId: questDef.id,
+          questTarget: true
+        }, index, diff);
+      }
+    }
+
     const level = {
       token: ++levelToken,
       index: index,
@@ -456,12 +537,16 @@
         left: def.arenaStart + 34,
         right: def.width - 24
       },
-      gateX: def.arenaStart + 20
+      gateX: def.arenaStart + 20,
+      questDef: questDef,
+      questNpc: questNpc,
+      questTarget: questTarget
     };
 
     (def.enemies || []).forEach(function (e) {
       level.enemies.push(createEnemy(e, index, diff));
     });
+    if (questTarget) level.enemies.push(questTarget);
 
     // Memórias já coletadas não voltam a brilhar.
     memories.forEach(function (m) { if (m.taken) m.taken = true; });
@@ -488,8 +573,10 @@
     if (type === "flyer") { w = 24; h = 18; }
     if (type === "spitter") { w = 22; h = 24; }
     const baseHp = type === "flyer" ? 18 : type === "spitter" ? 26 : 24;
-    const hp = Math.round((baseHp + index * 6) * diff.hpMul);
-    const dmg = (7 + index * 2.2) * diff.dmgMul;
+    const hpMul = def.hpMul || 1;
+    const dmgMul = def.dmgMul || 1;
+    const hp = Math.round((baseHp + index * 6) * diff.hpMul * hpMul);
+    const dmg = (7 + index * 2.2) * diff.dmgMul * dmgMul;
     const baseY = type === "flyer" ? (def.y || 220) : GROUND_Y - h;
     return {
       type: type, x: def.x, y: baseY, baseY: baseY, w: w, h: h,
@@ -499,7 +586,11 @@
       dir: -1, t: irand(0, 200), kb: 0,
       flash: 0, burn: 0, burnTick: 0, dead: false,
       cooldown: irand(60, 150), charge: 0,
-      surfaceY: GROUND_Y
+      surfaceY: GROUND_Y,
+      name: def.name || null,
+      palette: def.palette || null,
+      questId: def.questId || null,
+      questTarget: !!def.questTarget
     };
   }
 
@@ -584,15 +675,38 @@
     const base = DATA.CHARACTERS.find(function (c) { return c.id === charId; });
     if (!base) return;
     const clothed = TP.ui.characterWithOutfit(base, outfitId);
+    const oldPlayerMax = state.player ? state.player.maxHp : 0;
     run.char.palette = clothed.palette;
     run.char.outfitId = clothed.outfitId;
     run.char.outfitName = clothed.outfitName;
-    if (state.player) state.player.char = run.char;
+    run.char.outfitBonus = clothed.outfitBonus;
+    run.char.outfitFx = clothed.outfitFx;
+    run.char.outfitFinal = clothed.outfitFinal;
+    run.char.outfitDesc = clothed.outfitDesc;
+    run.char.outfitPrice = clothed.outfitPrice;
+    run.char.maxHp = clothed.maxHp;
+    run.char.hp = clothed.hp;
+    run.char.damageMul = clothed.damageMul;
+    run.char.damageTaken = clothed.damageTaken;
+    run.char.speed = clothed.speed;
+    if (state.player) {
+      state.player.char = run.char;
+      state.player.maxHp = run.char.maxHp;
+      if (state.player.maxHp > oldPlayerMax) {
+        state.player.hp = Math.min(state.player.maxHp, state.player.hp + (state.player.maxHp - oldPlayerMax));
+      } else {
+        state.player.hp = Math.min(state.player.hp, state.player.maxHp);
+      }
+    }
   }
 
   function buyOutfit(charId, outfitId) {
     if (state.mode !== "camp" || !state.run) return;
     const run = state.run;
+    if (run.char.id !== charId) {
+      TP.ui.toast("Só <strong>" + run.char.name + "</strong> pode comprar e vestir o próprio traje nesta jornada.", "danger", 2600);
+      return;
+    }
     const char = DATA.CHARACTERS.find(function (c) { return c.id === charId; });
     const outfit = outfitDefFor(charId, outfitId);
     if (!char || !outfit) return;
@@ -606,13 +720,11 @@
       return;
     }
 
-    run.coins -= outfit.price;
+    spendCoins(run, outfit.price);
     TP.ui.markOutfitOwned(charId, outfitId);
     applyRunOutfit(charId, outfitId);
     TP.audio.sfx("buy");
-    const current = run.char.id === charId;
-    TP.ui.toast('<strong>' + outfit.name + '</strong> ' + (current ? "vestido agora" : "guardado para " + char.name) +
-      '. A peça fica no vestiário deste navegador.', "memory", 3400);
+    TP.ui.toast('<strong>' + outfit.name + '</strong> vestido agora. A peça fica no vestiário deste navegador.', "memory", 3400);
     syncCamp();
     TP.ui.invalidateHUD();
   }
@@ -620,6 +732,10 @@
   function equipOutfit(charId, outfitId) {
     if (state.mode !== "camp" || !state.run) return;
     const run = state.run;
+    if (run.char.id !== charId) {
+      TP.ui.toast("Só <strong>" + run.char.name + "</strong> pode equipar o próprio traje nesta jornada.", "danger", 2400);
+      return;
+    }
     const char = DATA.CHARACTERS.find(function (c) { return c.id === charId; });
     const outfit = outfitDefFor(charId, outfitId);
     if (!char || !outfit || !TP.ui.outfitOwned(charId, outfitId)) return;
@@ -628,7 +744,21 @@
     TP.ui.setOutfitEquipped(charId, outfitId);
     applyRunOutfit(charId, outfitId);
     TP.audio.sfx("click");
-    TP.ui.toast('<strong>' + outfit.name + '</strong> ' + (run.char.id === charId ? "vestido" : "reservado para " + char.name) + '.', "coin", 2200);
+    TP.ui.toast('<strong>' + outfit.name + '</strong> vestido.', "coin", 2200);
+    syncCamp();
+    TP.ui.invalidateHUD();
+  }
+
+  function equipWeapon(tier) {
+    if (state.mode !== "camp" || !state.run) return;
+    const run = state.run;
+    if (!equipRunWeapon(run, run.weaponClass, tier)) {
+      TP.ui.toast("Você ainda não conquistou essa arma.", "danger", 2000);
+      return;
+    }
+    persistArmory(run);
+    TP.audio.sfx("click");
+    TP.ui.toast("<strong>" + getWeapon(run.char, tier, run.weaponClass).name + "</strong> equipada.", "coin", 2200);
     syncCamp();
     TP.ui.invalidateHUD();
   }
@@ -708,6 +838,10 @@
   }
 
   function returnToTitle() {
+    if (state.run) {
+      saveWallet(state.run);
+      persistArmory(state.run);
+    }
     TP.ui.hideScreens();
     TP.ui.showGameOver(false);
     showTitle();
@@ -783,9 +917,11 @@
     state.deathTimer = 0;
     state.hitFlash = 22;
     state.camera.shake = 8;
+    state.nearNpc = null;
     TP.audio.sfx("death");
     burst(player.x + player.w / 2, player.y + player.h / 2, "#c8684b", 24, 2.4, 2, 0.12);
     burst(player.x + player.w / 2, player.y + player.h / 2, "#e9c17a", 12, 1.6, 1, 0.08);
+    TP.ui.hideInteractPrompt();
     TP.ui.showTouch(false);
   }
 
@@ -818,6 +954,8 @@
     if (key === "true" && run.memories < 15) return;
     const ending = DATA.ENDINGS[key];
     if (!ending) return;
+    saveWallet(run);
+    persistArmory(run);
     run.ending = key;
     state.endingTone = ending.tone;
     state.mode = "endingText";
@@ -826,6 +964,20 @@
       run.deaths + " queda(s).";
     TP.ui.showEndingResult(key, ending, run, note, ending.tone);
     TP.audio.startTheme(key === "true" ? 4 : 0);
+  }
+
+  function newJourney() {
+    if (!state.run) { showTitle(); return; }
+    const charId = state.run.char.id;
+    const diffId = state.run.diff.id;
+    saveWallet(state.run);
+    persistArmory(state.run);
+    state.selectedChar = charId;
+    state.selectedDiff = diffId;
+    TP.ui.hideScreens();
+    TP.ui.showGameOver(false);
+    TP.ui.resetEnding();
+    beginJourney();
   }
 
   /* ============================================================
@@ -852,6 +1004,8 @@
     if (p.dead) return;
 
     checkPickups(p);
+    updateQuestNpc(p, level);
+    if (state.mode !== "playing") return;
     updateEnemies();
     updateBoss();
     updateProjectiles();
@@ -1265,6 +1419,123 @@
       e.dead = true;
       burst(e.x + e.w / 2, e.y + e.h / 2, "#c9875b", 16, 2.2, 2, 0.08);
       TP.audio.sfx("hit");
+      onEnemyKilled(e);
+    }
+  }
+
+  function questForId(id) {
+    return DATA.QUESTS.find(function (q) { return q.id === id; }) || null;
+  }
+
+  function completeQuest(quest, qs) {
+    if (!quest || !qs || qs.complete || !state.run) return;
+    qs.accepted = true;
+    qs.complete = true;
+    addCoins(state.run, quest.reward);
+    TP.audio.sfx("coin");
+    TP.ui.invalidateHUD();
+    TP.ui.toast("<strong>Tarefa de " + quest.npc.name + "</strong> concluída. +" +
+      fmt(quest.reward) + " moedas.", "memory", 3800);
+  }
+
+  function onEnemyKilled(e) {
+    if (!e || !e.questTarget || !e.questId || !state.run || !state.run.quests) return;
+    const quest = questForId(e.questId);
+    const qs = state.run.quests[e.questId];
+    if (!quest || !qs) return;
+    qs.targetDead = true;
+    if (qs.accepted) {
+      completeQuest(quest, qs);
+    } else if (!qs.complete) {
+      TP.ui.toast("O alvo de <strong>" + quest.npc.name + "</strong> caiu. Fale com " +
+        quest.npc.name + " para receber a recompensa.", "memory", 3600);
+    }
+  }
+
+  function npcSpeaker(quest) {
+    return {
+      name: quest.npc.name,
+      role: quest.npc.role,
+      portrait: TP.art.makeNpcPortrait ? TP.art.makeNpcPortrait(quest.npc) : null
+    };
+  }
+
+  function finishNpcDialogue(token) {
+    const level = state.level;
+    if (!level || level.token !== token) return;
+    state.mode = "playing";
+    if (state.player) state.player.locked = false;
+    TP.ui.showTouch(true);
+    TP.ui.invalidateHUD();
+  }
+
+  function talkToNpc(npc) {
+    const run = state.run;
+    const level = state.level;
+    if (!run || !level || !npc || state.mode !== "playing") return;
+    const quest = questForId(npc.questId);
+    const qs = quest && run.quests ? run.quests[quest.id] : null;
+    if (!quest || !qs) return;
+    const token = level.token;
+    const speaker = npcSpeaker(quest);
+    state.mode = "dialogue";
+    state.nearNpc = null;
+    if (state.player) state.player.locked = true;
+    TP.ui.hideInteractPrompt();
+    TP.ui.showTouch(false);
+
+    function finish() {
+      finishNpcDialogue(token);
+    }
+
+    if (qs.complete) {
+      TP.ui.showDialogue([quest.lines.done], finish, speaker);
+      return;
+    }
+
+    if (qs.accepted) {
+      if (qs.targetDead) {
+        completeQuest(quest, qs);
+        TP.ui.showDialogue([quest.lines.done], finish, speaker);
+      } else {
+        TP.ui.showDialogue([quest.lines.active], finish, speaker);
+      }
+      return;
+    }
+
+    TP.ui.showDialogue(quest.lines.intro.slice(), function () {
+      qs.accepted = true;
+      if (qs.targetDead) {
+        completeQuest(quest, qs);
+        TP.ui.showDialogue([quest.lines.done], finish, speaker);
+        return;
+      }
+      TP.ui.toast("<strong>Tarefa aceita:</strong> derrote " + quest.target.name +
+        " para " + quest.npc.name + ".", "memory", 3400);
+      finish();
+    }, speaker);
+  }
+
+  function updateQuestNpc(p, level) {
+    const npc = level.questNpc;
+    if (!npc || !state.run || !state.run.quests || p.dead) {
+      state.nearNpc = null;
+      TP.ui.hideInteractPrompt();
+      return;
+    }
+    const dx = Math.abs((p.x + p.w / 2) - (npc.x + npc.w / 2));
+    const dy = Math.abs((p.y + p.h / 2) - (npc.y + npc.h / 2));
+    const near = dx < 48 && dy < 42;
+    if (!near) {
+      state.nearNpc = null;
+      TP.ui.hideInteractPrompt();
+      return;
+    }
+    state.nearNpc = npc;
+    TP.ui.showInteractPrompt(npc, state.run.quests[npc.questId]);
+    if (TP.input.interactPressed) {
+      TP.input.interactPressed = false;
+      talkToNpc(npc);
     }
   }
 
@@ -1328,7 +1599,11 @@
           e.burnTick = 0;
           e.hp -= e.burnDmg || 2;
           addFloater(String(e.burnDmg || 2), e.x + e.w / 2, e.y - 2, "#ff9b62");
-          if (e.hp <= 0) { e.dead = true; burst(e.x + e.w / 2, e.y + e.h / 2, "#d97545", 10, 1.8, 2, 0.06); }
+          if (e.hp <= 0) {
+            e.dead = true;
+            burst(e.x + e.w / 2, e.y + e.h / 2, "#d97545", 10, 1.8, 2, 0.06);
+            onEnemyKilled(e);
+          }
         }
       }
       if (e.dead) continue;
@@ -1852,14 +2127,14 @@
     if (b.cfg.final) {
       if (!run.finalCoinClaimed) {
         run.finalCoinClaimed = true;
-        run.coins += 1000;
+        addCoins(run, 1000);
         TP.ui.toast("A coroa deixou cair <strong>1.000 moedas</strong>.", "coin", 3000);
       }
     } else {
       const rewards = [];
       if (!run.bossCoins[level.index]) {
         run.bossCoins[level.index] = true;
-        run.coins += b.cfg.coin;
+        addCoins(run, b.cfg.coin);
         rewards.push("<strong>" + fmt(b.cfg.coin) + " moedas</strong>");
       }
       const drop = dropBossWeapon(run, b);
@@ -1937,7 +2212,7 @@
 
     if (!run.finalCoinClaimed) {
       run.finalCoinClaimed = true;
-      run.coins += 1000;
+      addCoins(run, 1000);
       TP.audio.sfx("coin");
       TP.ui.invalidateHUD();
       TP.ui.toast("O Rei se ajoelha por um instante. <strong>1.000 moedas</strong> caem da coroa.", "coin", 3600);
