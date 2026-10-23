@@ -141,6 +141,117 @@
     }
   ];
 
+  /* Roupas de cada herói. O traje inicial é gratuito; os demais são
+     comprados com as moedas deixadas pelos chefes. As cores são aplicadas
+     sobre a paleta base sem mudar o corpo, os rostos ou as armas. */
+  const OUTFITS = {
+    viajante: [
+      {
+        id: "base", name: "Traje de Estrada", price: 0, colors: {},
+        desc: "O casaco gasto de quem já dormiu em todas as encruzilhadas."
+      },
+      {
+        id: "brasa", name: "Manto da Brasa", price: 500,
+        colors: { hood: "#55251e", cloak: "#6b2f25", tunic: "#8d4a32", accent: "#ffb45e", metal: "#b98457", dark: "#2a1712", boot: "#3b241b" },
+        desc: "Tecido tingido no fogo de Pedro. A estrada fica mais quente."
+      },
+      {
+        id: "lua", name: "Manto da Lua", price: 1000,
+        colors: { hood: "#2b3652", cloak: "#33415f", tunic: "#4a5878", accent: "#a9c9e8", metal: "#c7d2dd", dark: "#1a2030", boot: "#293247" },
+        desc: "Um manto da cor das noites em que o Reino esquece de amanhecer."
+      },
+      {
+        id: "raiz", name: "Manto de Raiz", price: 1600,
+        colors: { hood: "#30442a", cloak: "#3a4e30", tunic: "#576d40", accent: "#b9c96e", metal: "#89936d", dark: "#1d271a", boot: "#2e3b24" },
+        desc: "Fibras antigas costuradas com paciência. Cheira a chuva e a floresta."
+      }
+    ],
+    arqueira: [
+      {
+        id: "base", name: "Traje de Trilha", price: 0, colors: {},
+        desc: "O manto leve de quem aprendeu a desaparecer entre as árvores."
+      },
+      {
+        id: "musgo", name: "Musgo Antigo", price: 500,
+        colors: { hood: "#3d5b3f", tunic: "#5b7b4a", accent: "#d8b76a", metal: "#9aaa8d", dark: "#1c2a1c", boot: "#33452d" },
+        desc: "O verde que só existe onde a floresta ainda se lembra de ser jovem."
+      },
+      {
+        id: "crepusculo", name: "Crepúsculo", price: 1000,
+        colors: { hood: "#413354", tunic: "#5a4672", accent: "#c9a5e4", metal: "#9c8bb5", dark: "#221b2e", boot: "#372c47" },
+        desc: "A última luz da tarde presa nas dobras do capuz."
+      },
+      {
+        id: "neve", name: "Neve Silenciosa", price: 1600,
+        colors: { hood: "#c8d7d3", tunic: "#a6bbb7", accent: "#e5c77c", metal: "#dbe6e3", dark: "#687c78", boot: "#7d918d" },
+        desc: "O traje dos caçadores da serra. Branco o bastante para perdoar o inverno."
+      }
+    ],
+    guerreiro: [
+      {
+        id: "base", name: "Armadura do Muro", price: 0, colors: {},
+        desc: "Metal amassado em mais noites do que qualquer canção consegue contar."
+      },
+      {
+        id: "ferro", name: "Ferro Negro", price: 500,
+        colors: { armor: "#383d44", metal: "#727c86", accent: "#b33f38", plume: "#c04b43", dark: "#1d2024", boot: "#2c3036" },
+        desc: "A armadura dos que preferem ser difíceis de derrubar."
+      },
+      {
+        id: "ouro", name: "Ouro do Rei", price: 1000,
+        colors: { armor: "#6f5a2e", metal: "#d4b05a", accent: "#e5c06a", plume: "#e5c06a", dark: "#2e2718", boot: "#3b3020" },
+        desc: "Uma armadura que já serviu a um trono. Agora serve a uma promessa."
+      },
+      {
+        id: "sangue", name: "Sangue Antigo", price: 1600,
+        colors: { armor: "#5a2a28", metal: "#a9675a", accent: "#e26a56", plume: "#e26a56", dark: "#2a1515", boot: "#3a2020" },
+        desc: "Vermelho escuro como o ferro depois da batalha. Ainda não pede descanso."
+      }
+    ],
+    mago: [
+      {
+        id: "base", name: "Manto de Cinzas", price: 0, colors: {},
+        desc: "O robe de quem passou a vida catalogando ruínas e perdendo o medo delas."
+      },
+      {
+        id: "cinza", name: "Cinza Fria", price: 500,
+        colors: { robe: "#3f474f", robe2: "#2d3339", accent: "#b9c4d0", dark: "#1d2226", staff: "#6b5b4c", boot: "#2a3035" },
+        desc: "Um manto sóbrio, da cor do que sobra quando a magia termina."
+      },
+      {
+        id: "estrela", name: "Estrela Partida", price: 1000,
+        colors: { robe: "#2d3f63", robe2: "#202f4c", accent: "#8ec7ff", dark: "#141c2d", staff: "#6b4f3a", boot: "#22324d" },
+        desc: "Os fios guardam uma luz azul que não ilumina nada além do caminho."
+      },
+      {
+        id: "abismo", name: "Abismo", price: 1600,
+        colors: { robe: "#432c4c", robe2: "#2d1e36", accent: "#d58ae6", dark: "#1a1220", staff: "#4b3547", boot: "#30213a" },
+        desc: "Roupas que parecem feitas de uma pergunta. A resposta é melhor não vestir."
+      }
+    ],
+    minerador: [
+      {
+        id: "base", name: "Traje de Fundo", price: 0, colors: {},
+        desc: "Lona, couro e poeira. O uniforme de quem voltou de onde o mapa termina."
+      },
+      {
+        id: "cobre", name: "Cobre Velho", price: 500,
+        colors: { armor: "#6b432d", helmet: "#b0703e", accent: "#e0a84e", metal: "#bd854e", dark: "#2a1a12", boot: "#42291b" },
+        desc: "As placas de cobre que a mina deixou como lembrança."
+      },
+      {
+        id: "cristal", name: "Cristal da Mina", price: 1000,
+        colors: { armor: "#3b4a55", helmet: "#7fa2b0", accent: "#8fe3df", metal: "#9dbac4", dark: "#1c262d", boot: "#2a363f" },
+        desc: "Pedra clara o bastante para devolver a luz que o fundo engoliu."
+      },
+      {
+        id: "obsidiana", name: "Obsidiana", price: 1600,
+        colors: { armor: "#2c2435", helmet: "#4a3e5c", accent: "#b98add", metal: "#6f5a85", dark: "#18131f", boot: "#241d2d" },
+        desc: "Vidro vulcânico polido pelo tempo. Corta a escuridão antes de cortar a pedra."
+      }
+    ]
+  };
+
   const WEAPON_CLASSES = {
     sword: {
       name: "Espada", icon: "sword", ranged: false, range: 38,
@@ -172,103 +283,101 @@
   };
 
   /* Quatro degraus: Rara (inicial), Épica, Lendária, Mítica.
-     O custo é sempre a diferença para o degrau atual. */
+     A progressão vem dos chefes, não de moedas. */
   const WEAPONS = {
     sword: [
       {
         name: "Espada Longa", rarity: "rara", tier: 0, dmg: 14, speed: "Média",
-        cooldown: 24, weight: 5, effect: "none", total: 0, upgrade: 0,
+        cooldown: 24, weight: 5, effect: "none",
         desc: "A lâmina comprida dos que ainda acreditam em distância curta."
       },
       {
         name: "Espada Larga", rarity: "epica", tier: 1, dmg: 22, speed: "Lenta",
-        cooldown: 34, weight: 8, effect: "none", total: 1500, upgrade: 1500,
+        cooldown: 34, weight: 8, effect: "none",
         desc: "Pesada como uma decisão tomada tarde. Deixa marcas no chão."
       },
       {
         name: "Espada Flamejante", rarity: "lendaria", tier: 2, dmg: 26, speed: "Média",
-        cooldown: 24, weight: 6, effect: "burn", total: 2000, upgrade: 500,
+        cooldown: 24, weight: 6, effect: "burn",
         desc: "A lâmina guarda uma fogueira que nunca pediu licença para arder."
       },
       {
         name: "Espada Sombria", rarity: "mitica", tier: 3, dmg: 24, speed: "Média",
-        cooldown: 24, weight: 6, effect: "lifesteal", total: 3000, upgrade: 1000,
+        cooldown: 24, weight: 6, effect: "lifesteal",
         desc: "Corta lembranças. Devolve um pouco da vida que elas levam."
       }
     ],
     bow: [
       {
         name: "Arco de Caça", rarity: "rara", tier: 0, dmg: 16, speed: "Rápida",
-        cooldown: 20, weight: 3, effect: "none", total: 0, upgrade: 0,
+        cooldown: 20, weight: 3, effect: "none",
         desc: "Madeira flexível, corda de tendão. Não erra o que já decidiu acertar."
       },
       {
         name: "Arco Composto", rarity: "epica", tier: 1, dmg: 22, speed: "Rápida",
-        cooldown: 20, weight: 4, effect: "none", total: 1500, upgrade: 1500,
+        cooldown: 20, weight: 4, effect: "none",
         desc: "Cada curva conta uma história de tensão. A flecha discorda em silêncio."
       },
       {
         name: "Arco Flamejante", rarity: "lendaria", tier: 2, dmg: 28, speed: "Média",
-        cooldown: 24, weight: 4, effect: "burn", total: 2000, upgrade: 500,
+        cooldown: 24, weight: 4, effect: "burn",
         desc: "A flecha risca o ar como uma brasa que se recusa a apagar."
       },
       {
         name: "Arco Sombrio", rarity: "mitica", tier: 3, dmg: 26, speed: "Média",
-        cooldown: 24, weight: 5, effect: "lifesteal", total: 3000, upgrade: 1000,
+        cooldown: 24, weight: 5, effect: "lifesteal",
         desc: "Onde a flecha toca, a sombra bebe. A arqueira aprendeu a não olhar."
       }
     ],
     pickaxe: [
       {
         name: "Picareta de Ferro", rarity: "rara", tier: 0, dmg: 18, speed: "Lenta",
-        cooldown: 32, weight: 8, effect: "none", total: 0, upgrade: 0,
+        cooldown: 32, weight: 8, effect: "none",
         desc: "Ferro gasto, cabo de madeira dura. Abriu túneis e sepulturas com a mesma paciência."
       },
       {
         name: "Picareta Ancestral", rarity: "epica", tier: 1, dmg: 24, speed: "Média",
-        cooldown: 28, weight: 7, effect: "spirit", total: 1500, upgrade: 1500,
+        cooldown: 28, weight: 7, effect: "spirit",
         desc: "Os espíritos da mina ainda seguram o cabo junto com você."
       },
       {
         name: "Picareta de Obsidiana", rarity: "lendaria", tier: 2, dmg: 30, speed: "Lenta",
-        cooldown: 34, weight: 9, effect: "burn", total: 2000, upgrade: 500,
+        cooldown: 34, weight: 9, effect: "burn",
         desc: "Pedra que nasceu do fogo. Cada picada devolve o calor com juros."
       },
       {
         name: "Picareta do Abismo", rarity: "mitica", tier: 3, dmg: 28, speed: "Média",
-        cooldown: 30, weight: 8, effect: "lifesteal", total: 3000, upgrade: 1000,
+        cooldown: 30, weight: 8, effect: "lifesteal",
         desc: "Foi encontrada onde a mina deixa de ter fundo. Ainda está descendo."
       }
     ],
     staff: [
       {
         name: "Cajado de Cristal", rarity: "rara", tier: 0, dmg: 15, speed: "Média",
-        cooldown: 23, weight: 3, effect: "none", total: 0, upgrade: 0,
+        cooldown: 23, weight: 3, effect: "none",
         desc: "Um cristal pequeno, uma luz teimosa. O bastante para começar."
       },
       {
         name: "Cajado Arcano", rarity: "epica", tier: 1, dmg: 21, speed: "Média",
-        cooldown: 23, weight: 4, effect: "none", total: 1500, upgrade: 1500,
+        cooldown: 23, weight: 4, effect: "none",
         desc: "Runas antigas giram devagar ao redor da ponta, como peixes cegos."
       },
       {
         name: "Cajado Flamejante", rarity: "lendaria", tier: 2, dmg: 27, speed: "Média",
-        cooldown: 25, weight: 5, effect: "burn", total: 2000, upgrade: 500,
+        cooldown: 25, weight: 5, effect: "burn",
         desc: "O fogo não obedece. Ele apenas reconhece o mago como velho conhecido."
       },
       {
         name: "Cajado Sombrio", rarity: "mitica", tier: 3, dmg: 25, speed: "Média",
-        cooldown: 25, weight: 5, effect: "lifesteal", total: 3000, upgrade: 1000,
+        cooldown: 25, weight: 5, effect: "lifesteal",
         desc: "A escuridão não é vazia. Ela tem dentes, e aprendeu a morder por você."
       }
     ]
   };
 
-  /* A loja vende a arma pronta. Forjar na classe atual continua mais barato. */
-  const SHOP_PRICES = [400, 1600, 2400, 3200];
-  Object.keys(WEAPONS).forEach(function (cls) {
-    WEAPONS[cls].forEach(function (w) { w.shopPrice = SHOP_PRICES[w.tier] || 400; });
-  });
+  /* As armas não são compradas: Colosso, Vulto e Corvo entregam,
+     respectivamente, os degraus Épico, Lendário e Mítico da classe
+     equipada. Ferrugem e o Rei rendem moedas para o vestiário. */
 
   const DIFFICULTIES = [
     {
@@ -298,7 +407,7 @@
     colosso: {
       name: "Colosso", title: "O Guardião das Ruínas", hp: 250, w: 84, h: 94,
       contact: 15, speed: 0.72, flying: false, attacks: ["slam", "charge", "volley"],
-      coin: 500, theme: "ruins",
+      coin: 500, dropTier: 1, theme: "ruins",
       taunt: "PEDRA. RAIZ. SILÊNCIO. VOCÊ NÃO PASSA.",
       taunt2: "A RUÍNA TAMBÉM SABE SE LEVANTAR.",
       deathLine: "O Colosso se desfaz. Sob as pedras, um desenho de criança espera há séculos.",
@@ -307,7 +416,7 @@
     vulto: {
       name: "Vulto", title: "O Que Sussurra Entre as Árvores", hp: 300, w: 64, h: 94,
       contact: 16, speed: 0.92, flying: true, hover: 258, attacks: ["volley", "teleport", "summon"],
-      coin: 500, theme: "forest",
+      coin: 500, dropTier: 2, theme: "forest",
       taunt: "VOCÊ OUVE A FLORESTA? ELA NÃO PEDE SOCORRO. ELA CHORA.",
       taunt2: "AS RAÍZES SABEM O SEU NOME. EU TAMBÉM.",
       deathLine: "O Vulto se desfaz em folhas secas. Uma canção de ninar escapa das raízes.",
@@ -316,7 +425,7 @@
     corvo: {
       name: "Corvo Cinzento", title: "A Asa Que Cobre o Vale", hp: 350, w: 116, h: 68,
       contact: 16, speed: 1.05, flying: true, hover: 198, attacks: ["dive", "feathers", "gust"],
-      coin: 500, theme: "mountain",
+      coin: 500, dropTier: 3, theme: "mountain",
       taunt: "O VALE É MEU. O INVERNO É MEU. ATÉ O SEU ÚLTIMO SUSPIRO É MEU.",
       taunt2: "AINDA NÃO APRENDEU A CAIR?",
       deathLine: "O Corvo cai como uma noite que termina. Uma pena cinzenta pousa na sua mão.",
@@ -586,7 +695,7 @@
   };
 
   TP.DATA = {
-    RARITIES, CHARACTERS, WEAPON_CLASSES, WEAPONS, DIFFICULTIES,
+    RARITIES, CHARACTERS, OUTFITS, WEAPON_CLASSES, WEAPONS, DIFFICULTIES,
     BOSSES, MEMORIES, LEVELS, ENDINGS
   };
 })();

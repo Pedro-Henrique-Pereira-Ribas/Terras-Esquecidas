@@ -47,8 +47,7 @@
     return {
       name: w.name, rarity: w.rarity, rarityLabel: rar.label, tier: w.tier,
       dmg: w.dmg, speed: w.speed, cooldown: w.cooldown, weight: w.weight,
-      effect: w.effect, desc: w.desc, upgrade: w.upgrade, total: w.total,
-      shopPrice: w.shopPrice,
+      effect: w.effect, desc: w.desc,
       className: DATA.WEAPON_CLASSES[weaponClass].name,
       cls: weaponClass
     };
@@ -66,6 +65,33 @@
     run.weaponTier = tier;
     if (state.player) state.player.weapon = getWeapon(run.char, tier, cls);
     return true;
+  }
+
+  function dropBossWeapon(run, boss) {
+    const tier = boss.cfg.dropTier;
+    if (tier == null || !run) return null;
+    const cls = run.weaponClass;
+    const def = DATA.WEAPONS[cls] && DATA.WEAPONS[cls][tier];
+    if (!def || ownsWeapon(run, cls, tier)) return null;
+    // Drops seguem a progressão: nenhum chefe entrega um degrau saltado.
+    if (tier > 0 && !ownsWeapon(run, cls, tier - 1)) return null;
+    run.ownedWeapons[weaponKey(cls, tier)] = true;
+    equipRunWeapon(run, cls, tier);
+    const rar = DATA.RARITIES[def.rarity];
+    return {
+      name: def.name,
+      rarity: def.rarity,
+      rarityLabel: rar ? rar.label : "Rara",
+      tier: tier,
+      cls: cls,
+      className: DATA.WEAPON_CLASSES[cls].name
+    };
+  }
+
+  function joinRewards(parts) {
+    if (!parts.length) return "";
+    if (parts.length === 1) return parts[0];
+    return parts.slice(0, -1).join(", ") + " e " + parts[parts.length - 1];
   }
 
   function syncCamp() {
@@ -95,9 +121,8 @@
     restartPhase: restartPhase,
     returnToTitle: returnToTitle,
     continueFromCheckpoint: continueFromCheckpoint,
-    buyUpgrade: buyUpgrade,
-    buyWeapon: buyWeapon,
-    equipWeapon: equipWeapon,
+    buyOutfit: buyOutfit,
+    equipOutfit: equipOutfit,
     campContinue: campContinue,
     chooseEnding: chooseEnding
   };
@@ -265,9 +290,10 @@
   }
 
   function beginJourney() {
-    const char = DATA.CHARACTERS.find(function (c) { return c.id === state.selectedChar; });
+    const baseChar = DATA.CHARACTERS.find(function (c) { return c.id === state.selectedChar; });
     const diff = DATA.DIFFICULTIES.find(function (d) { return d.id === state.selectedDiff; });
-    if (!char || !diff) return;
+    if (!baseChar || !diff) return;
+    const char = TP.ui.characterWithOutfit ? TP.ui.characterWithOutfit(baseChar) : baseChar;
     state.run = {
       char: char,
       diff: diff,
@@ -284,6 +310,7 @@
       bossCoins: [false, false, false, false],
       finalCoinClaimed: false,
       finalForgeDone: false,
+      lastDrop: null,
       deaths: 0,
       startedAt: state.time,
       ending: null
@@ -518,9 +545,11 @@
     const isFinal = context.type === "finalForge";
     const nextDef = context.nextIndex != null ? DATA.LEVELS[context.nextIndex] : null;
     const dropped = context.dropped || 0;
-    const speech = isFinal
-      ? "O Rei deixou cair mil moedas antes de se erguer de novo. Não pergunte como. A forja está aberta, e o trono ainda espera."
+    const weaponDrop = context.weaponDrop || null;
+    let speech = isFinal
+      ? "O Rei deixou cair mil moedas antes de se erguer de novo. Não pergunte como. A forja está aberta, o vestiário também, e o trono ainda espera."
       : level.def.camp + (dropped ? "  O chefe deixou " + fmt(dropped) + " moedas entre as pedras." : "");
+    if (weaponDrop) speech += "  A arma " + weaponDrop.name + " veio junto.";
     state.campContext = context;
     state.campData = {
       type: context.type,
@@ -529,79 +558,77 @@
       tier: run.weaponTier,
       owned: run.ownedWeapons,
       coins: run.coins,
+      weaponDrop: weaponDrop,
       speech: speech,
       kicker: isFinal ? "ENTRE O REI E A COROA" : "ACAMPAMENTO · " + level.def.name.toUpperCase(),
       title: isFinal ? "A Última Forja" : "A Forja de Pedro",
       hint: isFinal
-        ? "O ferreiro aquece o metal com pressa. A loja também está aberta. O Rei espera do outro lado da fogueira."
-        : (nextDef ? "Próxima parada: " + nextDef.name + ". Forje, compre ou troque sua arma antes de seguir." : ""),
+        ? "As armas vêm dos chefes. No vestiário, as moedas viram roupas para os heróis. O Rei espera do outro lado da fogueira."
+        : (nextDef ? "Próxima parada: " + nextDef.name + ". As armas caem dos chefes; as moedas compram roupas no vestiário." : ""),
       continueLabel: isFinal ? "ENFRENTAR O REI" : (nextDef ? "SEGUIR PARA " + nextDef.name.toUpperCase() : "SEGUIR VIAGEM")
     };
     TP.ui.showCamp(state.campData);
   }
 
-  function buyUpgrade() {
+  function outfitDefFor(charId, outfitId) {
+    const list = DATA.OUTFITS[charId] || [];
+    for (let i = 0; i < list.length; i++) {
+      if (list[i].id === outfitId) return list[i];
+    }
+    return null;
+  }
+
+  function applyRunOutfit(charId, outfitId) {
+    const run = state.run;
+    if (!run || !run.char || run.char.id !== charId) return;
+    const base = DATA.CHARACTERS.find(function (c) { return c.id === charId; });
+    if (!base) return;
+    const clothed = TP.ui.characterWithOutfit(base, outfitId);
+    run.char.palette = clothed.palette;
+    run.char.outfitId = clothed.outfitId;
+    run.char.outfitName = clothed.outfitName;
+    if (state.player) state.player.char = run.char;
+  }
+
+  function buyOutfit(charId, outfitId) {
     if (state.mode !== "camp" || !state.run) return;
     const run = state.run;
-    const cls = run.weaponClass;
-    const nextTier = run.weaponTier + 1;
-    if (nextTier > 3) return;
-    const next = DATA.WEAPONS[cls][nextTier];
-    const cost = next.upgrade;
-    if (run.coins < cost) {
-      TP.ui.toast("Pedro assopra a brasa: “Ainda faltam " + fmt(cost - run.coins) + " moedas.”", "danger", 2200);
+    const char = DATA.CHARACTERS.find(function (c) { return c.id === charId; });
+    const outfit = outfitDefFor(charId, outfitId);
+    if (!char || !outfit) return;
+
+    if (TP.ui.outfitOwned(charId, outfitId)) {
+      equipOutfit(charId, outfitId);
       return;
     }
-    run.coins -= cost;
-    run.ownedWeapons[weaponKey(cls, nextTier)] = true;
-    equipRunWeapon(run, cls, nextTier);
+    if (run.coins < outfit.price) {
+      TP.ui.toast("Pedro conta as moedas: “Faltam " + fmt(outfit.price - run.coins) + " para esse traje.”", "danger", 2400);
+      return;
+    }
+
+    run.coins -= outfit.price;
+    TP.ui.markOutfitOwned(charId, outfitId);
+    applyRunOutfit(charId, outfitId);
     TP.audio.sfx("buy");
-    TP.ui.toast('<strong>' + next.name + '</strong> forjada. ' + DATA.RARITIES[next.rarity].label + '. A brasa mudou de cor.', "memory", 3000);
+    const current = run.char.id === charId;
+    TP.ui.toast('<strong>' + outfit.name + '</strong> ' + (current ? "vestido agora" : "guardado para " + char.name) +
+      '. A peça fica no vestiário deste navegador.', "memory", 3400);
     syncCamp();
     TP.ui.invalidateHUD();
   }
 
-  function buyWeapon(cls, tier) {
+  function equipOutfit(charId, outfitId) {
     if (state.mode !== "camp" || !state.run) return;
-    tier = Number(tier);
     const run = state.run;
-    const weapons = DATA.WEAPONS[cls];
-    const def = weapons && weapons[tier];
-    if (!def) return;
+    const char = DATA.CHARACTERS.find(function (c) { return c.id === charId; });
+    const outfit = outfitDefFor(charId, outfitId);
+    if (!char || !outfit || !TP.ui.outfitOwned(charId, outfitId)) return;
+    if (TP.ui.equippedOutfitId(charId) === outfitId) return;
 
-    if (ownsWeapon(run, cls, tier)) {
-      equipWeapon(cls, tier);
-      return;
-    }
-    if (tier > 0 && !ownsWeapon(run, cls, tier - 1)) {
-      TP.ui.toast("Pedro cruza os braços: “Essa só sai depois de você comprar a anterior.”", "danger", 2400);
-      return;
-    }
-    const price = def.shopPrice || 0;
-    if (run.coins < price) {
-      TP.ui.toast("Pedro conta as moedas: “Faltam " + fmt(price - run.coins) + " para essa arma.”", "danger", 2400);
-      return;
-    }
-
-    run.coins -= price;
-    run.ownedWeapons[weaponKey(cls, tier)] = true;
-    equipRunWeapon(run, cls, tier);
-    TP.audio.sfx("buy");
-    TP.ui.toast('<strong>' + def.name + '</strong> comprada e equipada. A loja cheira a óleo e brasa.', "memory", 3000);
-    syncCamp();
-    TP.ui.invalidateHUD();
-  }
-
-  function equipWeapon(cls, tier) {
-    if (state.mode !== "camp" || !state.run) return;
-    tier = Number(tier);
-    const run = state.run;
-    const def = DATA.WEAPONS[cls] && DATA.WEAPONS[cls][tier];
-    if (!def || !ownsWeapon(run, cls, tier)) return;
-    if (run.weaponClass === cls && run.weaponTier === tier) return;
-    equipRunWeapon(run, cls, tier);
+    TP.ui.setOutfitEquipped(charId, outfitId);
+    applyRunOutfit(charId, outfitId);
     TP.audio.sfx("click");
-    TP.ui.toast('<strong>' + def.name + '</strong> equipada.', "coin", 2000);
+    TP.ui.toast('<strong>' + outfit.name + '</strong> ' + (run.char.id === charId ? "vestido" : "reservado para " + char.name) + '.', "coin", 2200);
     syncCamp();
     TP.ui.invalidateHUD();
   }
@@ -1820,6 +1847,7 @@
     burst(b.x + b.w / 2, b.y + b.h / 2, "#d05e4a", 26, 2.5, 2, 0.12);
     TP.ui.showTouch(false);
     TP.ui.invalidateHUD();
+    run.lastDrop = null;
 
     if (b.cfg.final) {
       if (!run.finalCoinClaimed) {
@@ -1827,11 +1855,22 @@
         run.coins += 1000;
         TP.ui.toast("A coroa deixou cair <strong>1.000 moedas</strong>.", "coin", 3000);
       }
-    } else if (!run.bossCoins[level.index]) {
-      run.bossCoins[level.index] = true;
-      run.coins += b.cfg.coin;
-      TP.audio.sfx("coin");
-      TP.ui.toast("O chefe deixou cair <strong>" + fmt(b.cfg.coin) + " moedas</strong>.", "coin", 3200);
+    } else {
+      const rewards = [];
+      if (!run.bossCoins[level.index]) {
+        run.bossCoins[level.index] = true;
+        run.coins += b.cfg.coin;
+        rewards.push("<strong>" + fmt(b.cfg.coin) + " moedas</strong>");
+      }
+      const drop = dropBossWeapon(run, b);
+      if (drop) {
+        run.lastDrop = drop;
+        rewards.push("<strong>" + drop.name + "</strong>");
+      }
+      if (rewards.length) {
+        TP.audio.sfx(drop ? "memory" : "coin");
+        TP.ui.toast("O chefe deixou " + joinRewards(rewards) + ".", drop ? "memory" : "coin", 3600);
+      }
       TP.ui.invalidateHUD();
     }
   }
@@ -1868,7 +1907,8 @@
         showCamp({
           type: "afterBoss",
           nextIndex: level.index + 1,
-          dropped: b.cfg.coin
+          dropped: b.cfg.coin,
+          weaponDrop: run.lastDrop
         });
       }
     });
@@ -1902,7 +1942,7 @@
       TP.ui.invalidateHUD();
       TP.ui.toast("O Rei se ajoelha por um instante. <strong>1.000 moedas</strong> caem da coroa.", "coin", 3600);
     }
-    TP.ui.toast("<strong>Pedro:</strong> “A forja está aberta. Escolha o que vai levar para o fim.”", "memory", 4200);
+    TP.ui.toast("<strong>Pedro:</strong> “A forja está aberta. O vestiário também. Escolha o que vai vestir para o fim.”", "memory", 4200);
 
     after(95, function () {
       if (!state.level || state.level.token !== token) return;

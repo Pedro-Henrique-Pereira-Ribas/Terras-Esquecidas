@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <meta name="theme-color" content="#0b0d0b">
-  <meta name="description" content="Terra Perdida — uma jornada de plataforma em pixel art por cinco terras esquecidas. Escolha seu herói, forje sua arma e decida o destino de um reino sem nome.">
+  <meta name="description" content="Terra Perdida — uma jornada de plataforma em pixel art por cinco terras esquecidas. Escolha seu herói, tome armas dos chefes, vista seu traje e decida o destino de um reino sem nome.">
   <title>Terra Perdida — Cinco terras. Uma memória esquecida.</title>
   <link rel="icon" href="favicon.svg" type="image/svg+xml">
   <link rel="stylesheet" href="css/style.css">
@@ -256,17 +256,17 @@
                 <h3>Combate</h3>
                 <p><kbd>J</kbd> ou <kbd>X</kbd> para atacar. Clique esquerdo no canvas também ataca.</p>
                 <p>Espada e picareta são corpo a corpo. O arco fere mais longe; o cajado é mais forte na distância média. A arma define o alcance, o dano e o efeito.</p>
-                <p>No acampamento, use a <b>Forja</b> para subir a raridade da arma equipada ou a <b>Loja</b> para comprar armas de outras classes e trocar a que está em uso.</p>
+                <p>As armas não são compradas: cada guardião entrega o próximo degrau da classe equipada. A aba <b>Armas</b> no acampamento mostra o próximo drop.</p>
               </article>
               <article class="how-card">
-                <h3>Forja de Pedro</h3>
-                <p>Cada chefe guarda moedas. Entre uma fase e outra, Pedro usa a forja para subir a raridade da sua arma:</p>
+                <h3>Armas e trajes</h3>
+                <p>Os três primeiros chefes deixam uma arma melhor. Ela é equipada automaticamente:</p>
                 <ul class="how-list">
-                  <li><b>Rara</b> inicial → <b>Épica</b> por 1.500</li>
-                  <li><b>Épica</b> → <b>Lendária</b> por +500</li>
-                  <li><b>Lendária</b> → <b>Mítica</b> por +1.000</li>
+                  <li><b>Colosso</b> → arma <b>Épica</b></li>
+                  <li><b>Vulto</b> → arma <b>Lendária</b></li>
+                  <li><b>Corvo Cinzento</b> → arma <b>Mítica</b></li>
                 </ul>
-                <p>O caminho completo custa 3.000 moedas — exatamente o que o Reino entrega.</p>
+                <p>Ferrugem e o Rei rendem moedas. Use-as no <b>Vestiário</b> para comprar roupas para qualquer herói. As roupas ficam guardadas neste navegador e valem para novas jornadas.</p>
               </article>
               <article class="how-card">
                 <h3>Memórias e escolhas</h3>
@@ -284,7 +284,7 @@
               </article>
             </div>
             <footer class="screen-foot">
-              <p class="foot-note">O jogo guarda sua conta local, o servidor escolhido e a preferência de som. Cada jornada começa do zero.</p>
+              <p class="foot-note">O jogo guarda sua conta local, o servidor escolhido, a preferência de som e as roupas desbloqueadas. Cada jornada começa do zero.</p>
               <button id="btn-how-close" class="btn btn-primary" type="button">ENTENDI <span>›</span></button>
             </footer>
           </div>
@@ -310,14 +310,14 @@
                 <p class="camp-sign">— Pedro</p>
               </div>
               <div class="forge">
-                <div id="camp-tabs" class="camp-tabs" role="tablist" aria-label="Forja e loja">
-                  <button id="camp-tab-forge" class="camp-tab active" type="button" role="tab" aria-selected="true" data-camp-tab="forge">FORJA</button>
-                  <button id="camp-tab-shop" class="camp-tab" type="button" role="tab" aria-selected="false" data-camp-tab="shop">LOJA</button>
+                <div id="camp-tabs" class="camp-tabs" role="tablist" aria-label="Armas e vestiário">
+                  <button id="camp-tab-forge" class="camp-tab active" type="button" role="tab" aria-selected="true" data-camp-tab="forge">ARMAS</button>
+                  <button id="camp-tab-wardrobe" class="camp-tab" type="button" role="tab" aria-selected="false" data-camp-tab="wardrobe">VESTIÁRIO</button>
                 </div>
                 <div id="camp-forge-panel" class="camp-tab-panel">
                   <div class="forge-head">
                     <div>
-                      <p class="kicker">FORJA DE CLASSE</p>
+                      <p class="kicker">ARSENAL DE CLASSE</p>
                       <h3 id="forge-weapon-class">Espada</h3>
                     </div>
                     <span id="forge-current" class="forge-current">Rara</span>
@@ -326,18 +326,18 @@
                   <div id="forge-next" class="forge-next"></div>
                   <div id="forge-action" class="forge-action"></div>
                 </div>
-                <div id="camp-shop-panel" class="camp-tab-panel hidden">
+                <div id="camp-wardrobe-panel" class="camp-tab-panel hidden">
                   <div class="forge-head">
                     <div>
-                      <p class="kicker">LOJA DE PEDRO</p>
-                      <h3>Armas à venda</h3>
+                      <p class="kicker">VESTIÁRIO DE PEDRO</p>
+                      <h3>Trajes dos heróis</h3>
                     </div>
-                    <span id="shop-current" class="forge-current">Rara</span>
+                    <span id="wardrobe-current" class="forge-current">Traje inicial</span>
                   </div>
-                  <div id="shop-class-tabs" class="shop-class-tabs" role="tablist" aria-label="Classes de arma"></div>
-                  <div id="shop-grid" class="weapon-path shop-grid"></div>
-                  <div id="shop-detail" class="forge-next"></div>
-                  <div id="shop-action" class="forge-action"></div>
+                  <div id="wardrobe-char-tabs" class="shop-class-tabs wardrobe-char-tabs" role="tablist" aria-label="Heróis"></div>
+                  <div id="wardrobe-grid" class="weapon-path outfit-grid"></div>
+                  <div id="wardrobe-detail" class="forge-next"></div>
+                  <div id="wardrobe-action" class="forge-action"></div>
                 </div>
               </div>
             </div>

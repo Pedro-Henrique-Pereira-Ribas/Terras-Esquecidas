@@ -264,14 +264,16 @@
   function RARITY_GLOW(c) { return c; }
 
   art.makePortrait = function (char) {
-    if (art.portraitCache[char.id]) return art.portraitCache[char.id];
+    // O traje muda a paleta; o cache precisa separar cada combinação.
+    const key = char.id + ":" + (char.outfitId || "base");
+    if (art.portraitCache[key]) return art.portraitCache[key];
     const c = document.createElement("canvas");
     c.width = 96; c.height = 96;
     const ctx = c.getContext("2d");
     ctx.imageSmoothingEnabled = false;
     art.drawCharacterBust(ctx, char, 96, 96);
-    art.portraitCache[char.id] = c.toDataURL("image/png");
-    return art.portraitCache[char.id];
+    art.portraitCache[key] = c.toDataURL("image/png");
+    return art.portraitCache[key];
   };
 
   /* ============================================================

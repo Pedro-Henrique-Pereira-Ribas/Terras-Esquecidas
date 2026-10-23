@@ -15,8 +15,9 @@
     dlg: null,
     camp: null,
     campTab: "forge",
-    shopClass: null,
-    shopTier: 0,
+    wardrobe: { owned: {}, equipped: {} },
+    wardrobeChar: null,
+    wardrobeSelected: null,
     levelCardTimer: null,
     lastHud: "",
     lastProgress: -1,
@@ -33,6 +34,7 @@
     "screen-camp", "screen-pause", "screen-journal", "screen-gameover", "screen-ending"];
   const ACCOUNT_KEY = "terraPerdida.accounts.v1";
   const SESSION_KEY = "terraPerdida.session.v1";
+  const WARDROBE_KEY = "terraPerdida.wardrobe.v1";
   const DEFAULT_SERVER = "Reino Sem Nome";
 
   function q(id) { return document.getElementById(id); }
@@ -74,9 +76,9 @@
       forgeClass: q("forge-weapon-class"), forgeCurrent: q("forge-current"),
       weaponPath: q("weapon-path"), forgeNext: q("forge-next"), forgeAction: q("forge-action"),
       campTabs: q("camp-tabs"), campForgePanel: q("camp-forge-panel"),
-      campShopPanel: q("camp-shop-panel"), shopClassTabs: q("shop-class-tabs"),
-      shopCurrent: q("shop-current"), shopGrid: q("shop-grid"),
-      shopDetail: q("shop-detail"), shopAction: q("shop-action"),
+      campWardrobePanel: q("camp-wardrobe-panel"), wardrobeCharTabs: q("wardrobe-char-tabs"),
+      wardrobeCurrent: q("wardrobe-current"), wardrobeGrid: q("wardrobe-grid"),
+      wardrobeDetail: q("wardrobe-detail"), wardrobeAction: q("wardrobe-action"),
       campContinue: q("btn-camp-continue"),
       endingChoiceView: q("ending-choice-view"), endingResultView: q("ending-result-view"),
       endingMemories: q("ending-memories"), endingCoins: q("ending-coins"), endingCls: q("ending-cls"),
@@ -108,6 +110,7 @@
     });
 
     bindButtons();
+    loadWardrobe();
     buildCharacterCards();
     buildDifficultyCards();
     loadAccountStore();
@@ -204,18 +207,6 @@
       TP.audio.sfx("click");
       call("selectDifficulty", card.getAttribute("data-diff"));
     });
-    UI.el.forgeAction.addEventListener("click", function (e) {
-      const btn = e.target.closest("[data-buy-tier]");
-      if (!btn) return;
-      TP.audio.sfx("click");
-      call("buyUpgrade");
-    });
-    UI.el.weaponPath.addEventListener("click", function (e) {
-      const card = e.target.closest("[data-buy-tier]");
-      if (!card) return;
-      TP.audio.sfx("click");
-      call("buyUpgrade");
-    });
     UI.el.campTabs.addEventListener("click", function (e) {
       const tab = e.target.closest("[data-camp-tab]");
       if (!tab) return;
@@ -223,31 +214,31 @@
       TP.audio.sfx("click");
       UI.refreshCamp();
     });
-    UI.el.shopClassTabs.addEventListener("click", function (e) {
-      const tab = e.target.closest("[data-shop-class]");
+    UI.el.wardrobeCharTabs.addEventListener("click", function (e) {
+      const tab = e.target.closest("[data-wardrobe-char]");
       if (!tab) return;
-      const cls = tab.getAttribute("data-shop-class");
-      if (!TP.DATA.WEAPONS[cls]) return;
-      UI.shopClass = cls;
-      UI.shopTier = UI.camp && UI.camp.weaponClass === cls ? UI.camp.tier : 0;
+      const charId = tab.getAttribute("data-wardrobe-char");
+      if (!TP.DATA.OUTFITS[charId]) return;
+      UI.wardrobeChar = charId;
+      UI.wardrobeSelected = UI.equippedOutfitId(charId);
       TP.audio.sfx("click");
       UI.refreshCamp();
     });
-    UI.el.shopGrid.addEventListener("click", function (e) {
-      const card = e.target.closest("[data-shop-tier]");
+    UI.el.wardrobeGrid.addEventListener("click", function (e) {
+      const card = e.target.closest("[data-wardrobe-outfit]");
       if (!card) return;
-      UI.shopTier = Number(card.getAttribute("data-shop-tier"));
+      UI.wardrobeSelected = card.getAttribute("data-wardrobe-outfit");
       TP.audio.sfx("click");
       UI.refreshCamp();
     });
-    UI.el.shopAction.addEventListener("click", function (e) {
-      const btn = e.target.closest("[data-shop-act]");
+    UI.el.wardrobeAction.addEventListener("click", function (e) {
+      const btn = e.target.closest("[data-wardrobe-act]");
       if (!btn) return;
-      const cls = btn.getAttribute("data-shop-class");
-      const tier = Number(btn.getAttribute("data-shop-tier"));
+      const charId = btn.getAttribute("data-wardrobe-char");
+      const outfitId = btn.getAttribute("data-wardrobe-outfit");
       TP.audio.sfx("click");
-      if (btn.getAttribute("data-shop-act") === "buy") call("buyWeapon", cls, tier);
-      else call("equipWeapon", cls, tier);
+      if (btn.getAttribute("data-wardrobe-act") === "buy") call("buyOutfit", charId, outfitId);
+      else call("equipOutfit", charId, outfitId);
     });
   }
 
@@ -477,6 +468,112 @@
   };
 
   /* ============================================================
+     VESTIÁRIO / ROUPAS
+     ============================================================ */
+  function outfitKey(charId, outfitId) { return charId + ":" + outfitId; }
+
+  function outfitList(charId) {
+    return TP.DATA.OUTFITS[charId] || [];
+  }
+
+  function outfitDef(charId, outfitId) {
+    const list = outfitList(charId);
+    for (let i = 0; i < list.length; i++) {
+      if (list[i].id === outfitId) return list[i];
+    }
+    return null;
+  }
+
+  function outfitOwned(charId, outfitId) {
+    const def = outfitDef(charId, outfitId);
+    if (!def) return false;
+    if (def.price <= 0) return true;
+    return !!UI.wardrobe.owned[outfitKey(charId, outfitId)];
+  }
+
+  function equippedOutfitId(charId) {
+    const wanted = UI.wardrobe.equipped[charId];
+    return outfitDef(charId, wanted) ? wanted : "base";
+  }
+
+  function withOutfit(char, outfitId) {
+    const def = outfitDef(char.id, outfitId || equippedOutfitId(char.id)) || outfitList(char.id)[0] || null;
+    const clothed = {};
+    Object.keys(char).forEach(function (key) { clothed[key] = char[key]; });
+    const palette = {};
+    Object.keys(char.palette || {}).forEach(function (key) { palette[key] = char.palette[key]; });
+    if (def && def.colors) {
+      Object.keys(def.colors).forEach(function (key) { palette[key] = def.colors[key]; });
+    }
+    clothed.palette = palette;
+    clothed.outfitId = def ? def.id : "base";
+    clothed.outfitName = def ? def.name : "Traje de Estrada";
+    return clothed;
+  }
+
+  function saveWardrobe() {
+    accountStorageSet(WARDROBE_KEY, JSON.stringify(UI.wardrobe));
+  }
+
+  function loadWardrobe() {
+    let stored = null;
+    try {
+      stored = JSON.parse(accountStorageGet(WARDROBE_KEY) || "null");
+    } catch (err) {
+      stored = null;
+    }
+    const owned = stored && stored.owned && typeof stored.owned === "object" ? stored.owned : {};
+    const equipped = stored && stored.equipped && typeof stored.equipped === "object" ? stored.equipped : {};
+    UI.wardrobe = { owned: {}, equipped: {} };
+    TP.DATA.CHARACTERS.forEach(function (char) {
+      outfitList(char.id).forEach(function (outfit) {
+        if (outfit.price <= 0 || owned[outfitKey(char.id, outfit.id)]) {
+          UI.wardrobe.owned[outfitKey(char.id, outfit.id)] = true;
+        }
+      });
+      const wanted = equipped[char.id];
+      if (wanted && outfitOwned(char.id, wanted)) {
+        UI.wardrobe.equipped[char.id] = wanted;
+      }
+    });
+  }
+
+  function rebuildCharacterCards() {
+    if (!UI.el.charGrid) return;
+    UI.charsBuilt = false;
+    buildCharacterCards();
+    if (UI.selectedChar) UI.updateCharacterSelection(UI.selectedChar);
+  }
+
+  UI.outfitList = outfitList;
+  UI.getOutfit = outfitDef;
+  UI.outfitOwned = outfitOwned;
+  UI.equippedOutfitId = equippedOutfitId;
+  UI.characterWithOutfit = withOutfit;
+  UI.outfitCount = function (charId) {
+    return outfitList(charId).filter(function (outfit) {
+      return outfitOwned(charId, outfit.id);
+    }).length;
+  };
+
+  UI.markOutfitOwned = function (charId, outfitId) {
+    if (!outfitDef(charId, outfitId)) return false;
+    UI.wardrobe.owned[outfitKey(charId, outfitId)] = true;
+    UI.wardrobe.equipped[charId] = outfitId;
+    saveWardrobe();
+    rebuildCharacterCards();
+    return true;
+  };
+
+  UI.setOutfitEquipped = function (charId, outfitId) {
+    if (!outfitOwned(charId, outfitId)) return false;
+    UI.wardrobe.equipped[charId] = outfitId;
+    saveWardrobe();
+    rebuildCharacterCards();
+    return true;
+  };
+
+  /* ============================================================
      TELAS
      ============================================================ */
   UI.showScreen = function (id) {
@@ -559,7 +656,8 @@
   function buildCharacterCards() {
     if (UI.charsBuilt) return;
     const chars = TP.DATA.CHARACTERS;
-    UI.el.charGrid.innerHTML = chars.map(function (c) {
+    UI.el.charGrid.innerHTML = chars.map(function (base) {
+      const c = withOutfit(base);
       const w = TP.DATA.WEAPONS[c.weaponClass][0];
       const wc = TP.DATA.WEAPON_CLASSES[c.weaponClass];
       const g = gradeClass(c.grade);
@@ -587,6 +685,7 @@
   }
 
   UI.showCharacters = function () {
+    buildCharacterCards();
     UI.showScreen("screen-characters");
     UI.updateCharacterSelection(UI.selectedChar);
   };
@@ -603,8 +702,10 @@
       return;
     }
     const w = TP.DATA.WEAPONS[c.weaponClass][0];
+    const outfit = UI.getOutfit(c.id, equippedOutfitId(c.id));
     UI.el.charNote.innerHTML = '<strong>' + esc(c.name) + '</strong> · ' + esc(c.classLabel) +
-      ' · 100 de vida · arma inicial <strong>' + esc(w.name) + '</strong> (' + esc(rarLabel(w)) + '). ' +
+      ' · 100 de vida · arma inicial <strong>' + esc(w.name) + '</strong> (' + esc(rarLabel(w)) + ') · traje <strong>' +
+      esc(outfit ? outfit.name : "Traje de Estrada") + '</strong>. ' +
       esc(c.passive) + ': ' + esc(c.passiveText);
   };
 
@@ -758,8 +859,8 @@
   UI.showCamp = function (data) {
     UI.camp = data;
     UI.campTab = "forge";
-    UI.shopClass = data.weaponClass || data.char.weaponClass;
-    UI.shopTier = data.tier || 0;
+    UI.wardrobeChar = data.char.id;
+    UI.wardrobeSelected = UI.equippedOutfitId(data.char.id);
     UI.clearToasts();
     UI.showScreen("screen-camp");
     UI.showHUD(false);
@@ -767,15 +868,20 @@
     UI.refreshCamp();
   };
 
-  function ownedIn(d, cls, tier) {
-    return !!(d && d.owned && d.owned[cls + ":" + tier]);
-  }
-
   function effectLabel(effect) {
     if (effect === "burn") return "Incendeia o alvo por alguns segundos.";
     if (effect === "lifesteal") return "Rouba um pouco de vida a cada acerto.";
     if (effect === "spirit") return "Libera uma onda espiritual no golpe.";
     return "Sem efeito elemental — só aço e intenção.";
+  }
+
+  function bossForDropTier(tier) {
+    const levels = TP.DATA.LEVELS;
+    for (let i = 0; i < levels.length; i++) {
+      const boss = TP.DATA.BOSSES[levels[i].bossKey];
+      if (boss && boss.dropTier === tier) return { boss: boss, level: levels[i] };
+    }
+    return null;
   }
 
   UI.refreshCamp = function () {
@@ -795,9 +901,9 @@
     UI.el.forgeClass.textContent = TP.DATA.WEAPON_CLASSES[cls].name + " · " + char.name;
     UI.el.forgeCurrent.textContent = rarLabel(cur);
 
-    const shopOpen = UI.campTab === "shop";
-    UI.el.campForgePanel.classList.toggle("hidden", shopOpen);
-    UI.el.campShopPanel.classList.toggle("hidden", !shopOpen);
+    const wardrobeOpen = UI.campTab === "wardrobe";
+    UI.el.campForgePanel.classList.toggle("hidden", wardrobeOpen);
+    UI.el.campWardrobePanel.classList.toggle("hidden", !wardrobeOpen);
     UI.el.campTabs.querySelectorAll("[data-camp-tab]").forEach(function (tab) {
       const active = tab.getAttribute("data-camp-tab") === UI.campTab;
       tab.classList.toggle("active", active);
@@ -805,116 +911,119 @@
     });
 
     UI.el.weaponPath.innerHTML = weapons.map(function (w, i) {
+      const owned = !!(d.owned && d.owned[cls + ":" + i]);
       let cardCls = "wp-card";
-      if (i === tier) cardCls += " owned";
+      if (i === tier) cardCls += " owned current";
+      else if (owned) cardCls += " owned";
       else if (i === tier + 1) cardCls += " next";
-      else if (i > tier + 1) cardCls += " locked";
-      const badge = i === tier ? '<span class="wp-badge">ATUAL</span>' : i === tier + 1 ? '<span class="wp-badge">PRÓXIMA</span>' : "";
-      const buy = i === tier + 1 ? ' data-buy-tier="' + i + '"' : "";
-      return '<button class="' + cardCls + '" type="button"' + buy + '>' + badge +
+      else cardCls += " locked";
+      const badge = i === tier ? '<span class="wp-badge">ATUAL</span>' : owned ? '<span class="wp-badge">OBTIDA</span>' : i === tier + 1 ? '<span class="wp-badge">CHEFE</span>' : "";
+      return '<div class="' + cardCls + '">' + badge +
         '<img src="' + art.makeWeaponIcon(cls, i) + '" alt="' + esc(w.name) + '">' +
         '<div class="wp-rarity rarity-text ' + w.rarity + '">' + esc(rarLabel(w)) + '</div>' +
         '<div class="wp-name">' + esc(w.name) + '</div>' +
         '<div class="wp-stat">' + w.dmg + ' dano · ' + esc(w.speed) + '</div>' +
-      '</button>';
+      '</div>';
     }).join("");
 
+    const nextBoss = next ? bossForDropTier(tier + 1) : null;
+    let forgeBody = "";
+    if (d.weaponDrop) {
+      forgeBody += '<div class="camp-loot"><span>ARMA DO CHEFE</span><b>' + esc(d.weaponDrop.name) + '</b> · ' +
+        esc(d.weaponDrop.rarityLabel || rarLabel(d.weaponDrop)) + ' · equipada automaticamente.</div>';
+    }
     if (next) {
-      const missing = Math.max(0, next.upgrade - d.coins);
-      const can = d.coins >= next.upgrade;
-      UI.el.forgeNext.innerHTML =
-        'Próximo degrau: <b>' + esc(next.name) + '</b> · ' + esc(rarLabel(next)) +
+      forgeBody +=
+        'Próximo drop: <b>' + esc(next.name) + '</b> · ' + esc(rarLabel(next)) +
         ' · <b>' + next.dmg + ' dano</b> · ' + esc(next.speed) + '.<br>' + esc(next.desc) +
-        '<div class="forge-diff"><span>Efeito: ' + esc(effectLabel(next.effect)) + '</span><span>Peso: ' + next.weight + '</span></div>';
-      if (can) {
-        UI.el.forgeAction.innerHTML = '<span class="forge-price">CUSTO: ' + formatCoins(next.upgrade) + '</span>' +
-          '<button class="btn btn-primary" type="button" data-buy-tier="' + (tier + 1) + '">FORJAR ' + esc(rarLabel(next).toUpperCase()) + ' <span>›</span></button>';
-      } else {
-        UI.el.forgeAction.innerHTML = '<span class="forge-price missing">FALTAM ' + formatCoins(missing) + ' MOEDAS</span>' +
-          '<button class="btn" type="button" disabled>FORJA INDISPONÍVEL</button>';
-      }
+        '<div class="forge-diff"><span>Efeito: ' + esc(effectLabel(next.effect)) + '</span><span>Peso: ' + next.weight + '</span></div>' +
+        (nextBoss ? '<div class="forge-drop-source">O <b>' + esc(nextBoss.boss.name) + '</b> deixa esta arma na Fase ' +
+          esc(nextBoss.level.numeral) + '. Nenhuma moeda é necessária.</div>' : '');
+      UI.el.forgeAction.innerHTML = '<span class="forge-price">ARMA DE CHEFE · SEM CUSTO</span>' +
+        (nextBoss ? '<span class="forge-price">PRÓXIMO: ' + esc(nextBoss.boss.name.toUpperCase()) + '</span>' : '');
     } else {
-      UI.el.forgeNext.innerHTML = '<b>' + esc(cur.name) + '</b> é o último degrau da sua classe. A lâmina já não pede mais nada a Pedro — só a você.';
+      forgeBody += '<b>' + esc(cur.name) + '</b> é o último degrau da sua classe. Ela já não pede mais nada a Pedro — só a você.';
       UI.el.forgeAction.innerHTML = '<span class="forge-price">ARMA MÍTICA · ' + cur.dmg + ' DANO</span>';
     }
+    UI.el.forgeNext.innerHTML = forgeBody;
 
-    refreshShop(d);
+    refreshWardrobe(d);
 
     UI.el.campContinue.textContent = d.continueLabel || "SEGUIR VIAGEM";
     UI.el.campContinue.innerHTML = esc(d.continueLabel || "SEGUIR VIAGEM") + ' <span>›</span>';
     UI.updateSoundLabels();
   };
 
-  function refreshShop(d) {
-    const classes = Object.keys(TP.DATA.WEAPONS);
-    let shopClass = UI.shopClass;
-    if (!TP.DATA.WEAPONS[shopClass]) shopClass = d.weaponClass;
-    UI.shopClass = shopClass;
-    const weapons = TP.DATA.WEAPONS[shopClass];
-    const classDef = TP.DATA.WEAPON_CLASSES[shopClass];
-    const equippedClass = d.weaponClass || d.char.weaponClass;
-    const equippedWeapon = TP.DATA.WEAPONS[equippedClass][d.tier];
-    if (UI.shopTier == null || UI.shopTier < 0 || UI.shopTier > 3) UI.shopTier = 0;
-
-    UI.el.shopClassTabs.innerHTML = classes.map(function (c) {
-      const ownedCount = TP.DATA.WEAPONS[c].filter(function (_, i) { return ownedIn(d, c, i); }).length;
-      return '<button class="shop-class-tab' + (c === shopClass ? " active" : "") + '" type="button"' +
-        ' data-shop-class="' + c + '" role="tab" aria-selected="' + (c === shopClass ? "true" : "false") + '">' +
-        '<img src="' + art.makeWeaponIcon(c, 0) + '" alt="">' +
-        '<span>' + esc(TP.DATA.WEAPON_CLASSES[c].name) + '</span>' +
-        '<small>' + ownedCount + '/4</small>' +
+  function refreshWardrobe(d) {
+    const chars = TP.DATA.CHARACTERS;
+    let charId = UI.wardrobeChar;
+    if (!TP.DATA.OUTFITS[charId]) charId = d.char.id;
+    UI.wardrobeChar = charId;
+    const char = chars.find(function (c) { return c.id === charId; }) || d.char;
+    const outfits = UI.outfitList(charId);
+    if (!outfits.some(function (o) { return o.id === UI.wardrobeSelected; })) {
+      UI.wardrobeSelected = UI.equippedOutfitId(charId);
+    }
+    UI.el.wardrobeCharTabs.innerHTML = chars.map(function (c) {
+      const worn = withOutfit(c);
+      const count = UI.outfitCount(c.id);
+      const total = UI.outfitList(c.id).length;
+      const active = c.id === charId;
+      const shortName = c.name.replace(/^O /, "");
+      return '<button class="shop-class-tab wardrobe-char-tab' + (active ? " active" : "") + '" type="button"' +
+        ' data-wardrobe-char="' + c.id + '" role="tab" aria-selected="' + (active ? "true" : "false") + '"' +
+        ' aria-label="Roupas de ' + esc(c.name) + '" title="' + esc(c.name) + '">' +
+        '<img src="' + art.makePortrait(worn) + '" alt="">' +
+        '<span>' + esc(shortName) + '</span>' +
+        '<small>' + count + '/' + total + '</small>' +
       '</button>';
     }).join("");
-    UI.el.shopCurrent.textContent = TP.DATA.WEAPON_CLASSES[equippedClass].name + " · " + rarLabel(equippedWeapon);
 
-    UI.el.shopGrid.innerHTML = weapons.map(function (w, i) {
-      const owned = ownedIn(d, shopClass, i);
-      const equipped = equippedClass === shopClass && d.tier === i;
-      const locked = !owned && i > 0 && !ownedIn(d, shopClass, i - 1);
-      let cardCls = "wp-card shop-card";
+    const equippedId = UI.equippedOutfitId(charId);
+    const equipped = UI.getOutfit(charId, equippedId) || outfits[0];
+    UI.el.wardrobeCurrent.textContent = equipped ? equipped.name : "Traje inicial";
+
+    UI.el.wardrobeGrid.innerHTML = outfits.map(function (outfit) {
+      const owned = UI.outfitOwned(charId, outfit.id);
+      const equippedNow = equippedId === outfit.id;
+      const selected = UI.wardrobeSelected === outfit.id;
+      let cardCls = "wp-card shop-card outfit-card";
       if (owned) cardCls += " owned";
-      if (equipped) cardCls += " equipped";
-      if (locked) cardCls += " locked";
-      if (UI.shopTier === i) cardCls += " selected";
-      const badge = equipped ? "EM USO" : owned ? "SUA" : locked ? "BLOQUEADA" : "À VENDA";
-      return '<button class="' + cardCls + '" type="button" data-shop-tier="' + i + '" aria-pressed="' + (UI.shopTier === i ? "true" : "false") + '">' +
+      if (equippedNow) cardCls += " equipped";
+      if (selected) cardCls += " selected";
+      const badge = equippedNow ? "EM USO" : owned ? "SEU" : "À VENDA";
+      const preview = withOutfit(char, outfit.id);
+      return '<button class="' + cardCls + '" type="button" data-wardrobe-outfit="' + outfit.id + '" aria-pressed="' + (selected ? "true" : "false") + '">' +
         '<span class="wp-badge">' + badge + '</span>' +
-        '<img src="' + art.makeWeaponIcon(shopClass, i) + '" alt="' + esc(w.name) + '">' +
-        '<div class="wp-rarity rarity-text ' + w.rarity + '">' + esc(rarLabel(w)) + '</div>' +
-        '<div class="wp-name">' + esc(w.name) + '</div>' +
-        '<div class="wp-stat">' + w.dmg + ' dano · ' + esc(w.speed) + '</div>' +
-        (owned ? '' : '<div class="wp-price">' + (locked ? 'domine a anterior' : formatCoins(w.shopPrice) + ' moedas') + '</div>') +
+        '<div class="outfit-portrait" style="background-image:url(\'' + art.makePortrait(preview) + '\')"></div>' +
+        '<div class="wp-name">' + esc(outfit.name) + '</div>' +
+        '<div class="wp-stat">' + (owned ? (equippedNow ? "Vestido agora" : "Desbloqueado") : formatCoins(outfit.price) + ' moedas') + '</div>' +
       '</button>';
     }).join("");
 
-    const selected = weapons[UI.shopTier];
-    const owned = ownedIn(d, shopClass, UI.shopTier);
-    const equipped = equippedClass === shopClass && d.tier === UI.shopTier;
-    const unlocked = UI.shopTier === 0 || ownedIn(d, shopClass, UI.shopTier - 1);
-    const price = selected.shopPrice;
-    const range = (classDef.rangeLabel || "curto").toLowerCase();
-    UI.el.shopDetail.innerHTML =
-      '<b>' + esc(selected.name) + '</b> · ' + esc(rarLabel(selected)) +
-      ' · <b>' + selected.dmg + ' dano</b> · ' + esc(selected.speed) + ' · alcance ' + esc(range) + '.<br>' + esc(selected.desc) +
-      '<div class="forge-diff"><span>Efeito: ' + esc(effectLabel(selected.effect)) + '</span>' +
-      '<span>Peso: ' + selected.weight + '</span>' +
-      '<span>' + (owned ? 'Já está na sua mochila' : 'Preço: ' + formatCoins(price) + ' moedas') + '</span></div>';
+    const selected = UI.getOutfit(charId, UI.wardrobeSelected) || outfits[0];
+    if (!selected) return;
+    const owned = UI.outfitOwned(charId, selected.id);
+    const equippedNow = equippedId === selected.id;
+    UI.el.wardrobeDetail.innerHTML =
+      '<b>' + esc(selected.name) + '</b> · ' + (selected.price > 0 ? formatCoins(selected.price) + ' moedas' : 'traje inicial') +
+      '.<br>' + esc(selected.desc) +
+      '<div class="forge-diff"><span>Herói: ' + esc(char.name) + '</span>' +
+      '<span>' + (owned ? 'Já está no vestiário' : 'Compra única') + '</span>' +
+      '<span>Guardado neste navegador</span></div>';
 
-    const attrs = ' data-shop-class="' + shopClass + '" data-shop-tier="' + UI.shopTier + '"';
-    if (equipped) {
-      UI.el.shopAction.innerHTML = '<span class="forge-price">EQUIPADA AGORA</span>' +
+    const attrs = ' data-wardrobe-char="' + charId + '" data-wardrobe-outfit="' + selected.id + '"';
+    if (equippedNow) {
+      UI.el.wardrobeAction.innerHTML = '<span class="forge-price">VESTIDO AGORA</span>' +
         '<button class="btn" type="button" disabled>EM USO</button>';
     } else if (owned) {
-      UI.el.shopAction.innerHTML = '<span class="forge-price">JÁ COMPRADA</span>' +
-        '<button class="btn btn-primary" type="button" data-shop-act="equip"' + attrs + '>EQUIPAR <span>›</span></button>';
-    } else if (!unlocked) {
-      UI.el.shopAction.innerHTML = '<span class="forge-price missing">REQUER ' + esc(TP.DATA.WEAPONS[shopClass][UI.shopTier - 1].name.toUpperCase()) + '</span>' +
-        '<button class="btn" type="button" disabled>BLOQUEADA</button>';
-    } else if (d.coins >= price) {
-      UI.el.shopAction.innerHTML = '<span class="forge-price">CUSTO: ' + formatCoins(price) + '</span>' +
-        '<button class="btn btn-primary" type="button" data-shop-act="buy"' + attrs + '>COMPRAR E EQUIPAR <span>›</span></button>';
+      UI.el.wardrobeAction.innerHTML = '<span class="forge-price">JÁ DESBLOQUEADO</span>' +
+        '<button class="btn btn-primary" type="button" data-wardrobe-act="equip"' + attrs + '>VESTIR <span>›</span></button>';
+    } else if (d.coins >= selected.price) {
+      UI.el.wardrobeAction.innerHTML = '<span class="forge-price">CUSTO: ' + formatCoins(selected.price) + '</span>' +
+        '<button class="btn btn-primary" type="button" data-wardrobe-act="buy"' + attrs + '>COMPRAR E VESTIR <span>›</span></button>';
     } else {
-      UI.el.shopAction.innerHTML = '<span class="forge-price missing">FALTAM ' + formatCoins(price - d.coins) + ' MOEDAS</span>' +
+      UI.el.wardrobeAction.innerHTML = '<span class="forge-price missing">FALTAM ' + formatCoins(selected.price - d.coins) + ' MOEDAS</span>' +
         '<button class="btn" type="button" disabled>SEM MOEDAS</button>';
     }
   }

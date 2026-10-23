@@ -182,7 +182,7 @@
       "screen-journal": "#btn-journal-back",
       "screen-gameover": "#btn-continue-checkpoint",
       "screen-ending": ".ending-choice:not([disabled])",
-      "screen-camp": "#camp-forge-panel:not(.hidden) #forge-action [data-buy-tier], #camp-shop-panel:not(.hidden) #shop-grid .selected, #btn-camp-continue"
+      "screen-camp": "#camp-wardrobe-panel:not(.hidden) #wardrobe-action [data-wardrobe-act], #btn-camp-continue"
     };
     const sel = map[screen.id];
     if (!sel) return null;

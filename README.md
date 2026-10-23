@@ -15,8 +15,8 @@ Um jogo de plataforma 2D em pixel art, feito para rodar direto no navegador. Atr
 - **5 terras** com cenários, plataformas, perigos e chefes próprios: Ruínas Antigas, Trilha Perdida, Serra Sombria, Mina Enferrujada e Última Fronteira.
 - **5 heróis jogáveis**, cada um com arma, passiva, peso e estilo de movimento diferentes.
 - **4 chefes** pelo caminho e o **Rei das Cinzas** no fim, com fases e padrões de ataque distintos.
-- **4 degraus de arma** por classe, forjados com as moedas deixadas pelos chefes.
-- **Loja no acampamento** para comprar armas de qualquer classe e trocar a equipada antes de seguir viagem.
+- **4 degraus de arma** por classe. As armas não são compradas: o Colosso, o Vulto e o Corvo entregam automaticamente os degraus Épico, Lendário e Mítico da classe equipada.
+- **Vestiário no acampamento** para comprar roupas e novas paletas para os cinco heróis. As peças são cosméticas, ficam salvas no navegador e valem para as próximas jornadas.
 - **Conta local e servidor opcionais**, com nome e chave de acesso guardados apenas no navegador. Dá para jogar como visitante sem criar nada.
 - **15 memórias** escondidas pelas fases. Elas não aumentam seu poder — mudam o que você pode dizer no final.
 - **3 dificuldades** (Raiz, Selva e Ruína) com ajustes reais de dano, vida, velocidade e cura.
@@ -26,7 +26,7 @@ Um jogo de plataforma 2D em pixel art, feito para rodar direto no navegador. Atr
 
 ### Conta e servidor
 
-O jogo abre direto no título e pode ser jogado como **Visitante**, sem criar conta. Se quiser guardar um nome e um servidor, use o botão **Entrar** no canto do título para criar uma conta local com nome, uma chave de 4 dígitos e o nome do servidor. Tudo fica salvo no `localStorage` do próprio navegador — não há login remoto nem envio de dados. Para voltar depois, use a aba **Entrar** com o mesmo nome e chave; o botão **Conta** no título permite trocar de perfil ou voltar a jogar sem conta.
+O jogo abre direto no título e pode ser jogado como **Visitante**, sem criar conta. Se quiser guardar um nome e um servidor, use o botão **Entrar** no canto do título para criar uma conta local com nome, uma chave de 4 dígitos e o nome do servidor. A conta e as roupas desbloqueadas ficam salvas no `localStorage` do próprio navegador — não há login remoto nem envio de dados. Para voltar depois, use a aba **Entrar** com o mesmo nome e chave; o botão **Conta** no título permite trocar de perfil ou voltar a jogar sem conta.
 
 ## Controles
 
@@ -53,7 +53,7 @@ O viajante tem um salto extra no ar. Nas fases com chefes voadores, pule e ataqu
 - **Arco:** longa distância. Perto demais, a flecha perde força; no alcance máximo, causa mais dano.
 - **Cajado:** distância média. O feitiço é mais forte na faixa ideal e perde força de perto ou longe demais.
 
-As armas compradas na loja ficam na mochila da jornada. A forja melhora a classe atualmente equipada, então vale escolher bem antes de gastar as moedas.
+As armas não custam moedas. Cada chefe derrotado entrega o próximo degrau da classe equipada, já em uso. Ferrugem e o Rei rendem moedas, que podem ser gastas no **Vestiário** em roupas para qualquer herói. As roupas são cosméticas e permanecem desbloqueadas no `localStorage` deste navegador, mesmo depois de voltar ao título.
 
 ## Como rodar localmente
 
@@ -73,7 +73,7 @@ Também funciona apenas abrindo `index.html` com dois cliques. O jogo não usa m
 index.html          # telas, HUD e estrutura
 css/style.css       # identidade visual e responsividade
 js/data.js          # heróis, armas, dificuldades, chefes, memórias e fases
-js/game.js          # fluxo da jornada, combate, camp, forja e finais
+js/game.js          # fluxo da jornada, combate, camp, drops e finais
 js/ui.js            # telas, HUD, cartões, diálogos e diário
 js/art.js           # retratos, ícones e arte procedural
 js/sprites.js       # sprites de inimigos e chefes
