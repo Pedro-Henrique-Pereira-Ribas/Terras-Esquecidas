@@ -82,6 +82,7 @@
   const G = {
     getMode: function () { return state.mode; },
     init: init,
+    showAccountGate: showAccountGate,
     showTitle: showTitle,
     showCharacters: showCharacters,
     selectCharacter: selectCharacter,
@@ -106,7 +107,7 @@
     TP.ui.init();
     TP.input.bindCanvas(document.getElementById("game"));
     TP.renderer.init(document.getElementById("game"));
-    showTitle();
+    showAccountGate();
     state.last = 0;
     state.acc = 0;
     requestAnimationFrame(loop);
@@ -176,9 +177,8 @@
   /* ============================================================
      FLUXO DE TELAS
      ============================================================ */
-  function showTitle() {
+  function resetFlowState() {
     clearFlow();
-    state.mode = "title";
     state.level = null;
     state.player = null;
     state.run = null;
@@ -192,16 +192,32 @@
     state.endingTone = "dark";
     state.camera.x = 0;
     state.camera.shake = 0;
-    TP.ui.hideScreens();
-    TP.ui.showScreen("screen-title");
     TP.ui.showHUD(false);
     TP.ui.showTouch(false);
     TP.ui.showGameOver(false);
     TP.ui.hideDialogue(false);
     TP.ui.hideLevelCard();
+    document.body.classList.remove("playing");
+  }
+
+  function showAccountGate() {
+    resetFlowState();
+    state.mode = "account";
+    TP.ui.hideScreens();
+    TP.ui.showScreen("screen-account");
+    TP.ui.refreshAccountGate();
+    TP.ui.updateSoundLabels();
+    if (TP.audio) TP.audio.startTheme(0);
+  }
+
+  function showTitle() {
+    resetFlowState();
+    state.mode = "title";
+    TP.ui.hideScreens();
+    TP.ui.showScreen("screen-title");
     TP.ui.resetEnding();
     TP.ui.updateSoundLabels();
-    document.body.classList.remove("playing");
+    TP.ui.renderAccountBadge();
     if (TP.audio) TP.audio.startTheme(0);
   }
 
@@ -255,6 +271,8 @@
     state.run = {
       char: char,
       diff: diff,
+      playerName: TP.ui.account ? TP.ui.account.name : "Viajante",
+      serverName: TP.ui.account ? TP.ui.account.server : "Reino Sem Nome",
       levelIndex: 0,
       coins: 0,
       weaponClass: char.weaponClass,
@@ -1060,7 +1078,7 @@
     const cls = p.weapon.cls;
     const classDef = DATA.WEAPON_CLASSES[cls];
     p.attackCd = Math.max(10, Math.round(p.weapon.cooldown * p.char.atkSpeedMul));
-    p.attackTimer = cls === "axe" ? 18 : 14;
+    p.attackTimer = cls === "pickaxe" ? 18 : 14;
     p.attackDuration = p.attackTimer;
     p.attackHitDone = false;
 
@@ -1768,6 +1786,18 @@
     }
   }
 
+  function retireEnemyProjectiles() {
+    // Não troque o array durante updateProjectiles: o laço ainda usa os
+    // índices antigos. Marcar os projéteis mantém o array vivo e seguro.
+    for (let i = 0; i < state.projectiles.length; i++) {
+      const pr = state.projectiles[i];
+      if (pr.owner === "enemy") {
+        pr.retired = true;
+        pr.life = 0;
+      }
+    }
+  }
+
   function killBoss(b) {
     if (b.dead) return;
     const level = state.level;
@@ -1782,7 +1812,7 @@
     state.bossIntro = 0;
     state.player.locked = true;
     state.player.invuln = 999999;
-    state.projectiles = state.projectiles.filter(function (pr) { return pr.owner !== "enemy"; });
+    retireEnemyProjectiles();
     state.camera.shake = 12;
     state.hitFlash = 20;
     TP.audio.sfx("explosion");
@@ -1860,7 +1890,7 @@
     b.burnTick = 0;
     state.player.locked = true;
     state.mode = "cutscene";
-    state.projectiles = state.projectiles.filter(function (pr) { return pr.owner !== "enemy"; });
+    retireEnemyProjectiles();
     state.camera.shake = 11;
     state.hitFlash = 22;
     TP.audio.sfx("explosion");
@@ -1932,6 +1962,9 @@
     const diff = state.run.diff;
     for (let i = state.projectiles.length - 1; i >= 0; i--) {
       const pr = state.projectiles[i];
+      // Um chefe pode morrer no meio deste laço e aposentar projéteis.
+      if (!pr) continue;
+      if (pr.retired) { state.projectiles.splice(i, 1); continue; }
       pr.life--;
       if (pr.life <= 0) { state.projectiles.splice(i, 1); continue; }
       if (pr.hitCd > 0) pr.hitCd--;

@@ -103,7 +103,81 @@
 
       <!-- ================= TELAS ================= -->
       <div id="screens">
-        <section id="screen-title" class="screen active">
+        <section id="screen-account" class="screen active" aria-label="Conta do viajante">
+          <div class="account-wrap">
+            <div class="account-lore">
+              <p class="kicker"><span></span> PORTAL DO VIAJANTE <span></span></p>
+              <h1>TERRA<br><em>PERDIDA</em></h1>
+              <p class="account-lore-copy">Toda jornada começa com um nome.<br>O seu ficará gravado no servidor escolhido.</p>
+              <div class="server-badge">
+                <span class="server-dot" aria-hidden="true"></span>
+                <span>Servidor</span>
+                <strong id="account-brand-server">Reino Sem Nome</strong>
+              </div>
+              <p class="account-local-note">Conta local, guardada neste navegador.<br>Nenhum dado sai do seu dispositivo.</p>
+            </div>
+
+            <div class="account-panel">
+              <div id="account-signed" class="account-view hidden">
+                <p class="kicker">VIAJANTE RECONHECIDO</p>
+                <div id="account-avatar" class="account-avatar" aria-hidden="true">V</div>
+                <h2 id="account-welcome-name">O Viajante</h2>
+                <p class="account-welcome-sub">Sua memória está guardada no servidor<br><strong id="account-welcome-server">Reino Sem Nome</strong>.</p>
+                <div class="account-meta">
+                  <span>Conta local</span>
+                  <span id="account-created">Criada agora</span>
+                </div>
+                <div class="account-actions">
+                  <button id="btn-account-play" class="btn btn-primary account-main-action" type="button">ENTRAR NO REINO <span>›</span></button>
+                  <button id="btn-account-switch" class="btn btn-ghost" type="button">TROCAR CONTA</button>
+                </div>
+              </div>
+
+              <div id="account-auth" class="account-view">
+                <div id="account-tabs" class="account-tabs" role="tablist" aria-label="Criar ou entrar em uma conta">
+                  <button class="account-tab active" type="button" role="tab" aria-selected="true" data-account-tab="create">CRIAR CONTA</button>
+                  <button class="account-tab" type="button" role="tab" aria-selected="false" data-account-tab="login">ENTRAR</button>
+                </div>
+                <h2 id="account-form-title">Escolha seu nome</h2>
+                <p id="account-form-sub" class="account-form-sub">Ele aparecerá no título e nos registros da jornada.</p>
+                <form id="account-form" novalidate>
+                  <label class="account-field" for="account-name">
+                    <span>Nome do viajante</span>
+                    <input id="account-name" type="text" maxlength="18" autocomplete="username" spellcheck="false" placeholder="Ex.: Pedro">
+                  </label>
+                  <label class="account-field" for="account-pin">
+                    <span>Chave de acesso <small>4 dígitos</small></span>
+                    <input id="account-pin" type="password" inputmode="numeric" maxlength="4" autocomplete="current-password" placeholder="••••">
+                  </label>
+                  <div id="account-server-group" class="account-server-group">
+                    <span class="account-field-label">Servidor <small>Escolha onde sua história será gravada</small></span>
+                    <div id="account-server-options" class="account-server-options" role="listbox" aria-label="Escolher servidor">
+                      <button class="server-option active" type="button" role="option" aria-selected="true" data-server="Reino Sem Nome"><span>Reino Sem Nome</span><small>Recomendado</small></button>
+                      <button class="server-option" type="button" role="option" aria-selected="false" data-server="Terras Esquecidas"><span>Terras Esquecidas</span><small>Sereno</small></button>
+                      <button class="server-option" type="button" role="option" aria-selected="false" data-server="Fronteira das Cinzas"><span>Fronteira das Cinzas</span><small>Intenso</small></button>
+                      <button class="server-option" type="button" role="option" aria-selected="false" data-server="Vale dos Ecos"><span>Vale dos Ecos</span><small>Misterioso</small></button>
+                      <button class="server-option" type="button" role="option" aria-selected="false" data-server="__custom"><span>Outro nome...</span><small>Personalizado</small></button>
+                    </div>
+                    <input id="account-server-custom" class="account-server-custom hidden" type="text" maxlength="24" spellcheck="false" placeholder="Digite o nome do servidor">
+                  </div>
+                  <p id="account-error" class="account-error" role="alert"></p>
+                  <button id="btn-account-create" class="btn btn-primary account-main-action" type="submit">CRIAR CONTA <span>›</span></button>
+                  <p class="account-form-note">Já criou uma conta antes? Use a aba <b>ENTRAR</b> com o mesmo nome e chave.</p>
+                </form>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section id="screen-title" class="screen">
+          <div class="title-account" id="title-account">
+            <span id="title-account-avatar" class="title-account-avatar" aria-hidden="true">V</span>
+            <span class="title-account-copy">
+              <strong id="title-account-name">Viajante</strong>
+              <small><span class="server-dot" aria-hidden="true"></span><span id="title-account-server">Reino Sem Nome</span></small>
+            </span>
+            <button id="btn-title-account" class="btn btn-small btn-ghost" type="button" aria-label="Abrir conta">CONTA</button>
+          </div>
           <div class="title-wrap">
             <p class="kicker"><span></span> PEDRO APRESENTA <span></span></p>
             <h1>TERRA<br><em>PERDIDA</em></h1>
@@ -178,7 +252,7 @@
               <article class="how-card">
                 <h3>Combate</h3>
                 <p><kbd>J</kbd> ou <kbd>X</kbd> para atacar. Clique esquerdo no canvas também ataca.</p>
-                <p>Espada e machado são corpo a corpo. O arco fere mais longe; o cajado é mais forte na distância média. A arma define o alcance, o dano e o efeito.</p>
+                <p>Espada e picareta são corpo a corpo. O arco fere mais longe; o cajado é mais forte na distância média. A arma define o alcance, o dano e o efeito.</p>
                 <p>No acampamento, use a <b>Forja</b> para subir a raridade da arma equipada ou a <b>Loja</b> para comprar armas de outras classes e trocar a que está em uso.</p>
               </article>
               <article class="how-card">
@@ -207,7 +281,7 @@
               </article>
             </div>
             <footer class="screen-foot">
-              <p class="foot-note">O jogo salva apenas a preferência de som. Cada jornada começa do zero.</p>
+              <p class="foot-note">O jogo guarda sua conta local, o servidor escolhido e a preferência de som. Cada jornada começa do zero.</p>
               <button id="btn-how-close" class="btn btn-primary" type="button">ENTENDI <span>›</span></button>
             </footer>
           </div>
@@ -276,6 +350,7 @@
             <p class="kicker">A CHAMA ESPERA</p>
             <h2>Pausa</h2>
             <p class="modal-sub">O Reino não anda enquanto você respira.</p>
+            <p id="pause-account" class="pause-account"></p>
             <div class="modal-actions">
               <button id="btn-resume" class="btn btn-primary" type="button">CONTINUAR</button>
               <button id="btn-journal" class="btn btn-ghost" type="button">DIÁRIO DE MEMÓRIAS</button>

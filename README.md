@@ -17,11 +17,16 @@ Um jogo de plataforma 2D em pixel art, feito para rodar direto no navegador. Atr
 - **4 chefes** pelo caminho e o **Rei das Cinzas** no fim, com fases e padrões de ataque distintos.
 - **4 degraus de arma** por classe, forjados com as moedas deixadas pelos chefes.
 - **Loja no acampamento** para comprar armas de qualquer classe e trocar a equipada antes de seguir viagem.
+- **Conta local e servidor** criados no início da jornada, com nome e chave de acesso guardados apenas no navegador.
 - **15 memórias** escondidas pelas fases. Elas não aumentam seu poder — mudam o que você pode dizer no final.
 - **3 dificuldades** (Raiz, Selva e Ruína) com ajustes reais de dano, vida, velocidade e cura.
 - **3 finais**, incluindo um final verdadeiro para quem encontrar todas as memórias.
 - **Diário de Memórias** no menu de pausa, com as lembranças encontradas e pistas para as que faltam.
 - **Arte e áudio 100% procedurais**: retratos, cenários, sprites, efeitos e trilha sonora são gerados por código. Nenhum asset externo.
+
+### Conta e servidor
+
+Ao abrir o jogo pela primeira vez, crie uma conta local com nome, uma chave de 4 dígitos e o nome do servidor. Tudo fica salvo no `localStorage` do próprio navegador — não há login remoto nem envio de dados. Para voltar depois, use a aba **Entrar** com o mesmo nome e chave; o botão **Conta** no título permite trocar de perfil.
 
 ## Controles
 
@@ -44,7 +49,7 @@ O viajante tem um salto extra no ar. Nas fases com chefes voadores, pule e ataqu
 
 ### Alcance das armas
 
-- **Espada e machado:** curto alcance, dano constante.
+- **Espada e picareta:** curto alcance, dano constante. A picareta do Minerador é pesada, mas abre espaço com cada golpe.
 - **Arco:** longa distância. Perto demais, a flecha perde força; no alcance máximo, causa mais dano.
 - **Cajado:** distância média. O feitiço é mais forte na faixa ideal e perde força de perto ou longe demais.
 

@@ -239,13 +239,21 @@
       art.rect(ctx, 27, 47, 3, 42, pal.staff || "#6b4f3a");
       art.pixelCircle(ctx, 28, 45, 7, "rgba(143,122,214,.25)");
       art.pixelCircle(ctx, 28, 45, 4, pal.accent);
-    } else if (char.weaponClass === "axe") {
-      art.rect(ctx, 27, 50, 4, 40, "#6b4f3a");
+    } else if (char.weaponClass === "pickaxe") {
+      ctx.save();
+      ctx.translate(31, 72);
+      ctx.rotate(-0.42);
+      art.rect(ctx, -2, -24, 4, 47, "#6b4f3a");
+      art.rect(ctx, -1, -24, 2, 47, "#8a6642");
       ctx.fillStyle = pal.metal;
       ctx.beginPath();
-      ctx.moveTo(31, 50); ctx.lineTo(47, 44); ctx.lineTo(48, 62); ctx.lineTo(31, 64);
+      ctx.moveTo(-23, -20); ctx.lineTo(-10, -31); ctx.lineTo(0, -33);
+      ctx.lineTo(10, -31); ctx.lineTo(23, -20); ctx.lineTo(15, -17);
+      ctx.lineTo(3, -24); ctx.lineTo(-3, -24); ctx.lineTo(-15, -17);
       ctx.closePath(); ctx.fill();
-      art.rect(ctx, 33, 53, 11, 4, "rgba(255,255,255,.12)");
+      art.rect(ctx, -5, -25, 10, 4, "rgba(255,255,255,.14)");
+      art.rect(ctx, -4, 13, 8, 4, pal.accent);
+      ctx.restore();
     }
 
     // brilho de fogueira
@@ -389,20 +397,26 @@
       art.rect(ctx, 42, -4, 9, 7, rar.color);
       art.rect(ctx, 37, -8, 6, 8, "#b8b1a1");
       if (tier >= 2) art.glow(ctx, 42, 0, 22, tier === 2 ? "#ffae5a" : "#b487ff", 0.3);
-    } else if (cls === "axe") {
+    } else if (cls === "pickaxe") {
       ctx.save();
       ctx.rotate(-Math.PI / 5.2);
       art.rect(ctx, -3, -38, 6, 76, "#5e432f");
       art.rect(ctx, -2, -38, 2, 76, "#8a6642");
       ctx.fillStyle = "#9aa0a4";
       ctx.beginPath();
-      ctx.moveTo(3, -30); ctx.lineTo(29, -38); ctx.lineTo(34, -7); ctx.lineTo(5, 2); ctx.closePath(); ctx.fill();
+      ctx.moveTo(-35, -23); ctx.lineTo(-22, -36); ctx.lineTo(-7, -40);
+      ctx.lineTo(0, -34); ctx.lineTo(7, -40); ctx.lineTo(22, -36);
+      ctx.lineTo(35, -23); ctx.lineTo(22, -26); ctx.lineTo(7, -31);
+      ctx.lineTo(0, -25); ctx.lineTo(-7, -31); ctx.lineTo(-22, -26);
+      ctx.closePath(); ctx.fill();
       ctx.fillStyle = "#c5c8c6";
       ctx.beginPath();
-      ctx.moveTo(3, -30); ctx.lineTo(20, -34); ctx.lineTo(23, -12); ctx.lineTo(5, -4); ctx.closePath(); ctx.fill();
-      art.rect(ctx, 14, -27, 8, 3, rar.color);
+      ctx.moveTo(-27, -22); ctx.lineTo(-18, -30); ctx.lineTo(-5, -33);
+      ctx.lineTo(-1, -29); ctx.lineTo(-17, -25); ctx.closePath(); ctx.fill();
+      art.rect(ctx, -7, -33, 14, 4, rar.color);
+      art.rect(ctx, -5, -5, 10, 4, rar.color);
       ctx.restore();
-      if (tier >= 2) art.glow(ctx, 20, -16, 26, tier === 2 ? "#ff9a4e" : "#b57bff", 0.3);
+      if (tier >= 2) art.glow(ctx, 0, -22, 34, tier === 2 ? "#ff9a4e" : "#b57bff", 0.3);
     } else {
       art.rect(ctx, -3, -30, 6, 64, "#6b4c35");
       art.rect(ctx, -2, -30, 2, 64, "#8f6847");

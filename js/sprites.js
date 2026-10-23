@@ -243,23 +243,25 @@
         ctx.stroke();
         ctx.restore();
       }
-    } else if (cls === "axe") {
+    } else if (cls === "pickaxe") {
       const swing = attacking ? (-1.45 + prog * 2.55) : -0.5;
       ctx.save();
       ctx.translate(6, 18);
       ctx.rotate(swing);
-      art.rect(ctx, -1, -3, 3, 17, "#5a3f2a");
+      art.rect(ctx, -1, -3, 3, 18, "#5a3f2a");
       ctx.fillStyle = "#979da0";
       ctx.beginPath();
-      ctx.moveTo(2, -2); ctx.lineTo(14, -7); ctx.lineTo(16, 5); ctx.lineTo(2, 7);
+      ctx.moveTo(-11, -3); ctx.lineTo(-5, -8); ctx.lineTo(0, -9);
+      ctx.lineTo(5, -8); ctx.lineTo(11, -3); ctx.lineTo(5, -1);
+      ctx.lineTo(0, -5); ctx.lineTo(-5, -1);
       ctx.closePath(); ctx.fill();
       ctx.fillStyle = "#c6c8c4";
       ctx.beginPath();
-      ctx.moveTo(2, -2); ctx.lineTo(10, -5); ctx.lineTo(11, 2); ctx.lineTo(2, 4);
-      ctx.closePath(); ctx.fill();
-      art.rect(ctx, 3, -1, 5, 2, rar.color);
-      if (effect === "burn") art.glow(ctx, 8, 0, 17, "#ff8f48", 0.35);
-      if (effect === "lifesteal") art.glow(ctx, 8, 0, 17, "#a97bff", 0.32);
+      ctx.moveTo(-8, -3); ctx.lineTo(-3, -6); ctx.lineTo(0, -6);
+      ctx.lineTo(0, -3); ctx.lineTo(-4, -2); ctx.closePath(); ctx.fill();
+      art.rect(ctx, -4, -6, 8, 2, rar.color);
+      if (effect === "burn") art.glow(ctx, 0, -3, 17, "#ff8f48", 0.35);
+      if (effect === "lifesteal") art.glow(ctx, 0, -3, 17, "#a97bff", 0.32);
       ctx.restore();
       if (attacking && prog > 0.25 && prog < 0.8) {
         ctx.save();

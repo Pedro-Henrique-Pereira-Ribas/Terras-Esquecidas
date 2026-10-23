@@ -20,12 +20,20 @@
     levelCardTimer: null,
     lastHud: "",
     lastProgress: -1,
-    lastGateLevel: -1
+    lastGateLevel: -1,
+    account: null,
+    accounts: [],
+    accountTab: "create",
+    serverChoice: "Reino Sem Nome",
+    serverCustom: ""
   };
   TP.ui = UI;
 
-  const SCREEN_IDS = ["screen-title", "screen-characters", "screen-difficulty", "screen-how",
+  const SCREEN_IDS = ["screen-account", "screen-title", "screen-characters", "screen-difficulty", "screen-how",
     "screen-camp", "screen-pause", "screen-journal", "screen-gameover", "screen-ending"];
+  const ACCOUNT_KEY = "terraPerdida.accounts.v1";
+  const SESSION_KEY = "terraPerdida.session.v1";
+  const DEFAULT_SERVER = "Reino Sem Nome";
 
   function q(id) { return document.getElementById(id); }
   function esc(s) {
@@ -76,7 +84,19 @@
       endingResultKicker: q("ending-result-kicker"), endingResultTitle: q("ending-result-title"),
       endingResultText: q("ending-result-text"), endingResultNote: q("ending-result-note"),
       journalGrid: q("journal-grid"), journalCount: q("journal-count"), journalNote: q("journal-note"),
-      touch: q("touch-controls")
+      touch: q("touch-controls"),
+      accountSigned: q("account-signed"), accountAuth: q("account-auth"),
+      accountAvatar: q("account-avatar"), accountWelcomeName: q("account-welcome-name"),
+      accountWelcomeServer: q("account-welcome-server"), accountCreated: q("account-created"),
+      accountBrandServer: q("account-brand-server"), accountFormTitle: q("account-form-title"),
+      accountFormSub: q("account-form-sub"), accountForm: q("account-form"),
+      accountName: q("account-name"), accountPin: q("account-pin"),
+      accountServerGroup: q("account-server-group"), accountServerOptions: q("account-server-options"),
+      accountServerCustom: q("account-server-custom"), accountError: q("account-error"),
+      accountCreate: q("btn-account-create"), accountTabs: q("account-tabs"),
+      titleAccountName: q("title-account-name"), titleAccountServer: q("title-account-server"),
+      titleAccountAvatar: q("title-account-avatar"), pauseAccount: q("pause-account"),
+      accountScreen: q("screen-account")
     };
 
     // Retratos de Pedro via data URL gerada pelo canvas.
@@ -88,6 +108,7 @@
     bindButtons();
     buildCharacterCards();
     buildDifficultyCards();
+    loadAccountStore();
     updateSoundLabels();
 
     const touchButtons = Array.from(document.querySelectorAll("#touch-controls [data-action]"));
@@ -117,6 +138,34 @@
     q("btn-title-sound").addEventListener("click", function () { toggleSound(); });
     q("btn-sound").addEventListener("click", function () { toggleSound(); });
     q("btn-pause-sound").addEventListener("click", function () { toggleSound(); });
+
+    q("btn-title-account").addEventListener("click", function () { TP.audio.sfx("click"); call("showAccountGate"); });
+    q("btn-account-play").addEventListener("click", function () { TP.audio.sfx("click"); call("showTitle"); });
+    q("btn-account-switch").addEventListener("click", function () { TP.audio.sfx("click"); switchAccount(); });
+
+    UI.el.accountTabs.addEventListener("click", function (e) {
+      const tab = e.target.closest("[data-account-tab]");
+      if (!tab) return;
+      TP.audio.sfx("click");
+      setAccountTab(tab.getAttribute("data-account-tab"));
+    });
+    UI.el.accountServerOptions.addEventListener("click", function (e) {
+      const option = e.target.closest("[data-server]");
+      if (!option) return;
+      TP.audio.sfx("click");
+      selectServer(option.getAttribute("data-server"));
+    });
+    UI.el.accountForm.addEventListener("submit", function (e) {
+      e.preventDefault();
+      submitAccountForm();
+    });
+    [UI.el.accountName, UI.el.accountPin].forEach(function (input) {
+      input.addEventListener("input", function () { setAccountError(""); });
+    });
+    UI.el.accountServerCustom.addEventListener("input", function () {
+      UI.serverCustom = UI.el.accountServerCustom.value;
+      setAccountError("");
+    });
 
     q("btn-pause").addEventListener("click", function () { call("togglePause"); });
     q("btn-resume").addEventListener("click", function () { call("togglePause", false); });
@@ -218,6 +267,203 @@
     const pause = q("btn-pause-sound");
     if (pause) pause.textContent = "SOM: " + (on ? "LIGADO" : "MUDO");
   }
+
+  /* ============================================================
+     CONTA LOCAL / SERVIDOR
+     ============================================================ */
+  function accountStorageGet(key) {
+    try { return window.localStorage.getItem(key); } catch (err) { return null; }
+  }
+  function accountStorageSet(key, value) {
+    try {
+      if (value == null) window.localStorage.removeItem(key);
+      else window.localStorage.setItem(key, value);
+    } catch (err) { /* modo privado ou armazenamento bloqueado */ }
+  }
+  function normalizeAccountName(name) {
+    return String(name || "").trim().replace(/\s+/g, " ").toLowerCase();
+  }
+  function hashPin(pin) {
+    let h = 5381;
+    const text = String(pin || "");
+    for (let i = 0; i < text.length; i++) h = ((h << 5) + h + text.charCodeAt(i)) >>> 0;
+    return h.toString(36);
+  }
+  function accountInitial(name) {
+    const clean = String(name || "V").trim();
+    return (clean.charAt(0) || "V").toUpperCase();
+  }
+  function accountCreatedLabel(iso) {
+    if (!iso) return "Conta local";
+    const d = new Date(iso);
+    if (isNaN(d.getTime())) return "Conta local";
+    return "Desde " + d.toLocaleDateString("pt-BR");
+  }
+  function loadAccountStore() {
+    let list = [];
+    try {
+      const parsed = JSON.parse(accountStorageGet(ACCOUNT_KEY) || "[]");
+      if (Array.isArray(parsed)) list = parsed;
+    } catch (err) { list = []; }
+    UI.accounts = list.filter(function (a) {
+      return a && typeof a.name === "string" && typeof a.server === "string";
+    });
+    const session = accountStorageGet(SESSION_KEY);
+    UI.account = session
+      ? UI.accounts.find(function (a) { return normalizeAccountName(a.name) === session; }) || null
+      : null;
+    UI.accountTab = UI.account ? "create" : UI.accounts.length ? "login" : "create";
+  }
+  function saveAccountStore() {
+    accountStorageSet(ACCOUNT_KEY, JSON.stringify(UI.accounts));
+  }
+  function setAccountSession(account) {
+    if (!account) accountStorageSet(SESSION_KEY, null);
+    else accountStorageSet(SESSION_KEY, normalizeAccountName(account.name));
+  }
+  function setAccountError(message) {
+    if (!UI.el.accountError) return;
+    UI.el.accountError.textContent = message || "";
+    UI.el.accountError.classList.toggle("visible", !!message);
+  }
+  function setAccountTab(tab) {
+    UI.accountTab = tab === "login" ? "login" : "create";
+    const isLogin = UI.accountTab === "login";
+    UI.el.accountTabs.querySelectorAll("[data-account-tab]").forEach(function (btn) {
+      const on = btn.getAttribute("data-account-tab") === UI.accountTab;
+      btn.classList.toggle("active", on);
+      btn.setAttribute("aria-selected", on ? "true" : "false");
+    });
+    UI.el.accountFormTitle.textContent = isLogin ? "Bem-vindo de volta" : "Escolha seu nome";
+    UI.el.accountFormSub.textContent = isLogin
+      ? "Entre com o nome do viajante e a chave criada neste navegador."
+      : "Ele aparecerá no título e nos registros da jornada.";
+    UI.el.accountServerGroup.classList.toggle("hidden", isLogin);
+    UI.el.accountCreate.innerHTML = (isLogin ? "ENTRAR NO REINO" : "CRIAR CONTA") + " <span>›</span>";
+    UI.el.accountPin.setAttribute("autocomplete", isLogin ? "current-password" : "new-password");
+    setAccountError("");
+  }
+  function selectServer(value) {
+    UI.serverChoice = value || DEFAULT_SERVER;
+    UI.el.accountServerOptions.querySelectorAll("[data-server]").forEach(function (btn) {
+      const on = btn.getAttribute("data-server") === UI.serverChoice;
+      btn.classList.toggle("active", on);
+      btn.setAttribute("aria-selected", on ? "true" : "false");
+    });
+    const custom = UI.serverChoice === "__custom";
+    UI.el.accountServerCustom.classList.toggle("hidden", !custom);
+    if (custom) {
+      UI.el.accountServerCustom.focus();
+      UI.el.accountBrandServer.textContent = UI.serverCustom.trim() || "Servidor personalizado";
+    } else {
+      UI.el.accountBrandServer.textContent = UI.serverChoice;
+    }
+    setAccountError("");
+  }
+  function chosenServer() {
+    return UI.serverChoice === "__custom" ? UI.serverCustom.trim() : UI.serverChoice;
+  }
+  function loginAccount(account) {
+    if (!account) return;
+    account.lastLogin = new Date().toISOString();
+    saveAccountStore();
+    setAccountSession(account);
+    UI.account = account;
+    setAccountError("");
+    UI.refreshAccountGate();
+  }
+  function switchAccount() {
+    setAccountSession(null);
+    UI.account = null;
+    UI.accountTab = UI.accounts.length ? "login" : "create";
+    if (UI.el.accountPin) UI.el.accountPin.value = "";
+    UI.refreshAccountGate();
+  }
+  function submitAccountForm() {
+    const name = UI.el.accountName.value.trim().replace(/\s+/g, " ");
+    const pin = UI.el.accountPin.value.trim();
+    if (!/^[^\u0000-\u001f<>]{3,18}$/.test(name)) {
+      setAccountError("O nome precisa ter entre 3 e 18 caracteres.");
+      UI.el.accountName.focus();
+      return;
+    }
+    if (!/^\d{4}$/.test(pin)) {
+      setAccountError("A chave de acesso precisa ter exatamente 4 números.");
+      UI.el.accountPin.focus();
+      return;
+    }
+
+    if (UI.accountTab === "login") {
+      const account = UI.accounts.find(function (a) { return normalizeAccountName(a.name) === normalizeAccountName(name); });
+      if (!account) {
+        setAccountError("Nenhuma conta com esse nome neste dispositivo.");
+        return;
+      }
+      if (account.pin !== hashPin(pin)) {
+        setAccountError("Chave de acesso incorreta.");
+        UI.el.accountPin.select();
+        return;
+      }
+      loginAccount(account);
+      return;
+    }
+
+    if (UI.accounts.some(function (a) { return normalizeAccountName(a.name) === normalizeAccountName(name); })) {
+      setAccountError("Já existe uma conta com esse nome. Use a aba ENTRAR.");
+      return;
+    }
+    const server = chosenServer();
+    if (!/^[^\u0000-\u001f<>]{3,24}$/.test(server)) {
+      setAccountError("Escolha um servidor ou digite um nome com 3 a 24 caracteres.");
+      return;
+    }
+    const account = {
+      name: name,
+      pin: hashPin(pin),
+      server: server,
+      createdAt: new Date().toISOString(),
+      lastLogin: new Date().toISOString()
+    };
+    UI.accounts.push(account);
+    saveAccountStore();
+    setAccountSession(account);
+    UI.account = account;
+    UI.el.accountPin.value = "";
+    setAccountError("");
+    UI.refreshAccountGate();
+  }
+
+  UI.refreshAccountGate = function () {
+    if (!UI.el.accountSigned) return;
+    const signed = !!UI.account;
+    UI.el.accountSigned.classList.toggle("hidden", !signed);
+    UI.el.accountAuth.classList.toggle("hidden", signed);
+    if (signed) {
+      const a = UI.account;
+      UI.el.accountAvatar.textContent = accountInitial(a.name);
+      UI.el.accountWelcomeName.textContent = a.name;
+      UI.el.accountWelcomeServer.textContent = a.server;
+      UI.el.accountCreated.textContent = accountCreatedLabel(a.createdAt);
+      UI.el.accountBrandServer.textContent = a.server;
+      UI.el.accountCreated.title = "Conta guardada apenas neste navegador";
+    } else {
+      setAccountTab(UI.accountTab);
+      UI.el.accountBrandServer.textContent = chosenServer() || DEFAULT_SERVER;
+      if (!UI.el.accountName.value && UI.accounts.length === 1) {
+        UI.el.accountName.value = UI.accounts[0].name;
+      }
+    }
+    UI.renderAccountBadge();
+  };
+
+  UI.renderAccountBadge = function () {
+    const a = UI.account;
+    if (!a) return;
+    if (UI.el.titleAccountName) UI.el.titleAccountName.textContent = a.name;
+    if (UI.el.titleAccountServer) UI.el.titleAccountServer.textContent = a.server;
+    if (UI.el.titleAccountAvatar) UI.el.titleAccountAvatar.textContent = accountInitial(a.name);
+    if (UI.el.pauseAccount) UI.el.pauseAccount.textContent = a.name + "  ·  Servidor " + a.server;
+  };
 
   /* ============================================================
      TELAS
@@ -407,7 +653,7 @@
     if (!c) { UI.el.diffHeroNote.textContent = ""; return; }
     const d = TP.DATA.DIFFICULTIES.find(function (x) { return x.id === UI.selectedDiff; });
     UI.el.diffHeroNote.innerHTML = "Herói: <strong>" + esc(c.name) + "</strong> · " +
-      esc(c.weaponClass === "sword" ? "Espada" : c.weaponClass === "bow" ? "Arco" : c.weaponClass === "axe" ? "Machado" : "Cajado") +
+      esc(TP.DATA.WEAPON_CLASSES[c.weaponClass].name) +
       " rara · 100 de vida." + (d ? " Dificuldade: <strong>" + esc(d.name + " — " + d.label) + "</strong>." : " Escolha a dificuldade.");
   };
 

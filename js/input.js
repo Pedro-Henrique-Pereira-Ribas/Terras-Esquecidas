@@ -173,6 +173,7 @@
   function preferredMenuTarget(screen) {
     if (!screen) return null;
     const map = {
+      "screen-account": "#btn-account-play, #btn-account-create",
       "screen-title": "#btn-start",
       "screen-characters": ".char-card.selected, [data-char]",
       "screen-difficulty": ".diff-card.selected, [data-diff]",
@@ -204,7 +205,7 @@
   function updateGamepadMenu(pressed, prev) {
     if (!TP.game || !TP.game.getMode) return;
     const mode = TP.game.getMode();
-    const menuMode = ["title", "characters", "difficulty", "how", "paused", "camp", "gameover", "ending", "endingText"].indexOf(mode) >= 0;
+    const menuMode = ["account", "title", "characters", "difficulty", "how", "paused", "camp", "gameover", "ending", "endingText"].indexOf(mode) >= 0;
     if (!menuMode) { lastMenuKey = null; return; }
     const screen = activeMenuScreen();
     if (!screen) { lastMenuKey = null; return; }

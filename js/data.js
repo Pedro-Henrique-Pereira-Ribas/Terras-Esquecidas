@@ -118,9 +118,9 @@
       id: "minerador",
       name: "Minerador",
       epithet: "Aquele que Escutou o Fundo",
-      classLabel: "Bárbaro",
+      classLabel: "Minerador",
       grade: "Mítico",
-      weaponClass: "axe",
+      weaponClass: "pickaxe",
       hp: 100,
       speed: 1.76,
       jump: -9.0,
@@ -154,9 +154,9 @@
       /* Longa distância: a flecha perde força de perto e atinge o ápice longe. */
       falloff: { mode: "long", near: 40, far: 300, nearMul: 0.45, farMul: 1.1 }
     },
-    axe: {
-      name: "Machado", icon: "axe", ranged: false, range: 47,
-      verb: "golpe", attackLine: "O peso decides.", projectileSpeed: 0,
+    pickaxe: {
+      name: "Picareta", icon: "pickaxe", ranged: false, range: 45,
+      verb: "picada", attackLine: "A pedra cede.", projectileSpeed: 0,
       rangeLabel: "Curto"
     },
     staff: {
@@ -218,26 +218,26 @@
         desc: "Onde a flecha toca, a sombra bebe. A arqueira aprendeu a não olhar."
       }
     ],
-    axe: [
+    pickaxe: [
       {
-        name: "Machado Duplo", rarity: "rara", tier: 0, dmg: 18, speed: "Lenta",
+        name: "Picareta de Ferro", rarity: "rara", tier: 0, dmg: 18, speed: "Lenta",
         cooldown: 32, weight: 8, effect: "none", total: 0, upgrade: 0,
-        desc: "Duas lâminas, duas desculpas. O peso faz o resto."
+        desc: "Ferro gasto, cabo de madeira dura. Abriu túneis e sepulturas com a mesma paciência."
       },
       {
-        name: "Machado Ancestral", rarity: "epica", tier: 1, dmg: 24, speed: "Média",
+        name: "Picareta Ancestral", rarity: "epica", tier: 1, dmg: 24, speed: "Média",
         cooldown: 28, weight: 7, effect: "spirit", total: 1500, upgrade: 1500,
         desc: "Os espíritos da mina ainda seguram o cabo junto com você."
       },
       {
-        name: "Machado de Obsidiana", rarity: "lendaria", tier: 2, dmg: 30, speed: "Lenta",
+        name: "Picareta de Obsidiana", rarity: "lendaria", tier: 2, dmg: 30, speed: "Lenta",
         cooldown: 34, weight: 9, effect: "burn", total: 2000, upgrade: 500,
-        desc: "Pedra que nasceu do fogo. Devolve o calor com juros."
+        desc: "Pedra que nasceu do fogo. Cada picada devolve o calor com juros."
       },
       {
-        name: "Machado do Abismo", rarity: "mitica", tier: 3, dmg: 28, speed: "Média",
+        name: "Picareta do Abismo", rarity: "mitica", tier: 3, dmg: 28, speed: "Média",
         cooldown: 30, weight: 8, effect: "lifesteal", total: 3000, upgrade: 1000,
-        desc: "Foi encontrado onde a mina deixa de ter fundo. Ainda está descendo."
+        desc: "Foi encontrada onde a mina deixa de ter fundo. Ainda está descendo."
       }
     ],
     staff: [
@@ -306,7 +306,7 @@
     },
     vulto: {
       name: "Vulto", title: "O Que Sussurra Entre as Árvores", hp: 300, w: 64, h: 94,
-      contact: 16, speed: 0.92, flying: true, hover: 218, attacks: ["volley", "teleport", "summon"],
+      contact: 16, speed: 0.92, flying: true, hover: 258, attacks: ["volley", "teleport", "summon"],
       coin: 500, theme: "forest",
       taunt: "VOCÊ OUVE A FLORESTA? ELA NÃO PEDE SOCORRO. ELA CHORA.",
       taunt2: "AS RAÍZES SABEM O SEU NOME. EU TAMBÉM.",
