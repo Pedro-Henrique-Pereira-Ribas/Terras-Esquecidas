@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="theme-color" content="#0b0d0b">
+  <meta name="description" content="Terra Perdida — uma jornada de plataforma em pixel art por cinco terras esquecidas. Escolha seu herói, forje sua arma e decida o destino de um reino sem nome.">
+  <title>Terra Perdida — Cinco terras. Uma memória esquecida.</title>
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <main id="app" aria-label="Terra Perdida">
+    <div id="stage">
+      <canvas id="game" width="640" height="360" aria-label="Área do jogo"></canvas>
+      <div id="scanlines" aria-hidden="true"></div>
+
+      <!-- ================= HUD ================= -->
+      <div id="hud" class="hidden" aria-live="polite">
+        <div class="hud-top">
+          <div class="hud-hero">
+            <div id="hud-portrait" class="hud-portrait" aria-hidden="true"></div>
+            <div class="hud-hero-meta">
+              <div class="hud-name-row">
+                <span id="hud-hero-name">O Viajante</span>
+                <span id="hud-hero-grade" class="grade-pill">Comum</span>
+              </div>
+              <div class="hp-track" aria-label="Vida">
+                <div id="hud-hp-fill" class="hp-fill"></div>
+                <span id="hud-hp-text">100 / 100</span>
+              </div>
+              <div class="hud-weapon">
+                <span id="hud-weapon-name">Espada Longa</span>
+                <span id="hud-weapon-rarity" class="rarity-text rara">Rara</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="hud-mid">
+            <div id="hud-phase" class="hud-phase">I · Ruínas Antigas</div>
+            <div class="hud-memory"><span class="memory-star">✦</span> <span id="hud-memories">0 / 15 memórias</span></div>
+            <div class="hud-progress" aria-hidden="true">
+              <div class="hud-progress-track">
+                <div id="hud-progress-fill" class="hud-progress-fill"></div>
+                <span id="hud-progress-gate" class="hud-progress-gate" title="Portão do chefe"></span>
+              </div>
+            </div>
+          </div>
+
+          <div class="hud-actions">
+            <div class="hud-coins" title="Moedas de chefe">
+              <span class="coin-dot" aria-hidden="true"></span>
+              <span id="hud-coins">0</span>
+            </div>
+            <button id="btn-sound" class="icon-btn" type="button" aria-label="Ligar ou desligar som" title="Som">♪</button>
+            <button id="btn-pause" class="icon-btn pause-icon-btn" type="button" aria-label="Pausar" title="Pausa (Esc)">II</button>
+          </div>
+        </div>
+
+        <div id="boss-bar" class="boss-bar hidden">
+          <div class="boss-bar-label">
+            <span id="boss-name">Colosso</span>
+            <span id="boss-title">O Guardião das Ruínas</span>
+          </div>
+          <div class="boss-track">
+            <div id="boss-fill" class="boss-fill"></div>
+            <div class="boss-notch" aria-hidden="true"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ================= CONTROLES DE TOQUE ================= -->
+      <div id="touch-controls" class="touch-controls hidden" aria-label="Controles de toque">
+        <div class="touch-side touch-left">
+          <button class="touch-btn touch-arrow" data-action="left" type="button" aria-label="Esquerda">‹</button>
+          <button class="touch-btn touch-arrow" data-action="right" type="button" aria-label="Direita">›</button>
+        </div>
+        <div class="touch-side touch-right">
+          <button class="touch-btn touch-dash" data-action="dash" type="button" aria-label="Esquiva">»</button>
+          <button class="touch-btn touch-jump" data-action="jump" type="button" aria-label="Pular">SALTO</button>
+          <button class="touch-btn touch-attack" data-action="attack" type="button" aria-label="Atacar">GOLPE</button>
+        </div>
+      </div>
+
+      <!-- ================= DIÁLOGO ================= -->
+      <div id="dialogue" class="dialogue hidden" role="dialog" aria-modal="false" aria-label="Pedro, o narrador">
+        <div class="dialogue-portrait pedro-portrait" aria-hidden="true"></div>
+        <div class="dialogue-body">
+          <div class="dialogue-name">PEDRO <span>narrador e ferreiro</span></div>
+          <p id="dialogue-text"></p>
+          <button id="btn-dialogue-next" class="dialogue-next" type="button">CONTINUAR <span>›</span></button>
+        </div>
+      </div>
+
+      <!-- ================= AVISOS ================= -->
+      <div id="toast-layer" class="toast-layer" aria-live="polite"></div>
+
+      <div id="level-card" class="level-card hidden" aria-hidden="true">
+        <p id="level-card-numeral">I</p>
+        <h2 id="level-card-name">Ruínas Antigas</h2>
+        <p id="level-card-subtitle">Onde a pedra aprendeu a ficar em silêncio</p>
+      </div>
+
+      <!-- ================= TELAS ================= -->
+      <div id="screens">
+        <section id="screen-title" class="screen active">
+          <div class="title-wrap">
+            <p class="kicker"><span></span> PEDRO APRESENTA <span></span></p>
+            <h1>TERRA<br><em>PERDIDA</em></h1>
+            <p class="title-sub">Cinco terras apagadas da memória.<br>Cinco heróis. Uma coroa esperando no fim.</p>
+            <div class="title-buttons">
+              <button id="btn-start" class="btn btn-primary" type="button">INICIAR JORNADA <span>›</span></button>
+              <button id="btn-how" class="btn btn-ghost" type="button">COMO JOGAR</button>
+              <button id="btn-title-sound" class="btn btn-ghost btn-small" type="button">SOM: LIGADO</button>
+            </div>
+            <p class="title-note">“A estrada não me assusta. Só o silêncio dela.”<br><strong>— Pedro, arquivista do Reino Sem Nome</strong></p>
+          </div>
+        </section>
+
+        <section id="screen-characters" class="screen">
+          <div class="screen-inner">
+            <header class="screen-head">
+              <button id="btn-char-back" class="btn btn-back" type="button">‹ VOLTAR</button>
+              <div class="screen-title-block">
+                <p class="kicker">PASSO 1 DE 2</p>
+                <h2>Quem vai carregar a memória?</h2>
+                <p class="screen-sub">Todos têm 100 de vida. O que muda é o caminho — e a arma que já sabem empunhar.</p>
+              </div>
+              <div class="head-spacer" aria-hidden="true"></div>
+            </header>
+
+            <div id="char-grid" class="char-grid" role="list"></div>
+
+            <footer class="screen-foot">
+              <p id="char-selected-note" class="foot-note">Escolha um herói para ver seus detalhes.</p>
+              <button id="btn-char-next" class="btn btn-primary" type="button" disabled>ESCOLHER DIFICULDADE <span>›</span></button>
+            </footer>
+          </div>
+        </section>
+
+        <section id="screen-difficulty" class="screen">
+          <div class="screen-inner">
+            <header class="screen-head">
+              <button id="btn-diff-back" class="btn btn-back" type="button">‹ PERSONAGENS</button>
+              <div class="screen-title-block">
+                <p class="kicker">PASSO 2 DE 2</p>
+                <h2>Quanto o Reino vai apertar?</h2>
+                <p class="screen-sub">A história é a mesma. A brasa que você carrega é que muda.</p>
+              </div>
+              <div class="head-spacer" aria-hidden="true"></div>
+            </header>
+
+            <div id="diff-grid" class="diff-grid" role="list"></div>
+
+            <footer class="screen-foot">
+              <p id="diff-hero-note" class="foot-note"></p>
+              <button id="btn-diff-start" class="btn btn-primary" type="button" disabled>ENTRAR NO REINO <span>›</span></button>
+            </footer>
+          </div>
+        </section>
+
+        <section id="screen-how" class="screen">
+          <div class="screen-inner how-inner">
+            <header class="screen-head">
+              <button id="btn-how-back" class="btn btn-back" type="button">‹ VOLTAR</button>
+              <div class="screen-title-block">
+                <p class="kicker">O QUE PEDRO NÃO DIZ</p>
+                <h2>Como sobreviver ao Reino Sem Nome</h2>
+              </div>
+              <div class="head-spacer" aria-hidden="true"></div>
+            </header>
+            <div class="how-grid">
+              <article class="how-card">
+                <h3>Movimento</h3>
+                <p><kbd>A</kbd><kbd>D</kbd> ou <kbd>←</kbd><kbd>→</kbd> para andar. <kbd>Espaço</kbd>, <kbd>W</kbd> ou <kbd>↑</kbd> para pular — todos têm salto duplo; o Viajante tem um terceiro.</p>
+                <p><kbd>Shift</kbd> ou <kbd>K</kbd> para uma esquiva curta. Ela também serve para atravessar vãos.</p>
+              </article>
+              <article class="how-card">
+                <h3>Combate</h3>
+                <p><kbd>J</kbd> ou <kbd>X</kbd> para atacar. Clique esquerdo no canvas também ataca.</p>
+                <p>Espada e machado são corpo a corpo. Arco e cajado disparam à distância. A arma define o alcance, o dano e o efeito.</p>
+              </article>
+              <article class="how-card">
+                <h3>Forja de Pedro</h3>
+                <p>Cada chefe guarda moedas. Entre uma fase e outra, Pedro usa a forja para subir a raridade da sua arma:</p>
+                <ul class="how-list">
+                  <li><b>Rara</b> inicial → <b>Épica</b> por 1.500</li>
+                  <li><b>Épica</b> → <b>Lendária</b> por +500</li>
+                  <li><b>Lendária</b> → <b>Mítica</b> por +1.000</li>
+                </ul>
+                <p>O caminho completo custa 3.000 moedas — exatamente o que o Reino entrega.</p>
+              </article>
+              <article class="how-card">
+                <h3>Memórias e escolhas</h3>
+                <p>Há <b>3 memórias</b> em cada uma das 5 fases. Elas não aumentam seu poder: mudam o que você sabe — e o que pode dizer no final.</p>
+                <p>As três memórias da última fase são necessárias para o final verdadeiro. Sem todas as 15, a coroa ainda pode ser tomada ou partida.</p>
+              </article>
+              <article class="how-card">
+                <h3>Outros controles</h3>
+                <p>Toque: setas e botões na tela. Gamepad: direcional/analógico, <kbd>A</kbd> pula, <kbd>X</kbd> ataca, <kbd>B</kbd> esquiva e <kbd>Start</kbd> pausa.</p>
+                <p><kbd>Esc</kbd> pausa. A música e os efeitos são sintetizados em tempo real; use o botão ♪ para silenciar.</p>
+              </article>
+              <article class="how-card how-tip">
+                <h3>Dica de Pedro</h3>
+                <p>“Não corra para a morte. Corra para a próxima fogueira. A diferença é pequena, mas é tudo.”</p>
+              </article>
+            </div>
+            <footer class="screen-foot">
+              <p class="foot-note">O jogo salva apenas a preferência de som. Cada jornada começa do zero.</p>
+              <button id="btn-how-close" class="btn btn-primary" type="button">ENTENDI <span>›</span></button>
+            </footer>
+          </div>
+        </section>
+
+        <section id="screen-camp" class="screen">
+          <div class="camp-panel">
+            <header class="camp-head">
+              <div>
+                <p id="camp-kicker" class="kicker">ACAMPAMENTO</p>
+                <h2 id="camp-title">A Forja de Pedro</h2>
+              </div>
+              <div class="camp-wallet">
+                <span class="coin-dot"></span>
+                <span id="camp-coins">0</span>
+                <small>moedas</small>
+              </div>
+            </header>
+            <div class="camp-body">
+              <div class="camp-pedro">
+                <div class="pedro-portrait portrait-lg" aria-hidden="true"></div>
+                <p id="camp-speech">Sente-se. A brasa não tem pressa, e a estrada pode esperar um pouco.</p>
+                <p class="camp-sign">— Pedro</p>
+              </div>
+              <div class="forge">
+                <div class="forge-head">
+                  <div>
+                    <p class="kicker">FORJA DE CLASSE</p>
+                    <h3 id="forge-weapon-class">Espada</h3>
+                  </div>
+                  <span id="forge-current" class="forge-current">Rara</span>
+                </div>
+                <div id="weapon-path" class="weapon-path"></div>
+                <div id="forge-next" class="forge-next"></div>
+                <div id="forge-action" class="forge-action"></div>
+              </div>
+            </div>
+            <footer class="camp-foot">
+              <p id="camp-hint" class="foot-note"></p>
+              <button id="btn-camp-continue" class="btn btn-primary" type="button">SEGUIR VIAGEM <span>›</span></button>
+            </footer>
+          </div>
+        </section>
+
+        <section id="screen-pause" class="screen modal-screen">
+          <div class="modal-box">
+            <p class="kicker">A CHAMA ESPERA</p>
+            <h2>Pausa</h2>
+            <p class="modal-sub">O Reino não anda enquanto você respira.</p>
+            <div class="modal-actions">
+              <button id="btn-resume" class="btn btn-primary" type="button">CONTINUAR</button>
+              <button id="btn-journal" class="btn btn-ghost" type="button">DIÁRIO DE MEMÓRIAS</button>
+              <button id="btn-restart-phase" class="btn btn-ghost" type="button">REINICIAR FASE</button>
+              <button id="btn-pause-sound" class="btn btn-ghost" type="button">SOM: LIGADO</button>
+              <button id="btn-quit" class="btn btn-ghost danger" type="button">VOLTAR AO TÍTULO</button>
+            </div>
+            <p class="modal-hint">Esc ou P volta ao jogo.<br>A/D move · Espaço pula · J ataca · Shift esquiva.</p>
+          </div>
+        </section>
+
+        <section id="screen-journal" class="screen journal-screen">
+          <div class="screen-inner journal-inner">
+            <header class="screen-head">
+              <button id="btn-journal-back" class="btn btn-back" type="button">‹ PAUSA</button>
+              <div class="screen-title-block">
+                <p class="kicker">CADERNO DE PEDRO</p>
+                <h2>Memórias do Reino</h2>
+                <p id="journal-count" class="screen-sub">0 / 15 memórias encontradas</p>
+              </div>
+              <div class="head-spacer" aria-hidden="true"></div>
+            </header>
+
+            <div id="journal-grid" class="journal-grid" role="list"></div>
+
+            <footer class="screen-foot">
+              <p id="journal-note" class="foot-note">As memórias não aumentam seu poder. Elas mudam o que você pode dizer no fim.</p>
+              <button id="btn-journal-resume" class="btn btn-primary" type="button">CONTINUAR JORNADA <span>›</span></button>
+            </footer>
+          </div>
+        </section>
+
+        <section id="screen-gameover" class="screen modal-screen">
+          <div class="modal-box gameover-box">
+            <p class="kicker">A BRASA VACILA</p>
+            <h2>A memória ainda não acabou</h2>
+            <p class="modal-sub">Pedro já está ao seu lado. Ele não deixa o fogo apagar tão fácil.</p>
+            <div class="modal-actions">
+              <button id="btn-continue-checkpoint" class="btn btn-primary" type="button">CONTINUAR DO DESCANSO</button>
+              <button id="btn-gameover-restart" class="btn btn-ghost" type="button">REINICIAR FASE</button>
+              <button id="btn-gameover-quit" class="btn btn-ghost danger" type="button">VOLTAR AO TÍTULO</button>
+            </div>
+          </div>
+        </section>
+
+        <section id="screen-ending" class="screen">
+          <div class="ending-panel">
+            <div id="ending-choice-view">
+              <p class="kicker">O TRONO VAZIO</p>
+              <h2>O Reino está esperando</h2>
+              <p class="ending-sub">A coroa está no chão. O Rei não está mais ali. Você tem três caminhos — e apenas um deles pede todas as memórias.</p>
+              <div class="ending-stats">
+                <span><b id="ending-memories">0</b> / 15 memórias</span>
+                <span><b id="ending-coins">0</b> moedas</span>
+                <span><b id="ending-cls">—</b></span>
+              </div>
+              <div class="ending-choices">
+                <button class="ending-choice" id="btn-ending-crown" type="button">
+                  <span class="ending-num">I</span>
+                  <strong>Tomar a coroa</strong>
+                  <small>O Reino precisa de um rei. Você já chegou até aqui.</small>
+                </button>
+                <button class="ending-choice" id="btn-ending-break" type="button">
+                  <span class="ending-num">II</span>
+                  <strong>Romper a coroa</strong>
+                  <small>Nenhum trono vale mais uma memória roubada.</small>
+                </button>
+                <button class="ending-choice true-choice" id="btn-ending-true" type="button">
+                  <span class="ending-num">III</span>
+                  <strong>Dizer o nome verdadeiro</strong>
+                  <small id="true-choice-note">Requer as 15 memórias.</small>
+                </button>
+              </div>
+            </div>
+            <div id="ending-result-view" class="hidden">
+              <p id="ending-result-kicker" class="kicker">FINAL</p>
+              <h2 id="ending-result-title">O PESO DO OURO</h2>
+              <div id="ending-result-text" class="ending-text"></div>
+              <div class="ending-footer">
+                <p id="ending-result-note" class="foot-note"></p>
+                <button id="btn-ending-title" class="btn btn-primary" type="button">VOLTAR AO TÍTULO</button>
+              </div>
+            </div>
+          </div>
+        </section>
+      </div>
+
+      <div id="fade" class="fade" aria-hidden="true"></div>
+    </div>
+  </main>
+
+  <script src="js/data.js" defer></script>
+  <script src="js/audio.js" defer></script>
+  <script src="js/art.js" defer></script>
+  <script src="js/scenery.js" defer></script>
+  <script src="js/sprites.js" defer></script>
+  <script src="js/input.js" defer></script>
+  <script src="js/renderer.js" defer></script>
+  <script src="js/ui.js" defer></script>
+  <script src="js/game.js" defer></script>
+</body>
+</html>

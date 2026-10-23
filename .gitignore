@@ -1,0 +1,19 @@
+# Dependências usadas apenas para testes locais
+node_modules/
+package-lock.json
+
+# Versões antigas / rascunhos que não fazem parte da versão publicada
+terra-perdida/
+jogo/
+
+# Arquivos temporários de teste e capturas
+test-results/
+playwright-report/
+*.log
+screenshots/
+shot-*.png
+
+# Sistema
+.DS_Store
+Thumbs.db
+desktop.ini

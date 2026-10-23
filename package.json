@@ -1,0 +1,14 @@
+{
+  "name": "terra-perdida",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Terra Perdida — plataforma 2D em pixel art, com arte e áudio procedurais.",
+  "scripts": {
+    "serve": "npx --yes serve ."
+  },
+  "author": "Pedro Henrique Pereira Ribas",
+  "license": "UNLICENSED",
+  "devDependencies": {
+    "playwright-core": "^1.64.1"
+  }
+}
