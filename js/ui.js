@@ -634,10 +634,6 @@
     if (UI.el.toastLayer) UI.el.toastLayer.innerHTML = "";
   };
 
-  UI.clearToasts = function () {
-    if (UI.el.toastLayer) UI.el.toastLayer.innerHTML = "";
-  };
-
   UI.toast = function (html, type, ms) {
     if (!UI.el.toastLayer) return;
     const el = document.createElement("div");

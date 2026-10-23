@@ -24,14 +24,20 @@ Um jogo de plataforma 2D em pixel art, feito para rodar direto no navegador. Atr
 
 ## Controles
 
-| Ação | Teclado | Controle / toque |
+| Ação | Teclado | Gamepad / toque |
 | --- | --- | --- |
-| Mover | `A` / `D` ou setas | analógico / botões na tela |
-| Pular | `Espaço`, `W`, `Z` ou `↑` | botão **SALTO** |
-| Atacar | `J` ou `X` | botão **GOLPE** |
-| Esquivar | `Shift` ou `K` / `C` | botão **»** |
-| Pausar | `Esc` ou `P` | botão **II** |
-| Avançar diálogo | `Enter`, `Espaço` ou `E` | toque na tela |
+| Mover | `A` / `D` ou setas | analógico / D-pad ou botões na tela |
+| Pular | `Espaço`, `W`, `Z` ou `↑` | **A** / botão **SALTO** |
+| Atacar | `J` ou `X` | **X** / botão **GOLPE** |
+| Esquivar | `Shift` ou `K` / `C` | **B** / botão **»** |
+| Pausar | `Esc` ou `P` | **Start** / botão **II** |
+| Avançar diálogo | `Enter`, `Espaço` ou `E` | **A** / toque na tela |
+
+**Mouse:** clique no canvas para atacar; menus e cartões também respondem ao clique.
+
+**Gamepad (mapeamento padrão):** analógico ou D-pad move, **A** pula, **X** ataca, **B** esquiva e **Start** pausa. Nos menus, o D-pad navega e **A** confirma.
+
+**Celular:** jogue na horizontal. Em modo retrato, o jogo mostra um aviso para girar o aparelho.
 
 O viajante tem um salto extra no ar. Nas fases com chefes voadores, pule e ataque no ar — o alcance vertical faz parte do combate.
 
@@ -63,7 +69,7 @@ js/audio.js         # WebAudio procedural (trilha e efeitos)
 js/input.js         # teclado, mouse, toque e gamepad
 ```
 
-O canvas tem resolução interna de **640 × 360** e é escalado com `image-rendering: pixelated`, mantendo a estética de pixel art em qualquer tela.
+O canvas tem resolução interna de **640 × 360** e é ampliado preservando 16:9 com `image-rendering: pixelated`. Em janelas múltiplas de 640 × 360 (como 1280 × 720) a escala é inteira e os pixels ficam sem suavização; em telas menores, o jogo se ajusta ao espaço disponível sem esticar a imagem.
 
 ## Publicação
 
