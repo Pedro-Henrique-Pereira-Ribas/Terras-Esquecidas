@@ -1066,7 +1066,8 @@
       damage: playerDamage(p), r: isBow ? 4 : 6,
       life: isBow ? 80 : 100, maxLife: isBow ? 80 : 100,
       color: isBow ? "#e0c47d" : (p.weapon.rarity === "mitica" ? "#bd83ff" : "#b9a1ff"),
-      pierce: pierce, splash: splash, effect: p.weapon.effect
+      pierce: pierce, splash: splash, effect: p.weapon.effect,
+      falloff: classDef.falloff || null
     });
   }
 
@@ -1818,7 +1819,9 @@
       color: opts.color || "#ffb06e", gravity: opts.gravity || 0,
       pierce: opts.pierce || 0, splash: opts.splash || 0,
       effect: opts.effect || "none", rot: opts.rot || 0,
-      warning: opts.warning || 0, hitIds: {}, hitCd: 0
+      warning: opts.warning || 0, hitIds: {}, hitCd: 0,
+      originX: opts.x || 0, originY: opts.y || 0,
+      falloff: opts.falloff || null
     };
     state.projectiles.push(pr);
     return pr;
@@ -1889,7 +1892,7 @@
         }
         if ((pr.kind === "arrow" || pr.kind === "spell" || pr.kind === "spirit") && solidAt(pr.x, pr.y)) {
           burst(pr.x, pr.y, pr.color, 6, 1.3, 1, 0.08);
-          if (pr.splash > 0) splashDamage(pr, pr.x, pr.y);
+          if (pr.splash > 0) splashDamage(pr, pr.x, pr.y, undefined, projectileDamage(pr));
           state.projectiles.splice(i, 1);
           continue;
         }
@@ -1909,7 +1912,7 @@
         }
       }
 
-      if (pr.x < level.arena.left - 80 || pr.x > level.width + 80 || pr.y > H + 80 || pr.y < -140) {
+      if (pr.x < -80 || pr.x > level.width + 80 || pr.y > H + 80 || pr.y < -140) {
         state.projectiles.splice(i, 1);
       }
     }
@@ -1917,7 +1920,8 @@
 
   function hitFriendlyProjectile(pr) {
     const level = state.level;
-    const effects = { weapon: { effect: pr.effect, dmg: pr.damage } };
+    const dmg = projectileDamage(pr);
+    const effects = { weapon: { effect: pr.effect, dmg: dmg } };
     const dir = pr.vx >= 0 ? 1 : -1;
 
     for (let i = 0; i < level.enemies.length; i++) {
@@ -1926,10 +1930,10 @@
       if (pr.hitIds["e" + i]) continue;
       if (aabb(projectileBox(pr), { x: e.x, y: e.y, w: e.w, h: e.h })) {
         pr.hitIds["e" + i] = true;
-        damageEnemy(e, pr.damage, dir, effects);
+        damageEnemy(e, dmg, dir, effects);
         burst(pr.x, pr.y, pr.color, 7, 1.8, 2, 0.06);
         TP.audio.sfx("hit");
-        if (pr.splash > 0) splashDamage(pr, e.x + e.w / 2, e.y + e.h / 2, i);
+        if (pr.splash > 0) splashDamage(pr, e.x + e.w / 2, e.y + e.h / 2, i, dmg);
         if (pr.pierce > 0) { pr.pierce--; return false; }
         return true;
       }
@@ -1939,10 +1943,10 @@
     if (b && level.bossActive && !level.bossDefeated && !b.dead && !pr.hitIds.boss) {
       if (aabb(projectileBox(pr), { x: b.x, y: b.y, w: b.w, h: b.h })) {
         pr.hitIds.boss = true;
-        damageBoss(b, pr.damage, effects);
+        damageBoss(b, dmg, effects);
         burst(pr.x, pr.y, pr.color, 9, 2.1, 2, 0.05);
         TP.audio.sfx("hit");
-        if (pr.splash > 0) splashDamage(pr, b.x + b.w / 2, b.y + b.h / 2);
+        if (pr.splash > 0) splashDamage(pr, b.x + b.w / 2, b.y + b.h / 2, undefined, dmg);
         if (pr.pierce > 0) { pr.pierce--; return false; }
         return true;
       }
@@ -1950,10 +1954,40 @@
     return false;
   }
 
-  function splashDamage(pr, x, y, skipEnemy) {
+  /* Dano por distância: arqueira brilha longe; mago brilha na faixa média. */
+  function projectileDamage(pr) {
+    const falloff = pr.falloff;
+    if (!falloff) return pr.damage;
+    const dx = pr.x - pr.originX;
+    const dy = pr.y - pr.originY;
+    const dist = Math.sqrt(dx * dx + dy * dy);
+    let mul = 1;
+
+    if (falloff.mode === "long") {
+      const t = clamp((dist - falloff.near) / Math.max(1, falloff.far - falloff.near), 0, 1);
+      mul = falloff.nearMul + (falloff.farMul - falloff.nearMul) * t;
+    } else if (dist <= falloff.near) {
+      mul = falloff.nearMul;
+    } else if (dist < falloff.idealMin) {
+      const t = (dist - falloff.near) / Math.max(1, falloff.idealMin - falloff.near);
+      mul = falloff.nearMul + (falloff.idealMul - falloff.nearMul) * t;
+    } else if (dist <= falloff.idealMax) {
+      mul = falloff.idealMul;
+    } else if (dist < falloff.far) {
+      const t = (dist - falloff.idealMax) / Math.max(1, falloff.far - falloff.idealMax);
+      mul = falloff.idealMul + (falloff.farMul - falloff.idealMul) * t;
+    } else {
+      mul = falloff.farMul;
+    }
+
+    return Math.max(1, Math.round(pr.damage * mul));
+  }
+
+  function splashDamage(pr, x, y, skipEnemy, damage) {
     const level = state.level;
     const radius = pr.splash;
-    const effects = { weapon: { effect: pr.effect, dmg: pr.damage } };
+    const baseDamage = damage == null ? pr.damage : damage;
+    const effects = { weapon: { effect: pr.effect, dmg: baseDamage } };
     for (let i = 0; i < level.enemies.length; i++) {
       if (i === skipEnemy) continue;
       const e = level.enemies[i];
@@ -1961,14 +1995,14 @@
       const dx = (e.x + e.w / 2) - x;
       const dy = (e.y + e.h / 2) - y;
       if (dx * dx + dy * dy <= radius * radius) {
-        damageEnemy(e, pr.damage * 0.5, dx < 0 ? -1 : 1, effects);
+        damageEnemy(e, baseDamage * 0.5, dx < 0 ? -1 : 1, effects);
       }
     }
     const b = level.boss;
     if (b && level.bossActive && !level.bossDefeated && !b.dead) {
       const dx = (b.x + b.w / 2) - x;
       const dy = (b.y + b.h / 2) - y;
-      if (dx * dx + dy * dy <= radius * radius) damageBoss(b, pr.damage * 0.55, effects);
+      if (dx * dx + dy * dy <= radius * radius) damageBoss(b, baseDamage * 0.55, effects);
     }
     for (let i = 0; i < 10; i++) {
       burst(x + rand(-radius, radius), y + rand(-radius, radius), pr.color, 1, 0.7, 1, 0.02);

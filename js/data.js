@@ -56,7 +56,7 @@
       damageTaken: 1,
       atkSpeedMul: 0.88,
       passive: "Flecha que Insiste",
-      passiveText: "Suas flechas atravessam um inimigo extra antes de sumir.",
+      passiveText: "Longe, a flecha fere fundo; de perto, quase não corta. Ela ainda atravessa um inimigo extra.",
       blurb: "Cresceu ouvindo a floresta respirar. Agora procura a canção que o Rei fez calar.",
       quote: "Cada árvore lembra de uma coisa que os homens preferem esquecer.",
       palette: {
@@ -106,7 +106,7 @@
       damageTaken: 1,
       atkSpeedMul: 1,
       passive: "Faísca Antiga",
-      passiveText: "Seus feitiços explodem em uma pequena área e alcançam mais de um inimigo.",
+      passiveText: "Seus feitiços explodem em área e são mais fortes a média distância. Muito perto ou longe demais, perdem força.",
       blurb: "Passou a vida catalogando ruínas. Descobriu tarde demais que as ruínas também o catalogavam.",
       quote: "Toda magia é uma memória que se recusa a ficar quieta.",
       palette: {
@@ -144,19 +144,30 @@
   const WEAPON_CLASSES = {
     sword: {
       name: "Espada", icon: "sword", ranged: false, range: 38,
-      verb: "corte", attackLine: "Um corte limpo.", projectileSpeed: 0
+      verb: "corte", attackLine: "Um corte limpo.", projectileSpeed: 0,
+      rangeLabel: "Curto"
     },
     bow: {
       name: "Arco", icon: "bow", ranged: true, range: 0,
-      verb: "flecha", attackLine: "A corda canta.", projectileSpeed: 10.4
+      verb: "flecha", attackLine: "A corda canta.", projectileSpeed: 10.4,
+      rangeLabel: "Longo",
+      /* Longa distância: a flecha perde força de perto e atinge o ápice longe. */
+      falloff: { mode: "long", near: 40, far: 300, nearMul: 0.45, farMul: 1.1 }
     },
     axe: {
       name: "Machado", icon: "axe", ranged: false, range: 47,
-      verb: "golpe", attackLine: "O peso decides.", projectileSpeed: 0
+      verb: "golpe", attackLine: "O peso decides.", projectileSpeed: 0,
+      rangeLabel: "Curto"
     },
     staff: {
       name: "Cajado", icon: "staff", ranged: true, range: 0,
-      verb: "feitiço", attackLine: "A cinza acende.", projectileSpeed: 7.4
+      rangeLabel: "Médio",
+      verb: "feitiço", attackLine: "A cinza acende.", projectileSpeed: 7.4,
+      /* Média distância: dano cheio na faixa ideal, menor perto e longe demais. */
+      falloff: {
+        mode: "medium", near: 70, idealMin: 140, idealMax: 270, far: 420,
+        nearMul: 0.55, idealMul: 1.1, farMul: 0.5
+      }
     }
   };
 
@@ -279,7 +290,7 @@
 
   const BOSSES = {
     colosso: {
-      name: "Colosso", title: "O Guardião das Ruínas", hp: 560, w: 84, h: 94,
+      name: "Colosso", title: "O Guardião das Ruínas", hp: 250, w: 84, h: 94,
       contact: 15, speed: 0.72, flying: false, attacks: ["slam", "charge", "volley"],
       coin: 500, theme: "ruins",
       taunt: "PEDRA. RAIZ. SILÊNCIO. VOCÊ NÃO PASSA.",
@@ -288,7 +299,7 @@
       colors: { stone: "#7d806d", dark: "#4d5044", moss: "#738b55", eye: "#7de7d8", crack: "#2f322b" }
     },
     vulto: {
-      name: "Vulto", title: "O Que Sussurra Entre as Árvores", hp: 660, w: 64, h: 94,
+      name: "Vulto", title: "O Que Sussurra Entre as Árvores", hp: 300, w: 64, h: 94,
       contact: 16, speed: 0.92, flying: true, hover: 218, attacks: ["volley", "teleport", "summon"],
       coin: 500, theme: "forest",
       taunt: "VOCÊ OUVE A FLORESTA? ELA NÃO PEDE SOCORRO. ELA CHORA.",
@@ -297,7 +308,7 @@
       colors: { cloak: "#23372f", cloak2: "#15221d", bone: "#cfc4a3", eye: "#9be8a8", glow: "#78c7a0" }
     },
     corvo: {
-      name: "Corvo Cinzento", title: "A Asa Que Cobre o Vale", hp: 760, w: 116, h: 68,
+      name: "Corvo Cinzento", title: "A Asa Que Cobre o Vale", hp: 350, w: 116, h: 68,
       contact: 16, speed: 1.05, flying: true, hover: 198, attacks: ["dive", "feathers", "gust"],
       coin: 500, theme: "mountain",
       taunt: "O VALE É MEU. O INVERNO É MEU. ATÉ O SEU ÚLTIMO SUSPIRO É MEU.",
@@ -306,7 +317,7 @@
       colors: { feather: "#303b54", feather2: "#1d2438", beak: "#b8a56e", eye: "#ff5d54", wing: "#45536f" }
     },
     ferrugem: {
-      name: "Ferrugem", title: "A Máquina Que Sonhou", hp: 880, w: 102, h: 78,
+      name: "Ferrugem", title: "A Máquina Que Sonhou", hp: 350, w: 102, h: 78,
       contact: 18, speed: 0.84, flying: false, attacks: ["charge", "acid", "summon", "slam"],
       coin: 500, theme: "mine",
       taunt: "DOR É SÓ FERRO LEMBRANDO. EU TAMBÉM LEMBRO. NÃO DEVERIA.",
@@ -315,7 +326,7 @@
       colors: { rust: "#8b5236", metal: "#5c4a3e", dark: "#322722", core: "#ff9b4e", glow: "#ffc36e", eye: "#ff5e42" }
     },
     rei: {
-      name: "Rei das Cinzas", title: "O Nome Que o Reino Esqueceu", hp: 1120, w: 70, h: 98,
+      name: "Rei das Cinzas", title: "O Nome Que o Reino Esqueceu", hp: 350, w: 70, h: 98,
       contact: 20, speed: 0.9, flying: false, attacks: ["slashwave", "dash", "pillars", "volley"],
       coin: 1000, theme: "frontier", final: true,
       taunt: "MAIS UM QUE VEIO TOMAR O QUE SOBROU. MAIS UM NOME PARA AS CINZAS.",

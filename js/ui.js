@@ -262,6 +262,7 @@
     const chars = TP.DATA.CHARACTERS;
     UI.el.charGrid.innerHTML = chars.map(function (c) {
       const w = TP.DATA.WEAPONS[c.weaponClass][0];
+      const wc = TP.DATA.WEAPON_CLASSES[c.weaponClass];
       const g = gradeClass(c.grade);
       const speed = Math.max(1, Math.min(5, Math.round((c.speed / 2.5) * 5)));
       const weight = Math.max(1, Math.min(5, Math.round((c.weight / 8) * 5)));
@@ -275,7 +276,7 @@
             '<div class="stat-line"><span>Passo</span><span class="stat-track"><i style="width:' + (speed * 20) + '%"></i></span></div>' +
             '<div class="stat-line"><span>Peso</span><span class="stat-track"><i style="width:' + (weight * 20) + '%"></i></span></div>' +
           '</div>' +
-          '<div class="char-weapon"><b>' + esc(w.name) + '</b>Rara · ' + w.dmg + ' dano · ' + esc(w.speed) + '</div>' +
+          '<div class="char-weapon"><b>' + esc(w.name) + '</b>Rara · ' + w.dmg + ' dano · ' + esc(w.speed) + ' · alcance ' + esc((wc.rangeLabel || "curto").toLowerCase()) + '</div>' +
           '<div class="char-passive"><strong>' + esc(c.passive) + '</strong> ' + esc(c.passiveText) + '</div>' +
           '<p class="char-blurb">' + esc(c.blurb) + '</p>' +
           '<p class="char-quote">' + esc(c.quote) + '</p>' +
