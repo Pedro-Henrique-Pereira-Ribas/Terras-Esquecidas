@@ -17,7 +17,7 @@ Um jogo de plataforma 2D em pixel art, feito para rodar direto no navegador. Atr
 - **4 chefes** pelo caminho e o **Rei das Cinzas** no fim, com fases e padrões de ataque distintos.
 - **4 degraus de arma** por classe, forjados com as moedas deixadas pelos chefes.
 - **Loja no acampamento** para comprar armas de qualquer classe e trocar a equipada antes de seguir viagem.
-- **Conta local e servidor** criados no início da jornada, com nome e chave de acesso guardados apenas no navegador.
+- **Conta local e servidor opcionais**, com nome e chave de acesso guardados apenas no navegador. Dá para jogar como visitante sem criar nada.
 - **15 memórias** escondidas pelas fases. Elas não aumentam seu poder — mudam o que você pode dizer no final.
 - **3 dificuldades** (Raiz, Selva e Ruína) com ajustes reais de dano, vida, velocidade e cura.
 - **3 finais**, incluindo um final verdadeiro para quem encontrar todas as memórias.
@@ -26,7 +26,7 @@ Um jogo de plataforma 2D em pixel art, feito para rodar direto no navegador. Atr
 
 ### Conta e servidor
 
-Ao abrir o jogo pela primeira vez, crie uma conta local com nome, uma chave de 4 dígitos e o nome do servidor. Tudo fica salvo no `localStorage` do próprio navegador — não há login remoto nem envio de dados. Para voltar depois, use a aba **Entrar** com o mesmo nome e chave; o botão **Conta** no título permite trocar de perfil.
+O jogo abre direto no título e pode ser jogado como **Visitante**, sem criar conta. Se quiser guardar um nome e um servidor, use o botão **Entrar** no canto do título para criar uma conta local com nome, uma chave de 4 dígitos e o nome do servidor. Tudo fica salvo no `localStorage` do próprio navegador — não há login remoto nem envio de dados. Para voltar depois, use a aba **Entrar** com o mesmo nome e chave; o botão **Conta** no título permite trocar de perfil ou voltar a jogar sem conta.
 
 ## Controles
 

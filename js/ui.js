@@ -94,8 +94,10 @@
       accountServerGroup: q("account-server-group"), accountServerOptions: q("account-server-options"),
       accountServerCustom: q("account-server-custom"), accountError: q("account-error"),
       accountCreate: q("btn-account-create"), accountTabs: q("account-tabs"),
-      titleAccountName: q("title-account-name"), titleAccountServer: q("title-account-server"),
-      titleAccountAvatar: q("title-account-avatar"), pauseAccount: q("pause-account"),
+      accountSkip: q("btn-account-skip"),
+      titleAccount: q("title-account"), titleAccountName: q("title-account-name"),
+      titleAccountServer: q("title-account-server"), titleAccountAvatar: q("title-account-avatar"),
+      titleAccountButton: q("btn-title-account"), pauseAccount: q("pause-account"),
       accountScreen: q("screen-account")
     };
 
@@ -142,6 +144,7 @@
     q("btn-title-account").addEventListener("click", function () { TP.audio.sfx("click"); call("showAccountGate"); });
     q("btn-account-play").addEventListener("click", function () { TP.audio.sfx("click"); call("showTitle"); });
     q("btn-account-switch").addEventListener("click", function () { TP.audio.sfx("click"); switchAccount(); });
+    if (UI.el.accountSkip) UI.el.accountSkip.addEventListener("click", function () { TP.audio.sfx("click"); call("showTitle"); });
 
     UI.el.accountTabs.addEventListener("click", function (e) {
       const tab = e.target.closest("[data-account-tab]");
@@ -458,11 +461,19 @@
 
   UI.renderAccountBadge = function () {
     const a = UI.account;
-    if (!a) return;
-    if (UI.el.titleAccountName) UI.el.titleAccountName.textContent = a.name;
-    if (UI.el.titleAccountServer) UI.el.titleAccountServer.textContent = a.server;
-    if (UI.el.titleAccountAvatar) UI.el.titleAccountAvatar.textContent = accountInitial(a.name);
-    if (UI.el.pauseAccount) UI.el.pauseAccount.textContent = a.name + "  ·  Servidor " + a.server;
+    const name = a ? a.name : "Visitante";
+    const server = a ? a.server : "Jogando sem conta";
+    if (UI.el.titleAccount) UI.el.titleAccount.classList.toggle("guest", !a);
+    if (UI.el.titleAccountName) UI.el.titleAccountName.textContent = name;
+    if (UI.el.titleAccountServer) UI.el.titleAccountServer.textContent = server;
+    if (UI.el.titleAccountAvatar) UI.el.titleAccountAvatar.textContent = accountInitial(name);
+    if (UI.el.titleAccountButton) {
+      UI.el.titleAccountButton.textContent = a ? "CONTA" : "ENTRAR";
+      UI.el.titleAccountButton.setAttribute("aria-label", a ? "Abrir conta" : "Criar conta ou entrar");
+    }
+    if (UI.el.pauseAccount) UI.el.pauseAccount.textContent = a
+      ? a.name + "  ·  Servidor " + a.server
+      : "Visitante  ·  Jogando sem conta";
   };
 
   /* ============================================================

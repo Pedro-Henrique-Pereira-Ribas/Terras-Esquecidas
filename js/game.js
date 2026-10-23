@@ -107,7 +107,7 @@
     TP.ui.init();
     TP.input.bindCanvas(document.getElementById("game"));
     TP.renderer.init(document.getElementById("game"));
-    showAccountGate();
+    showTitle();
     state.last = 0;
     state.acc = 0;
     requestAnimationFrame(loop);

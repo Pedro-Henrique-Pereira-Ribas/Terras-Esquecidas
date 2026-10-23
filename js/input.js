@@ -173,7 +173,7 @@
   function preferredMenuTarget(screen) {
     if (!screen) return null;
     const map = {
-      "screen-account": "#btn-account-play, #btn-account-create",
+      "screen-account": "#btn-account-play, #btn-account-skip, #btn-account-create",
       "screen-title": "#btn-start",
       "screen-characters": ".char-card.selected, [data-char]",
       "screen-difficulty": ".diff-card.selected, [data-diff]",
