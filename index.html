@@ -33,6 +33,7 @@
                 <span id="hud-weapon-name">Espada Longa</span>
                 <span id="hud-weapon-rarity" class="rarity-text rara">Rara</span>
               </div>
+              <div id="hud-enchant" class="hud-enchant hidden"></div>
             </div>
           </div>
 
@@ -261,7 +262,7 @@
               </article>
               <article class="how-card">
                 <h3>Combate e tarefas</h3>
-                <p><kbd>J</kbd> ou <kbd>X</kbd> para atacar. Clique esquerdo no canvas também ataca. Perto de um NPC, <kbd>E</kbd> fala (gamepad: <kbd>Y</kbd>; toque: <b>FALAR</b>).</p>
+                <p><kbd>J</kbd> ou <kbd>X</kbd> para atacar. Clique esquerdo no canvas também ataca. Perto de um NPC, <kbd>E</kbd> fala; perto de um mercador, <kbd>E</kbd> abre a loja (gamepad: <kbd>Y</kbd>; toque: <b>FALAR</b> ou <b>LOJA</b>).</p>
                 <p>Espada e picareta são corpo a corpo. O arco fere mais longe; o cajado é mais forte na distância média. A arma define o alcance, o dano e o efeito.</p>
                 <p>Cada fase tem uma tarefa com um NPC e um alvo único. Fale com o NPC, derrote o alvo e receba <b>200 a 500 moedas</b>. As tarefas voltam a cada Nova Jornada.</p>
               </article>
@@ -276,6 +277,7 @@
                 </ul>
                 <p>As armas ficam guardadas por herói. Na aba <b>Armas</b>, clique em qualquer arma obtida para equipá-la; não há loja de armas.</p>
                 <p>O <b>Vestiário</b> tem 7 trajes por herói. Os trajes 2 a 6 dão bônus leves (2% a 4%). O 7º é o traje final: <b>250 de vida máxima</b>, sem outro bônus. Cada herói só compra e veste o próprio traje, com a própria carteira.</p>
+                <p>Nas três últimas fases do Ato II, mercadores vendem <b>encantamentos de arma</b> por moedas. Cada um dá dano ou velocidade de ataque, vale para todas as armas do herói e fica salvo no navegador. O interruptor na loja ou na pausa desliga os efeitos sem apagar as compras.</p>
               </article>
               <article class="how-card">
                 <h3>Memórias e escolhas</h3>
@@ -298,7 +300,7 @@
               </article>
             </div>
             <footer class="screen-foot">
-              <p class="foot-note">O jogo guarda sua conta local, o servidor escolhido, o som, os trajes, as armas e a carteira de cada herói. Memórias, tarefas, chefes e checkpoints começam do zero a cada jornada.</p>
+              <p class="foot-note">O jogo guarda sua conta local, o servidor escolhido, o som, os trajes, as armas, os encantamentos e a carteira de cada herói. Memórias, tarefas, chefes e checkpoints começam do zero a cada jornada.</p>
               <button id="btn-how-close" class="btn btn-primary" type="button">ENTENDI <span>›</span></button>
             </footer>
           </div>
@@ -362,6 +364,51 @@
           </div>
         </section>
 
+        <section id="screen-enchant" class="screen enchant-screen" aria-label="Mercador de encantamentos">
+          <div class="camp-panel enchant-panel">
+            <header class="camp-head">
+              <div>
+                <p id="enchant-kicker" class="kicker">MERCADOR DE ENCANTOS</p>
+                <h2 id="enchant-title">Khepri</h2>
+                <p id="enchant-role" class="enchant-role">Vidraceiro da Tumba</p>
+              </div>
+              <div class="camp-wallet">
+                <span class="coin-dot"></span>
+                <span id="enchant-coins">0</span>
+                <small>moedas</small>
+              </div>
+            </header>
+            <div class="enchant-body">
+              <aside class="enchant-merchant">
+                <div id="enchant-portrait" class="portrait-lg enchant-portrait" aria-hidden="true"></div>
+                <p id="enchant-speech" class="enchant-speech"></p>
+                <p id="enchant-sign" class="camp-sign">— Mercador</p>
+                <div id="enchant-summary" class="enchant-summary"></div>
+                <label class="enchant-toggle">
+                  <input id="enchant-enabled" type="checkbox" checked>
+                  <span>Encantamentos ativos</span>
+                </label>
+                <p id="enchant-owned" class="enchant-owned">0/2 desta fase</p>
+              </aside>
+              <div class="enchant-stock">
+                <div class="enchant-stock-head">
+                  <div>
+                    <p class="kicker">ESTOQUE DA FASE</p>
+                    <h3>Encantamentos de arma</h3>
+                  </div>
+                  <span class="enchant-note-badge">PERMANENTE POR HERÓI</span>
+                </div>
+                <div id="enchant-grid" class="enchant-grid"></div>
+                <p id="enchant-note" class="foot-note enchant-note"></p>
+              </div>
+            </div>
+            <footer class="camp-foot">
+              <p class="foot-note">Dano e velocidade de ataque valem para todas as armas deste herói. A compra fica salva neste navegador.</p>
+              <button id="btn-enchant-close" class="btn btn-primary" type="button">VOLTAR À JORNADA <span>›</span></button>
+            </footer>
+          </div>
+        </section>
+
         <section id="screen-pause" class="screen modal-screen">
           <div class="modal-box">
             <p class="kicker">A CHAMA ESPERA</p>
@@ -373,6 +420,7 @@
               <button id="btn-journal" class="btn btn-ghost" type="button">DIÁRIO DE MEMÓRIAS</button>
               <button id="btn-restart-phase" class="btn btn-ghost" type="button">REINICIAR FASE</button>
               <button id="btn-pause-sound" class="btn btn-ghost" type="button">SOM: LIGADO</button>
+              <button id="btn-pause-enchants" class="btn btn-ghost" type="button" aria-pressed="true">ENCANTAMENTOS: NENHUM</button>
               <button id="btn-quit" class="btn btn-ghost danger" type="button">VOLTAR AO TÍTULO</button>
             </div>
             <p class="modal-hint">Esc ou P volta ao jogo.<br>A/D move · Espaço pula · J ataca · Shift esquiva.</p>

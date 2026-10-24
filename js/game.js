@@ -28,6 +28,7 @@
     campData: null,
     campContext: null,
     nearNpc: null,
+    enchantNpc: null,
     deathTimer: 0
   };
   TP.state = state;
@@ -85,6 +86,16 @@
     run.coins -= amount;
     saveWallet(run);
     return true;
+  }
+
+  function enchantBonus(run, type) {
+    if (!run || !run.enchantments || run.enchantments.enabled === false) return 0;
+    const owned = run.enchantments.owned || {};
+    let total = 0;
+    DATA.ENCHANTMENTS.forEach(function (def) {
+      if (owned[def.id] && def.type === type) total += def.value;
+    });
+    return total;
   }
 
   function persistArmory(run) {
@@ -159,6 +170,11 @@
     buyOutfit: buyOutfit,
     equipOutfit: equipOutfit,
     equipWeapon: equipWeapon,
+    openEnchantShop: openEnchantShop,
+    closeEnchant: closeEnchant,
+    buyEnchantment: buyEnchantment,
+    toggleEnchantments: toggleEnchantments,
+    enchantBonus: enchantBonus,
     campContinue: campContinue,
     chooseEnding: chooseEnding,
     continueToAct2: continueToAct2,
@@ -197,7 +213,8 @@
     TP.input.poll();
 
     if (TP.input.pausePressed) {
-      if (state.mode === "playing" || state.mode === "paused") togglePause();
+      if (state.mode === "enchant") closeEnchant();
+      else if (state.mode === "playing" || state.mode === "paused") togglePause();
     }
 
     if (state.mode === "title" && TP.input.advancePressed) {
@@ -224,7 +241,7 @@
       }
     }
 
-    if (state.level && state.mode !== "camp" && state.mode !== "ending" && state.mode !== "endingText" && state.mode !== "title") {
+    if (state.level && state.mode !== "camp" && state.mode !== "enchant" && state.mode !== "ending" && state.mode !== "endingText" && state.mode !== "title") {
       if (state.mode === "playing") TP.ui.setHUD({ player: state.player, run: state.run, level: state.level });
       else TP.ui.setHUD({ player: state.player, run: state.run, level: state.level });
     }
@@ -362,6 +379,7 @@
       lastDrop: null,
       deaths: 0,
       quests: createQuestState(),
+      enchantments: TP.ui.enchantmentsFor(char.id),
       startedAt: state.time,
       ending: null,
       act1Ending: null,
@@ -370,6 +388,7 @@
     state.campData = null;
     state.campContext = null;
     state.nearNpc = null;
+    state.enchantNpc = null;
     state.selectedDiff = diff.id;
     TP.audio.init();
     startLevel(0, false);
@@ -408,6 +427,8 @@
     state.bossIntro = 0;
     state.campData = null;
     state.campContext = null;
+    state.nearNpc = null;
+    state.enchantNpc = null;
     buildLevel(index);
     TP.ui.hideScreens();
     TP.ui.showHUD(true);
@@ -520,6 +541,30 @@
       }
     }
 
+    const merchantDef = def.merchant ? DATA.MERCHANTS[def.merchant] : null;
+    let merchantNpc = null;
+    if (merchantDef) {
+      merchantNpc = {
+        id: "merchant_" + merchantDef.id,
+        merchantId: merchantDef.id,
+        name: merchantDef.name,
+        role: merchantDef.role,
+        kind: merchantDef.kind,
+        style: merchantDef.style,
+        palette: merchantDef.palette,
+        x: merchantDef.x,
+        y: GROUND_Y - 34,
+        w: 20,
+        h: 34,
+        stock: (merchantDef.stock || []).slice(),
+        speech: merchantDef.speech,
+        prompt: merchantDef.prompt,
+        touchLabel: merchantDef.touchLabel,
+        marker: merchantDef.marker,
+        shop: true
+      };
+    }
+
     const level = {
       token: ++levelToken,
       index: index,
@@ -545,7 +590,8 @@
       gateX: def.arenaStart + 20,
       questDef: questDef,
       questNpc: questNpc,
-      questTarget: questTarget
+      questTarget: questTarget,
+      merchantNpc: merchantNpc
     };
 
     (def.enemies || []).forEach(function (e) {
@@ -825,6 +871,7 @@
       TP.ui.showScreen("screen-pause");
       TP.ui.showTouch(false);
       TP.ui.updateSoundLabels();
+      TP.ui.updateEnchantLabels(state.run);
       TP.audio.sfx("click");
     } else if (state.mode === "paused") {
       TP.ui.hideScreens();
@@ -1046,7 +1093,7 @@
     if (p.dead) return;
 
     checkPickups(p);
-    updateQuestNpc(p, level);
+    updateNpcs(p, level);
     if (state.mode !== "playing") return;
     updateEnemies();
     updateBoss();
@@ -1300,7 +1347,8 @@
   function performAttack(p) {
     const cls = p.weapon.cls;
     const classDef = DATA.WEAPON_CLASSES[cls];
-    p.attackCd = Math.max(10, Math.round(p.weapon.cooldown * p.char.atkSpeedMul));
+    const attackSpeedBonus = enchantBonus(state.run, "attackSpeed");
+    p.attackCd = Math.max(10, Math.round(p.weapon.cooldown * p.char.atkSpeedMul / (1 + attackSpeedBonus)));
     p.attackTimer = cls === "pickaxe" ? 18 : 14;
     p.attackDuration = p.attackTimer;
     p.attackHitDone = false;
@@ -1325,7 +1373,8 @@
   }
 
   function playerDamage(p) {
-    return Math.max(1, Math.round(p.weapon.dmg * p.char.damageMul * rand(0.94, 1.06)));
+    const damageBonus = enchantBonus(state.run, "damage");
+    return Math.max(1, Math.round(p.weapon.dmg * p.char.damageMul * (1 + damageBonus) * rand(0.94, 1.06)));
   }
 
   function meleeHit(p, classDef) {
@@ -1558,22 +1607,119 @@
     }, speaker);
   }
 
-  function updateQuestNpc(p, level) {
-    const npc = level.questNpc;
-    if (!npc || !state.run || !state.run.quests || p.dead) {
+  function openEnchantShop(npc) {
+    if (state.mode !== "playing" || !state.run || !npc || !npc.shop) return;
+    state.mode = "enchant";
+    state.nearNpc = null;
+    state.enchantNpc = npc;
+    if (state.player) state.player.locked = true;
+    TP.ui.hideInteractPrompt();
+    TP.ui.showTouch(false);
+    TP.ui.showEnchant({ merchant: npc, run: state.run });
+    TP.audio.sfx("click");
+  }
+
+  function closeEnchant() {
+    if (state.mode !== "enchant") return;
+    state.mode = "playing";
+    state.enchantNpc = null;
+    if (state.player) state.player.locked = false;
+    TP.ui.hideScreens();
+    TP.ui.showHUD(true);
+    TP.ui.showTouch(true);
+    TP.ui.invalidateHUD();
+    TP.audio.sfx("click");
+  }
+
+  function buyEnchantment(id) {
+    if (state.mode !== "enchant" || !state.run || !state.enchantNpc) return;
+    const def = DATA.ENCHANTMENTS.find(function (e) { return e.id === id; }) || null;
+    if (!def || (state.enchantNpc.stock || []).indexOf(id) < 0) return;
+    const run = state.run;
+    if (!run.enchantments) run.enchantments = TP.ui.enchantmentsFor(run.char.id);
+    const ench = run.enchantments;
+    if (ench.owned[id]) {
+      TP.ui.toast("<strong>" + def.name + "</strong> já está gravado neste herói.", "coin", 2200);
+      return;
+    }
+    if (run.coins < def.price) {
+      TP.audio.sfx("click");
+      TP.ui.toast("Faltam <strong>" + fmt(def.price - run.coins) + " moedas</strong> para este encantamento.", "danger", 2600);
+      return;
+    }
+    spendCoins(run, def.price);
+    ench.owned[id] = true;
+    TP.ui.saveEnchantmentsFor(run.char.id, ench);
+    TP.audio.sfx("buy");
+    TP.ui.toast("<strong>" + def.name + "</strong> gravado. O bônus vale para todas as armas de " + run.char.name + ".", "memory", 3600);
+    TP.ui.refreshEnchant();
+    TP.ui.invalidateHUD();
+  }
+
+  function toggleEnchantments(value) {
+    const run = state.run;
+    if (!run) return;
+    if (!run.enchantments) run.enchantments = TP.ui.enchantmentsFor(run.char.id);
+    const ench = run.enchantments;
+    const next = typeof value === "boolean" ? value : !ench.enabled;
+    if (next === ench.enabled) return;
+    ench.enabled = next;
+    TP.ui.saveEnchantmentsFor(run.char.id, ench);
+    TP.ui.updateEnchantLabels(run);
+    if (state.mode === "enchant") {
+      TP.ui.refreshEnchant();
+      TP.ui.toast(next ? "Encantamentos ligados." : "Encantamentos desligados. As compras continuam salvas.", "coin", 2400);
+    }
+    TP.ui.invalidateHUD();
+    TP.audio.sfx("click");
+  }
+
+  function npcNear(p, npc) {
+    if (!npc) return false;
+    const dx = Math.abs((p.x + p.w / 2) - (npc.x + npc.w / 2));
+    const dy = Math.abs((p.y + p.h / 2) - (npc.y + npc.h / 2));
+    return dx < 48 && dy < 42;
+  }
+
+  function npcDistance(p, npc) {
+    const dx = (p.x + p.w / 2) - (npc.x + npc.w / 2);
+    const dy = (p.y + p.h / 2) - (npc.y + npc.h / 2);
+    return dx * dx + dy * dy;
+  }
+
+  function updateNpcs(p, level) {
+    if (!state.run || p.dead) {
       state.nearNpc = null;
       TP.ui.hideInteractPrompt();
       return;
     }
-    const dx = Math.abs((p.x + p.w / 2) - (npc.x + npc.w / 2));
-    const dy = Math.abs((p.y + p.h / 2) - (npc.y + npc.h / 2));
-    const near = dx < 48 && dy < 42;
-    if (!near) {
+    let npc = null;
+    let best = Infinity;
+    if (level.questNpc && state.run.quests && npcNear(p, level.questNpc)) {
+      npc = level.questNpc;
+      best = npcDistance(p, npc);
+    }
+    if (level.merchantNpc && npcNear(p, level.merchantNpc)) {
+      const dist = npcDistance(p, level.merchantNpc);
+      if (dist < best) {
+        npc = level.merchantNpc;
+        best = dist;
+      }
+    }
+    if (!npc) {
       state.nearNpc = null;
       TP.ui.hideInteractPrompt();
       return;
     }
     state.nearNpc = npc;
+    if (npc.shop) {
+      TP.ui.showInteractPrompt(npc);
+      if (TP.input.interactPressed) {
+        TP.input.interactPressed = false;
+        openEnchantShop(npc);
+      }
+      return;
+    }
     TP.ui.showInteractPrompt(npc, state.run.quests[npc.questId]);
     if (TP.input.interactPressed) {
       TP.input.interactPressed = false;

@@ -950,6 +950,76 @@
   ];
 
   /* ============================================================
+     ENCANTAMENTOS DE ARMA
+     Compra única por herói. Valem para todas as armas do herói.
+     ============================================================ */
+  const ENCHANTMENTS = [
+    {
+      id: "lamina_vidro", merchant: "khepri", name: "Lâmina de Vidro",
+      type: "damage", value: 0.05, price: 1500,
+      desc: "O vidro guarda o último raio de sol. +5% de dano em todas as armas do herói.",
+      color: "#7fd8cf", glow: "#d9fffa"
+    },
+    {
+      id: "passo_dunas", merchant: "khepri", name: "Passo das Dunas",
+      type: "attackSpeed", value: 0.04, price: 1300,
+      desc: "A areia não pesa nos pés de quem aprendeu a atravessá-la. +4% de velocidade de ataque.",
+      color: "#e8c36a", glow: "#fff1bd"
+    },
+    {
+      id: "fio_vazio", merchant: "nul", name: "Fio do Vazio",
+      type: "damage", value: 0.07, price: 1900,
+      desc: "Uma linha retirada de onde não existe chão. +7% de dano em todas as armas do herói.",
+      color: "#b48cff", glow: "#eadcff"
+    },
+    {
+      id: "deriva_silenciosa", merchant: "nul", name: "Deriva Silenciosa",
+      type: "attackSpeed", value: 0.05, price: 1700,
+      desc: "O vazio não faz barulho quando se move. +5% de velocidade de ataque.",
+      color: "#8d6bc7", glow: "#d9c8ff"
+    },
+    {
+      id: "julgamento_partido", merchant: "vesper", name: "Julgamento Partido",
+      type: "damage", value: 0.09, price: 2300,
+      desc: "Um pedaço da sentença que o Arcanjo não conseguiu terminar. +9% de dano em todas as armas do herói.",
+      color: "#fff0b0", glow: "#fffbe0"
+    },
+    {
+      id: "asa_restaurada", merchant: "vesper", name: "Asa Restaurada",
+      type: "attackSpeed", value: 0.06, price: 2100,
+      desc: "Uma asa que ainda lembra como era voar. +6% de velocidade de ataque.",
+      color: "#9bd8ff", glow: "#e5f8ff"
+    }
+  ];
+
+  const MERCHANTS = {
+    khepri: {
+      id: "khepri", name: "Khepri", role: "Vidraceiro da Tumba",
+      kind: "merchant", style: "desert", x: 200,
+      marker: "✦", prompt: "NEGOCIAR COM KHEPRI", touchLabel: "LOJA",
+      palette: { skin: "#b9825e", hair: "#2b1b17", cloth: "#8a6a3f", accent: "#7fd8cf", dark: "#2b2116" },
+      speech: "Vidro lembra do sol, e o sol lembra de quem o enterrou. Eu vendo o que os dois esqueceram. Escolha uma lâmina ou um passo — os dois cabem na sua bolsa.",
+      stock: ["lamina_vidro", "passo_dunas"]
+    },
+    nul: {
+      id: "nul", name: "Nul", role: "Coletor de Ecos",
+      kind: "merchant", style: "void", x: 200,
+      marker: "✦", prompt: "NEGOCIAR COM NUL", touchLabel: "LOJA",
+      palette: { skin: "#6f5a7d", hair: "#241a3d", cloth: "#3a2a55", accent: "#b48cff", dark: "#120f21" },
+      speech: "O vazio não cobra juros. Cobra nomes. Aqui, aceito moedas. Leve um fio ou uma deriva; o resto pode ficar comigo.",
+      stock: ["fio_vazio", "deriva_silenciosa"]
+    },
+    vesper: {
+      id: "vesper", name: "Vesper", role: "Mercador das Alturas",
+      kind: "merchant", style: "sky", x: 200,
+      marker: "✦", prompt: "NEGOCIAR COM VESPER", touchLabel: "LOJA",
+      palette: { skin: "#e0c7a8", hair: "#f0e6d0", cloth: "#7c6a8f", accent: "#fff0b0", dark: "#3a3442" },
+      speech: "O céu caiu, mas as asas ainda sabem o caminho. Compre um pedaço do julgamento ou um pouco da pressa que sobrou.",
+      stock: ["julgamento_partido", "asa_restaurada"]
+    }
+  };
+
+  /* ============================================================
      FASES
      Coordenadas em um mundo de 640x360, chão em y=320.
      ============================================================ */
@@ -1214,7 +1284,7 @@
     {
       id: "tumba", name: "Tumba de Vidro", numeral: "VIII", act: 2,
       subtitle: "Onde o sol foi enterrado com o rei",
-      theme: "desert", bossKey: "farao", quest: "areia", width: 3900, arenaStart: 3520,
+      theme: "desert", bossKey: "farao", quest: "areia", merchant: "khepri", width: 3900, arenaStart: 3520,
       groundGaps: [[560, 680], [1280, 1400], [1980, 2100], [2660, 2780], [3180, 3280]],
       platforms: [
         { x: 350, y: 250, w: 100 }, { x: 510, y: 195, w: 80 },
@@ -1251,7 +1321,7 @@
     {
       id: "fenda", name: "Fenda do Vazio", numeral: "IX", act: 2,
       subtitle: "Onde o Reino esqueceu de terminar",
-      theme: "void", bossKey: "imperador", quest: "vazio", width: 4050, arenaStart: 3670,
+      theme: "void", bossKey: "imperador", quest: "vazio", merchant: "nul", width: 4050, arenaStart: 3670,
       groundGaps: [[620, 760], [1380, 1500], [2140, 2260], [2840, 2960]],
       platforms: [
         { x: 380, y: 250, w: 100 }, { x: 540, y: 195, w: 80 },
@@ -1288,7 +1358,7 @@
     {
       id: "ceu", name: "Céu Partido", numeral: "X", act: 2,
       subtitle: "Onde a última asa ainda procura o chão",
-      theme: "celestial", bossKey: "arcanjo", quest: "asa", width: 4200, arenaStart: 3820,
+      theme: "celestial", bossKey: "arcanjo", quest: "asa", merchant: "vesper", width: 4200, arenaStart: 3820,
       groundGaps: [[700, 820], [1460, 1580], [2220, 2340], [2960, 3080]],
       platforms: [
         { x: 400, y: 250, w: 100 }, { x: 560, y: 195, w: 80 },
@@ -1381,6 +1451,6 @@
 
   TP.DATA = {
     RARITIES, CHARACTERS, OUTFITS, WEAPON_CLASSES, WEAPONS, DIFFICULTIES,
-    BOSSES, MEMORIES, QUESTS, LEVELS, ENDINGS
+    BOSSES, MEMORIES, QUESTS, ENCHANTMENTS, MERCHANTS, LEVELS, ENDINGS
   };
 })();

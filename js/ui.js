@@ -20,6 +20,8 @@
     wardrobeSelected: null,
     armory: {},
     wallet: {},
+    enchantments: {},
+    enchant: null,
     interactNpc: null,
     levelCardTimer: null,
     lastHud: "",
@@ -34,12 +36,13 @@
   TP.ui = UI;
 
   const SCREEN_IDS = ["screen-account", "screen-title", "screen-characters", "screen-difficulty", "screen-how",
-    "screen-camp", "screen-pause", "screen-journal", "screen-gameover", "screen-ending"];
+    "screen-camp", "screen-enchant", "screen-pause", "screen-journal", "screen-gameover", "screen-ending"];
   const ACCOUNT_KEY = "terraPerdida.accounts.v1";
   const SESSION_KEY = "terraPerdida.session.v1";
   const WARDROBE_KEY = "terraPerdida.wardrobe.v1";
   const ARMORY_KEY = "terraPerdida.armory.v1";
   const WALLET_KEY = "terraPerdida.wallet.v1";
+  const ENCHANT_KEY = "terraPerdida.enchantments.v1";
   const DEFAULT_SERVER = "Reino Sem Nome";
 
   function q(id) { return document.getElementById(id); }
@@ -72,7 +75,8 @@
       bossFill: q("boss-fill"), dialogue: q("dialogue"), dialogueText: q("dialogue-text"),
       dialogueName: q("dialogue-name"), dialoguePortrait: q("dialogue-portrait"),
       dialogueNext: q("btn-dialogue-next"), toastLayer: q("toast-layer"),
-      hudQuest: q("hud-quest"), interactPrompt: q("interact-prompt"),
+      hudQuest: q("hud-quest"), hudEnchant: q("hud-enchant"),
+      interactPrompt: q("interact-prompt"),
       interactText: q("interact-text"), touchInteract: q("touch-interact"),
       levelCard: q("level-card"), levelNumeral: q("level-card-numeral"),
       levelName: q("level-card-name"), levelSubtitle: q("level-card-subtitle"),
@@ -88,6 +92,13 @@
       wardrobeCurrent: q("wardrobe-current"), wardrobeGrid: q("wardrobe-grid"),
       wardrobeDetail: q("wardrobe-detail"), wardrobeAction: q("wardrobe-action"),
       campContinue: q("btn-camp-continue"),
+      enchantScreen: q("screen-enchant"), enchantTitle: q("enchant-title"),
+      enchantKicker: q("enchant-kicker"), enchantRole: q("enchant-role"),
+      enchantCoins: q("enchant-coins"), enchantPortrait: q("enchant-portrait"),
+      enchantSpeech: q("enchant-speech"), enchantSign: q("enchant-sign"), enchantSummary: q("enchant-summary"),
+      enchantOwned: q("enchant-owned"), enchantEnabled: q("enchant-enabled"),
+      enchantGrid: q("enchant-grid"), enchantNote: q("enchant-note"),
+      enchantClose: q("btn-enchant-close"), pauseEnchants: q("btn-pause-enchants"),
       endingChoiceView: q("ending-choice-view"), endingResultView: q("ending-result-view"),
       endingMemories: q("ending-memories"), endingCoins: q("ending-coins"), endingCls: q("ending-cls"),
       endingTrue: q("btn-ending-true"), trueNote: q("true-choice-note"),
@@ -122,6 +133,7 @@
     loadWardrobe();
     loadArmory();
     loadWallet();
+    loadEnchantments();
     buildCharacterCards();
     buildDifficultyCards();
     loadAccountStore();
@@ -199,6 +211,17 @@
     q("btn-dialogue-next").addEventListener("click", function () { UI.advanceDialogue(); });
 
     q("btn-camp-continue").addEventListener("click", function () { TP.audio.sfx("click"); call("campContinue"); });
+
+    q("btn-enchant-close").addEventListener("click", function () { TP.audio.sfx("click"); call("closeEnchant"); });
+    UI.el.enchantGrid.addEventListener("click", function (e) {
+      const card = e.target.closest("[data-enchant-id]");
+      if (!card) return;
+      call("buyEnchantment", card.getAttribute("data-enchant-id"));
+    });
+    UI.el.enchantEnabled.addEventListener("change", function () {
+      call("toggleEnchantments", UI.el.enchantEnabled.checked);
+    });
+    q("btn-pause-enchants").addEventListener("click", function () { call("toggleEnchantments"); });
 
     q("btn-ending-crown").addEventListener("click", function () { TP.audio.sfx("click"); call("chooseEnding", "crown"); });
     q("btn-ending-break").addEventListener("click", function () { TP.audio.sfx("click"); call("chooseEnding", "break"); });
@@ -682,6 +705,71 @@
   };
   UI.saveWalletFor = UI.setWalletFor;
 
+  /* ============================================================
+     ENCANTAMENTOS PERSISTENTES POR HERÓI
+     ============================================================ */
+  function enchantmentDef(id) {
+    return TP.DATA.ENCHANTMENTS.find(function (e) { return e.id === id; }) || null;
+  }
+
+  function normalizeEnchantments(raw) {
+    const owned = {};
+    const source = raw && raw.owned && typeof raw.owned === "object" ? raw.owned : {};
+    TP.DATA.ENCHANTMENTS.forEach(function (def) {
+      if (source[def.id]) owned[def.id] = true;
+    });
+    return { owned: owned, enabled: !(raw && raw.enabled === false) };
+  }
+
+  function loadEnchantments() {
+    let stored = null;
+    try {
+      stored = JSON.parse(accountStorageGet(ENCHANT_KEY) || "null");
+    } catch (err) {
+      stored = null;
+    }
+    UI.enchantments = {};
+    TP.DATA.CHARACTERS.forEach(function (char) {
+      UI.enchantments[char.id] = normalizeEnchantments(stored && stored[char.id]);
+    });
+  }
+
+  function saveEnchantmentsStore() {
+    accountStorageSet(ENCHANT_KEY, JSON.stringify(UI.enchantments));
+  }
+
+  UI.enchantmentsFor = function (charId) {
+    const char = TP.DATA.CHARACTERS.find(function (c) { return c.id === charId; });
+    if (!char) return { owned: {}, enabled: true };
+    if (!UI.enchantments[charId]) UI.enchantments[charId] = normalizeEnchantments(null);
+    return normalizeEnchantments(UI.enchantments[charId]);
+  };
+
+  UI.saveEnchantmentsFor = function (charId, value) {
+    if (!TP.DATA.CHARACTERS.some(function (c) { return c.id === charId; })) return false;
+    UI.enchantments[charId] = normalizeEnchantments(value);
+    saveEnchantmentsStore();
+    return true;
+  };
+
+  UI.enchantmentDef = enchantmentDef;
+
+  UI.enchantmentOwned = function (charId, id) {
+    const state = UI.enchantmentsFor(charId);
+    return !!state.owned[id];
+  };
+
+  UI.enchantmentCount = function (charId) {
+    const state = UI.enchantmentsFor(charId);
+    return Object.keys(state.owned).filter(function (id) { return !!state.owned[id]; }).length;
+  };
+
+  UI.setEnchantmentsEnabled = function (charId, enabled) {
+    const state = UI.enchantmentsFor(charId);
+    state.enabled = !!enabled;
+    return UI.saveEnchantmentsFor(charId, state);
+  };
+
   function rebuildCharacterCards() {
     if (!UI.el.charGrid) return;
     UI.charsBuilt = false;
@@ -735,7 +823,8 @@
       const el = q(sid);
       if (el) el.classList.toggle("active", sid === id);
     });
-    document.body.classList.toggle("camp-mode", id === "screen-camp");
+    document.body.classList.toggle("camp-mode", id === "screen-camp" || id === "screen-enchant");
+    document.body.classList.toggle("enchant-mode", id === "screen-enchant");
     UI.clearToasts();
   };
   UI.hideScreens = function () {
@@ -744,6 +833,7 @@
       if (el) el.classList.remove("active");
     });
     document.body.classList.remove("camp-mode");
+    document.body.classList.remove("enchant-mode");
     UI.hideInteractPrompt();
     UI.clearToasts();
   };
@@ -775,8 +865,13 @@
     const quest = TP.DATA.QUESTS.find(function (q) { return q.id === level.def.quest; });
     const questState = quest && run.quests ? run.quests[quest.id] : null;
     const questKey = questState ? (questState.complete ? 2 : questState.accepted ? 1 : 0) : 0;
+    const enchState = run.enchantments || { owned: {}, enabled: true };
+    const enchOwned = enchState.owned || {};
+    const enchCount = Object.keys(enchOwned).filter(function (id) { return !!enchOwned[id]; }).length;
+    const enchEnabled = enchState.enabled !== false;
+    const enchKey = enchCount + ":" + (enchEnabled ? 1 : 0);
     const key = p.char.id + ":" + p.hp + ":" + p.maxHp + ":" + p.weapon.cls + ":" + p.weapon.tier + ":" + run.coins + ":" + run.memories + ":" +
-      level.index + ":" + (level.bossActive ? 1 : 0) + ":" + (level.boss ? Math.ceil(level.boss.hp) : 0) + ":" + questKey;
+      level.index + ":" + (level.bossActive ? 1 : 0) + ":" + (level.boss ? Math.ceil(level.boss.hp) : 0) + ":" + questKey + ":" + enchKey;
     if (key === UI.lastHud) return;
     UI.lastHud = key;
 
@@ -793,6 +888,18 @@
     UI.el.phase.textContent = level.def.numeral + " · " + level.def.name;
     UI.el.memories.textContent = run.memories + " / " + (run.memoryGoal || (run.act === 2 ? 30 : 15)) + " memórias";
     UI.el.coins.textContent = formatCoins(run.coins);
+    if (UI.el.hudEnchant) {
+      if (enchCount > 0) {
+        const parts = enchantBonusParts(enchOwned, enchEnabled);
+        const detail = parts.length ? parts.join(" · ") : "sem bônus";
+        UI.el.hudEnchant.classList.remove("hidden");
+        UI.el.hudEnchant.innerHTML = '<span class="hud-enchant-mark">✦</span> ' +
+          esc(enchCount + (enchCount === 1 ? " encanto" : " encantos") + " · " + detail);
+        UI.el.hudEnchant.title = "Encantamentos de " + p.char.name + ": " + detail;
+      } else {
+        UI.el.hudEnchant.classList.add("hidden");
+      }
+    }
     if (UI.el.hudQuest) {
       if (quest) {
         UI.el.hudQuest.classList.remove("hidden");
@@ -1029,9 +1136,14 @@
     if (!npc) { UI.hideInteractPrompt(); return; }
     if (UI.interactNpc && UI.interactNpc.id === npc.id) return;
     UI.interactNpc = npc;
-    if (UI.el.interactText) UI.el.interactText.textContent = "FALAR COM " + String(npc.name || "NPC").toUpperCase();
+    if (UI.el.interactText) {
+      UI.el.interactText.textContent = npc.prompt || ("FALAR COM " + String(npc.name || "NPC").toUpperCase());
+    }
     if (UI.el.interactPrompt) UI.el.interactPrompt.classList.remove("hidden");
     if (UI.el.touchInteract) {
+      const label = npc.touchLabel || "FALAR";
+      UI.el.touchInteract.textContent = label;
+      UI.el.touchInteract.setAttribute("aria-label", label === "LOJA" ? "Abrir loja" : "Falar");
       UI.el.touchInteract.classList.toggle("hidden", !(TP.input && TP.input.hasTouch));
     }
   };
@@ -1039,7 +1151,11 @@
   UI.hideInteractPrompt = function () {
     UI.interactNpc = null;
     if (UI.el.interactPrompt) UI.el.interactPrompt.classList.add("hidden");
-    if (UI.el.touchInteract) UI.el.touchInteract.classList.add("hidden");
+    if (UI.el.touchInteract) {
+      UI.el.touchInteract.textContent = "FALAR";
+      UI.el.touchInteract.setAttribute("aria-label", "Falar");
+      UI.el.touchInteract.classList.add("hidden");
+    }
   };
 
   /* ============================================================
@@ -1287,6 +1403,110 @@
   UI.updateCampCoins = function (coins) {
     if (UI.camp) UI.camp.coins = coins;
     UI.refreshCamp();
+  };
+
+  /* ============================================================
+     MERCADOR DE ENCANTAMENTOS
+     ============================================================ */
+  function enchantPct(value) {
+    return Math.round((Number(value) || 0) * 100);
+  }
+
+  function enchantBonusParts(owned, enabled) {
+    let damage = 0;
+    let attackSpeed = 0;
+    TP.DATA.ENCHANTMENTS.forEach(function (def) {
+      if (!owned || !owned[def.id]) return;
+      if (def.type === "damage") damage += def.value;
+      else if (def.type === "attackSpeed") attackSpeed += def.value;
+    });
+    if (!enabled) return ["Efeitos desativados"];
+    const parts = [];
+    if (damage) parts.push("+" + enchantPct(damage) + "% de dano");
+    if (attackSpeed) parts.push("+" + enchantPct(attackSpeed) + "% de velocidade de ataque");
+    return parts;
+  }
+
+  UI.showEnchant = function (data) {
+    if (!data || !data.merchant || !data.run) return;
+    UI.enchant = { merchant: data.merchant, run: data.run };
+    UI.showScreen("screen-enchant");
+    UI.showHUD(false);
+    UI.showTouch(false);
+    UI.refreshEnchant();
+  };
+
+  UI.refreshEnchant = function () {
+    const ctx = UI.enchant;
+    if (!ctx || !ctx.merchant || !ctx.run) return;
+    const run = ctx.run;
+    const merchant = ctx.merchant;
+    const enchState = run.enchantments || { owned: {}, enabled: true };
+    const owned = enchState.owned || {};
+    const enabled = enchState.enabled !== false;
+    const stock = (merchant.stock || []).map(function (id) {
+      return TP.DATA.ENCHANTMENTS.find(function (def) { return def.id === id; }) || null;
+    }).filter(Boolean);
+    const ownedInStock = stock.filter(function (def) { return !!owned[def.id]; }).length;
+
+    UI.el.enchantTitle.textContent = merchant.name;
+    UI.el.enchantKicker.textContent = "MERCADOR DE ENCANTOS";
+    UI.el.enchantRole.textContent = merchant.role;
+    UI.el.enchantSpeech.textContent = merchant.speech || "";
+    if (UI.el.enchantSign) UI.el.enchantSign.textContent = "— " + merchant.name;
+    UI.el.enchantCoins.textContent = formatCoins(run.coins);
+    UI.el.enchantOwned.textContent = ownedInStock + "/" + stock.length + " desta fase";
+    UI.el.enchantEnabled.checked = enabled;
+    UI.el.enchantEnabled.disabled = UI.enchantmentCount(run.char.id) === 0;
+    if (UI.el.enchantPortrait) {
+      UI.el.enchantPortrait.style.backgroundImage = "url('" + art.makeNpcPortrait(merchant) + "')";
+    }
+
+    const parts = enchantBonusParts(owned, enabled);
+    UI.el.enchantSummary.innerHTML = parts.length
+      ? '<span class="enchant-summary-mark">✦</span> ' + esc(parts.join(" · "))
+      : '<span class="enchant-summary-mark">✦</span> Nenhum encantamento ativo.';
+    UI.el.enchantNote.textContent = enabled
+      ? "Compra única por herói. Os bônus ficam salvos neste navegador e valem para todas as jornadas."
+      : "Os efeitos estão desligados, mas as compras continuam salvas. Ligue o interruptor para usá-los.";
+
+    UI.el.enchantGrid.innerHTML = stock.map(function (def) {
+      const isOwned = !!owned[def.id];
+      const canAfford = run.coins >= def.price;
+      const cls = "enchant-card" + (isOwned ? " owned" : "") + (!isOwned && !canAfford ? " expensive" : "");
+      const effect = def.type === "damage"
+        ? "+" + enchantPct(def.value) + "% de dano"
+        : "+" + enchantPct(def.value) + "% de velocidade de ataque";
+      const typeLabel = def.type === "damage" ? "DANO" : "VELOCIDADE DE ATAQUE";
+      const priceLine = isOwned ? "ADQUIRIDO" : formatCoins(def.price) + " moedas";
+      const aria = def.name + " · " + effect + " · " + (isOwned ? "já adquirido" : priceLine);
+      return '<button class="' + cls + '" type="button" data-enchant-id="' + def.id + '"' +
+        (isOwned ? " disabled" : "") + ' aria-label="' + esc(aria) + '">' +
+        '<span class="enchant-icon" style="background-image:url(\'' + art.makeEnchantIcon(def.type, def.color, def.glow) + '\')"></span>' +
+        '<span class="enchant-card-body">' +
+          '<span class="enchant-type">' + typeLabel + '</span>' +
+          '<strong class="enchant-name">' + esc(def.name) + '</strong>' +
+          '<span class="enchant-effect">' + esc(effect) + '</span>' +
+          '<span class="enchant-desc">' + esc(def.desc) + '</span>' +
+        '</span>' +
+        '<span class="enchant-price' + (isOwned ? " owned" : canAfford ? "" : " missing") + '">' + priceLine + '</span>' +
+      '</button>';
+    }).join("");
+
+    UI.updateEnchantLabels(run);
+  };
+
+  UI.updateEnchantLabels = function (run) {
+    const btn = UI.el.pauseEnchants;
+    if (!btn) return;
+    const charId = run && run.char ? run.char.id : null;
+    const count = charId ? UI.enchantmentCount(charId) : 0;
+    const enabled = run && run.enchantments ? run.enchantments.enabled !== false : true;
+    btn.disabled = count === 0;
+    btn.textContent = count === 0
+      ? "ENCANTAMENTOS: NENHUM"
+      : "ENCANTAMENTOS: " + (enabled ? "LIGADOS" : "DESLIGADOS");
+    btn.setAttribute("aria-pressed", enabled ? "true" : "false");
   };
 
   function formatCoins(n) { return String(n).replace(/\B(?=(\d{3})+(?!\d))/g, "."); }

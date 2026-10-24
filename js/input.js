@@ -187,7 +187,8 @@
       "screen-journal": "#btn-journal-back",
       "screen-gameover": "#btn-continue-checkpoint",
       "screen-ending": ".ending-choice:not([disabled])",
-      "screen-camp": "#camp-wardrobe-panel:not(.hidden) #wardrobe-action [data-wardrobe-act], #btn-camp-continue"
+      "screen-camp": "#camp-wardrobe-panel:not(.hidden) #wardrobe-action [data-wardrobe-act], #btn-camp-continue",
+      "screen-enchant": "#enchant-grid .enchant-card:not([disabled]), #btn-enchant-close"
     };
     const sel = map[screen.id];
     if (!sel) return null;
@@ -210,7 +211,7 @@
   function updateGamepadMenu(pressed, prev) {
     if (!TP.game || !TP.game.getMode) return;
     const mode = TP.game.getMode();
-    const menuMode = ["account", "title", "characters", "difficulty", "how", "paused", "camp", "gameover", "ending", "endingText"].indexOf(mode) >= 0;
+    const menuMode = ["account", "title", "characters", "difficulty", "how", "paused", "camp", "enchant", "gameover", "ending", "endingText"].indexOf(mode) >= 0;
     if (!menuMode) { lastMenuKey = null; return; }
     const screen = activeMenuScreen();
     if (!screen) { lastMenuKey = null; return; }

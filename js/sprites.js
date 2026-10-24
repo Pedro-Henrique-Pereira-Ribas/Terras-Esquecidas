@@ -505,6 +505,44 @@
       art.pixelCircle(ctx, 0, 0, 3, pal.accent);
       art.glow(ctx, 0, 0, 9, pal.accent, 0.28);
       art.rect(ctx, -9, 22, 18, 3, pal.accent);
+    } else if (npc.kind === "merchant") {
+      // Capuz, mochila e lanterna: o mercador carrega a loja nas costas.
+      art.rect(ctx, -10, 0, 20, 6, pal.dark);
+      art.rect(ctx, -11, 3, 3, 13, pal.dark);
+      art.rect(ctx, 8, 3, 3, 13, pal.dark);
+      art.rect(ctx, 8, 14, 7, 15, "#5a4128");
+      art.rect(ctx, 9, 16, 5, 2, "#8a6a3f");
+      art.rect(ctx, 10, 20, 3, 2, pal.accent);
+      art.rect(ctx, -14, 22, 4, 7, pal.dark);
+      art.rect(ctx, -13, 23, 2, 5, pal.accent);
+      art.glow(ctx, -12, 25, 10, pal.accent, 0.22);
+      art.pixelCircle(ctx, 0, 18, 2, pal.accent);
+
+      if (npc.style === "desert") {
+        art.rect(ctx, -8, 0, 16, 4, pal.cloth);
+        art.rect(ctx, -10, 4, 4, 10, pal.cloth);
+        art.rect(ctx, -7, 12, 14, 2, pal.accent);
+        art.rect(ctx, 10, 7, 2, 7, "#7fd8cf");
+        art.glow(ctx, 11, 10, 7, "#7fd8cf", 0.28);
+      } else if (npc.style === "void") {
+        art.rect(ctx, -6, 4, 12, 5, pal.dark);
+        art.rect(ctx, -4, 6, 2, 1, pal.accent);
+        art.rect(ctx, 2, 6, 2, 1, pal.accent);
+        art.rect(ctx, 0, -8, 2, 6, pal.accent);
+        art.glow(ctx, 1, -6, 8, pal.accent, 0.32);
+        art.rect(ctx, 9, 8, 3, 10, pal.accent);
+      } else if (npc.style === "sky") {
+        ctx.save();
+        ctx.strokeStyle = pal.accent;
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.arc(0, -2, 8, -2.7, -0.45);
+        ctx.stroke();
+        ctx.restore();
+        art.rect(ctx, 9, 7, 3, 12, pal.accent);
+        art.rect(ctx, 12, 10, 2, 7, pal.accent);
+        art.glow(ctx, 10, 12, 9, pal.accent, 0.2);
+      }
     } else {
       art.rect(ctx, -8, 0, 16, 5, pal.dark);
       art.rect(ctx, -9, 3, 3, 9, pal.dark);
@@ -515,11 +553,11 @@
     }
     ctx.restore();
 
-    if (questState) {
-      const done = !!questState.complete;
-      const accepted = !!questState.accepted;
-      const mark = done ? "✦" : "!";
-      const color = done ? "#a8d68c" : accepted ? "#ffb066" : "#ffd27a";
+    if (questState || npc.marker) {
+      const done = !!(questState && questState.complete);
+      const accepted = !!(questState && questState.accepted);
+      const mark = npc.marker || (done ? "✦" : "!");
+      const color = npc.markerColor || (done ? "#a8d68c" : accepted ? "#ffb066" : "#ffd27a");
       const cx = npc.x + npc.w / 2;
       const cy = npc.y - 9 + Math.sin((time || 0) * 0.08) * 1.5;
       art.glow(ctx, cx, cy + 2, 11, color, 0.16);

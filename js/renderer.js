@@ -78,6 +78,11 @@
       TP.sprites.drawNpc(ctx, level.questNpc, t, qs);
     }
 
+    // Mercador de encantamentos
+    if (level.merchantNpc) {
+      TP.sprites.drawNpc(ctx, level.merchantNpc, t, null);
+    }
+
     // inimigos
     for (let i = 0; i < level.enemies.length; i++) {
       const e = level.enemies[i];

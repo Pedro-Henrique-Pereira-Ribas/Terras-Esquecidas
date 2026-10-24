@@ -7,7 +7,7 @@
 
   const art = {
     W: 640, H: 360, GROUND_Y: 320,
-    portraitCache: {}, weaponCache: {}, pedroCache: null, npcPortraitCache: {},
+    portraitCache: {}, weaponCache: {}, pedroCache: null, npcPortraitCache: {}, enchantIconCache: {},
     THEMES: {
       ruins: {
         skyTop: "#31475e", skyMid: "#68899c", skyLow: "#c5b38e",
@@ -473,6 +473,44 @@
       art.pixelCircle(ctx, 0, 13, 6, "rgba(255,176,102,.2)");
       art.rect(ctx, -29, 70, 12, 21, pal.dark);
       art.rect(ctx, 17, 70, 12, 21, pal.dark);
+    } else if (npc.kind === "merchant") {
+      // Ombros, capuz e a mochila de onde saem os encantamentos.
+      art.rect(ctx, -28, 18, 56, 8, pal.dark);
+      art.rect(ctx, -31, 25, 8, 40, pal.dark);
+      art.rect(ctx, 23, 25, 8, 40, pal.dark);
+      art.rect(ctx, -22, 16, 44, 6, pal.cloth);
+      art.rect(ctx, 28, 52, 13, 30, "#5a4128");
+      art.rect(ctx, 30, 56, 9, 3, "#8a6a3f");
+      art.rect(ctx, -39, 58, 8, 22, pal.dark);
+      art.rect(ctx, -37, 61, 4, 16, pal.accent);
+      art.glow(ctx, -35, 68, 22, pal.accent, 0.18);
+      art.rect(ctx, -15, 75, 30, 4, pal.accent);
+
+      if (npc.style === "desert") {
+        art.rect(ctx, -23, 15, 46, 7, pal.cloth);
+        art.rect(ctx, -27, 21, 7, 20, pal.cloth);
+        art.rect(ctx, -21, 42, 42, 4, pal.accent);
+        art.rect(ctx, 30, 24, 4, 16, "#7fd8cf");
+        art.glow(ctx, 32, 31, 15, "#7fd8cf", 0.25);
+      } else if (npc.style === "void") {
+        art.rect(ctx, -18, 28, 36, 12, pal.dark);
+        art.rect(ctx, -12, 32, 5, 2, pal.accent);
+        art.rect(ctx, 7, 32, 5, 2, pal.accent);
+        art.rect(ctx, 0, 0, 4, 12, pal.accent);
+        art.glow(ctx, 2, 5, 15, pal.accent, 0.3);
+        art.rect(ctx, 30, 40, 4, 28, pal.accent);
+      } else if (npc.style === "sky") {
+        ctx.save();
+        ctx.strokeStyle = pal.accent;
+        ctx.lineWidth = 3;
+        ctx.beginPath();
+        ctx.arc(0, 9, 18, -2.7, -0.45);
+        ctx.stroke();
+        ctx.restore();
+        art.rect(ctx, 30, 38, 5, 30, pal.accent);
+        art.rect(ctx, 35, 45, 4, 20, pal.accent);
+        art.glow(ctx, 32, 51, 22, pal.accent, 0.22);
+      }
     } else {
       art.rect(ctx, -21, 21, 42, 6, pal.dark);
       art.rect(ctx, -24, 26, 7, 30, pal.dark);
@@ -497,6 +535,43 @@
     art.drawNpcBust(ctx, npc, 96, 96);
     art.npcPortraitCache[key] = c.toDataURL("image/png");
     return art.npcPortraitCache[key];
+  };
+
+  art.makeEnchantIcon = function (type, color, glow) {
+    const key = String(type || "damage") + ":" + String(color || "#d8b06a");
+    if (art.enchantIconCache[key]) return art.enchantIconCache[key];
+    const c = document.createElement("canvas");
+    c.width = 48; c.height = 48;
+    const ctx = c.getContext("2d");
+    ctx.imageSmoothingEnabled = false;
+    const bg = ctx.createLinearGradient(0, 0, 0, 48);
+    bg.addColorStop(0, "#171b15");
+    bg.addColorStop(1, "#090b09");
+    ctx.fillStyle = bg;
+    ctx.fillRect(0, 0, 48, 48);
+    art.glow(ctx, 24, 24, 20, glow || color || "#d8b06a", 0.2);
+    art.pixelCircle(ctx, 24, 24, 16, "rgba(0,0,0,.22)");
+
+    if (type === "attackSpeed") {
+      art.rect(ctx, 12, 14, 3, 20, color);
+      art.rect(ctx, 18, 18, 3, 12, color);
+      art.rect(ctx, 24, 22, 3, 5, color);
+      art.rect(ctx, 18, 22, 18, 4, color);
+      art.rect(ctx, 30, 16, 4, 16, color);
+      art.rect(ctx, 26, 18, 4, 4, color);
+      art.rect(ctx, 26, 26, 4, 4, color);
+    } else {
+      art.rect(ctx, 22, 8, 4, 24, color);
+      art.rect(ctx, 24, 5, 2, 4, glow || color);
+      art.rect(ctx, 14, 31, 20, 4, "#6b4f3a");
+      art.rect(ctx, 22, 35, 4, 8, "#8a6a3f");
+      art.rect(ctx, 23, 36, 2, 3, glow || color);
+      art.rect(ctx, 31, 12, 2, 7, color);
+      art.rect(ctx, 29, 14, 6, 2, color);
+    }
+
+    art.enchantIconCache[key] = c.toDataURL("image/png");
+    return art.enchantIconCache[key];
   };
 
   art.makePedro = function () {
