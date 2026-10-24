@@ -93,6 +93,7 @@
       endingTrue: q("btn-ending-true"), trueNote: q("true-choice-note"),
       endingResultKicker: q("ending-result-kicker"), endingResultTitle: q("ending-result-title"),
       endingResultText: q("ending-result-text"), endingResultNote: q("ending-result-note"),
+      endingAct2: q("btn-ending-act2"),
       journalGrid: q("journal-grid"), journalCount: q("journal-count"), journalNote: q("journal-note"),
       touch: q("touch-controls"),
       accountSigned: q("account-signed"), accountAuth: q("account-auth"),
@@ -202,6 +203,7 @@
     q("btn-ending-crown").addEventListener("click", function () { TP.audio.sfx("click"); call("chooseEnding", "crown"); });
     q("btn-ending-break").addEventListener("click", function () { TP.audio.sfx("click"); call("chooseEnding", "break"); });
     q("btn-ending-true").addEventListener("click", function () { TP.audio.sfx("click"); call("chooseEnding", "true"); });
+    q("btn-ending-act2").addEventListener("click", function () { TP.audio.sfx("click"); call("continueToAct2"); });
     q("btn-ending-new").addEventListener("click", function () { TP.audio.sfx("click"); call("newJourney"); });
     q("btn-ending-title").addEventListener("click", function () { TP.audio.sfx("click"); call("returnToTitle"); });
 
@@ -789,7 +791,7 @@
     UI.el.weaponRarity.textContent = p.weapon.rarityLabel;
     UI.el.weaponRarity.className = "rarity-text " + p.weapon.rarity;
     UI.el.phase.textContent = level.def.numeral + " · " + level.def.name;
-    UI.el.memories.textContent = run.memories + " / 15 memórias";
+    UI.el.memories.textContent = run.memories + " / " + (run.memoryGoal || (run.act === 2 ? 30 : 15)) + " memórias";
     UI.el.coins.textContent = formatCoins(run.coins);
     if (UI.el.hudQuest) {
       if (quest) {
@@ -1083,6 +1085,7 @@
     if (effect === "burn") return "Incendeia o alvo por alguns segundos.";
     if (effect === "lifesteal") return "Rouba um pouco de vida a cada acerto.";
     if (effect === "spirit") return "Libera uma onda espiritual no golpe.";
+    if (effect === "eternal") return "Incendeia o alvo e devolve vida a cada acerto.";
     return "Sem efeito elemental — só aço e intenção.";
   }
 
@@ -1175,7 +1178,7 @@
       action += '<span class="forge-price">ARMA DE CHEFE · SEM CUSTO</span>' +
         (nextBoss ? '<span class="forge-price">PRÓXIMO: ' + esc(nextBoss.boss.name.toUpperCase()) + '</span>' : "");
     } else {
-      action += '<span class="forge-price">ARMA MÍTICA · ' + weapons[highestOwned].dmg + ' DANO</span>';
+      action += '<span class="forge-price">' + esc(rarLabel(weapons[highestOwned]).toUpperCase()) + ' · ' + weapons[highestOwned].dmg + ' DANO</span>';
     }
     if (ownedCount > 1) action += '<span class="forge-price">CLIQUE EM UMA ARMA OBTIDA PARA EQUIPAR</span>';
     UI.el.forgeAction.innerHTML = action;
@@ -1294,9 +1297,13 @@
   UI.showJournal = function (run) {
     if (!run) return;
     const ids = run.memoryIds || [];
+    const isAct2 = run.act === 2;
+    const levels = TP.DATA.LEVELS.slice(0, isAct2 ? 10 : 5);
+    const totalMemories = isAct2 ? 30 : 15;
+    const totalQuests = isAct2 ? 10 : 5;
     let foundTotal = 0;
     let questsDone = 0;
-    UI.el.journalGrid.innerHTML = TP.DATA.LEVELS.map(function (level, li) {
+    UI.el.journalGrid.innerHTML = levels.map(function (level, li) {
       const memories = TP.DATA.MEMORIES.slice(li * 3, li * 3 + 3);
       const quest = TP.DATA.QUESTS.find(function (q) { return q.id === level.quest; });
       const qs = quest && run.quests ? run.quests[quest.id] : null;
@@ -1343,12 +1350,16 @@
       '</section>';
     }).join("");
 
-    UI.el.journalCount.textContent = foundTotal + " / 15 memórias · " + questsDone + " / 5 tarefas";
-    UI.el.journalNote.textContent = foundTotal >= 15
-      ? "Pedro não precisa mais procurar. A história está inteira. As tarefas de fase pagam moedas a cada jornada."
+    UI.el.journalCount.textContent = foundTotal + " / " + totalMemories + " memórias · " + questsDone + " / " + totalQuests + " tarefas";
+    UI.el.journalNote.textContent = foundTotal >= totalMemories
+      ? (isAct2
+        ? "Pedro não precisa mais procurar. As trinta memórias estão inteiras, e o Ato II pode terminar sem esquecer nada."
+        : "Pedro não precisa mais procurar. A história está inteira. As tarefas de fase pagam moedas a cada jornada.")
       : foundTotal === 0
         ? "Nenhuma memória ainda. A terra guarda o que você ainda não sabe. As tarefas de fase pagam moedas a cada jornada."
-        : "As memórias não aumentam seu poder. Elas mudam o que você pode dizer no fim. As tarefas de fase pagam moedas.";
+        : (isAct2
+          ? "As memórias do Ato II continuam a história. As tarefas de fase pagam moedas a cada jornada."
+          : "As memórias não aumentam seu poder. Elas mudam o que você pode dizer no fim. As tarefas de fase pagam moedas.");
     UI.clearToasts();
     UI.showScreen("screen-journal");
     UI.updateSoundLabels();
@@ -1378,6 +1389,8 @@
     UI.showTouch(false);
     UI.el.endingChoiceView.classList.remove("hidden");
     UI.el.endingResultView.classList.add("hidden");
+    UI.el.endingResultView.classList.remove("act2");
+    if (UI.el.endingAct2) UI.el.endingAct2.classList.add("hidden");
     UI.el.endingMemories.textContent = run.memories;
     UI.el.endingCoins.textContent = run.coins;
     UI.el.endingCls.textContent = run.char.name + " · " + run.diff.name;
@@ -1389,19 +1402,28 @@
     UI.el.endingResultKicker.textContent = "FINAL";
   };
 
-  UI.showEndingResult = function (key, ending, run, note, tone) {
+  UI.showEndingResult = function (key, ending, run, note, tone, options) {
+    const act2 = !!(options && options.act2);
     UI.el.endingChoiceView.classList.add("hidden");
     UI.el.endingResultView.classList.remove("hidden");
-    UI.el.endingResultKicker.textContent = tone === "gold" ? "FINAL VERDADEIRO" : "FINAL";
+    UI.el.endingResultView.classList.toggle("act2", act2);
+    UI.el.endingResultKicker.textContent = act2 ? "FINAL DO ATO II" : tone === "gold" ? "FINAL VERDADEIRO" : "FINAL";
     UI.el.endingResultTitle.textContent = ending.title;
     UI.el.endingResultText.innerHTML = ending.text.map(function (p) { return "<p>" + esc(p) + "</p>"; }).join(" ");
     UI.el.endingResultNote.innerHTML = note || "";
+    if (UI.el.endingAct2) {
+      const canContinue = !act2 && run && run.act === 1;
+      UI.el.endingAct2.classList.toggle("hidden", !canContinue);
+      UI.el.endingAct2.disabled = !canContinue;
+    }
     void key;
   };
 
   UI.resetEnding = function () {
     UI.el.endingChoiceView.classList.remove("hidden");
     UI.el.endingResultView.classList.add("hidden");
+    UI.el.endingResultView.classList.remove("act2");
+    if (UI.el.endingAct2) UI.el.endingAct2.classList.add("hidden");
   };
 
   /* ============================================================

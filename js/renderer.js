@@ -154,6 +154,21 @@
         } else if (theme === "mine") {
           art.rect(ctx, x, g.y - 2, 9, 2, "#86583a");
           if (n % 4 === 0) art.rect(ctx, x + 3, g.y + 17, 4, 2, "#c78b4a");
+        } else if (theme === "forge") {
+          art.rect(ctx, x, g.y - 2, 11, 2, "#8a5a3a");
+          if (n % 3 === 0) art.rect(ctx, x + 4, g.y - 5, 2, 3, "#ff9b4e");
+        } else if (theme === "temple") {
+          art.rect(ctx, x, g.y - 2, 13, 2, "#9b9172");
+          if (n % 4 === 0) art.rect(ctx, x + 5, g.y + 18, 4, 2, "#d8bd72");
+        } else if (theme === "desert") {
+          art.rect(ctx, x, g.y - 2, 14, 2, "#e0b878");
+          if (n % 4 === 0) art.rect(ctx, x + 5, g.y + 16, 3, 3, "#7fd8cf");
+        } else if (theme === "void") {
+          art.rect(ctx, x, g.y - 2, 12, 2, "#55368a");
+          if (n % 3 === 0) art.rect(ctx, x + 4, g.y - 5, 2, 3, "#b48cff");
+        } else if (theme === "celestial") {
+          art.rect(ctx, x, g.y - 2, 13, 2, "#c9c3ac");
+          if (n % 4 === 0) art.rect(ctx, x + 5, g.y - 5, 2, 3, "#fff0b0");
         } else {
           art.rect(ctx, x, g.y - 2, 12, 2, "#6a4f43");
           if (n % 4 === 0) art.rect(ctx, x + 5, g.y - 5, 3, 3, "#8e4b3a");
@@ -206,6 +221,40 @@
       ctx.fillStyle = "#a54b38";
       ctx.fillRect(p.x + 20, p.y + 2, p.w * 0.4, 1);
       ctx.restore();
+    } else if (theme === "forge") {
+      art.rect(ctx, p.x, p.y, p.w, 12, "#4a3830");
+      art.rect(ctx, p.x, p.y, p.w, 3, "#a66b45");
+      art.rect(ctx, p.x + 4, p.y + 12, 6, 7, "#2b201b");
+      art.rect(ctx, p.x + p.w - 10, p.y + 12, 6, 7, "#2b201b");
+      art.rect(ctx, p.x + 12, p.y + 5, p.w - 24, 2, "#2b201b");
+      ctx.fillStyle = "rgba(255,155,78,.35)";
+      ctx.fillRect(p.x + 8, p.y - 2, 18, 2);
+    } else if (theme === "temple") {
+      art.rect(ctx, p.x, p.y, p.w, 12, "#5a5647");
+      art.rect(ctx, p.x, p.y, p.w, 3, "#a89b75");
+      art.rect(ctx, p.x + 4, p.y + 12, 7, 8, "#353229");
+      art.rect(ctx, p.x + p.w - 11, p.y + 12, 7, 8, "#353229");
+      art.rect(ctx, p.x + 14, p.y + 5, p.w - 28, 1, "#d8bd72");
+    } else if (theme === "desert") {
+      art.rect(ctx, p.x, p.y, p.w, 12, "#7a5a3a");
+      art.rect(ctx, p.x, p.y, p.w, 3, "#e0b878");
+      art.rect(ctx, p.x + 5, p.y + 12, 5, 7, "#4a3524");
+      art.rect(ctx, p.x + p.w - 10, p.y + 12, 5, 7, "#4a3524");
+      ctx.fillStyle = "rgba(127,216,207,.35)";
+      ctx.fillRect(p.x + 20, p.y + 2, p.w * 0.28, 1);
+    } else if (theme === "void") {
+      art.rect(ctx, p.x, p.y, p.w, 12, "#241a3d");
+      art.rect(ctx, p.x, p.y, p.w, 3, "#55368a");
+      art.rect(ctx, p.x + 5, p.y + 12, 5, 8, "#120f21");
+      art.rect(ctx, p.x + p.w - 10, p.y + 12, 5, 8, "#120f21");
+      art.glow(ctx, p.x + p.w / 2, p.y + 3, p.w * 0.3, "#b48cff", 0.1);
+    } else if (theme === "celestial") {
+      art.rect(ctx, p.x, p.y, p.w, 12, "#6f6f74");
+      art.rect(ctx, p.x, p.y, p.w, 3, "#d8d2ba");
+      art.rect(ctx, p.x + 4, p.y + 12, 7, 8, "#4b4b50");
+      art.rect(ctx, p.x + p.w - 11, p.y + 12, 7, 8, "#4b4b50");
+      ctx.fillStyle = "rgba(255,240,176,.45)";
+      ctx.fillRect(p.x + 16, p.y + 2, p.w * 0.35, 1);
     } else {
       art.rect(ctx, p.x, p.y, p.w, 12, "#5f604e");
       art.rect(ctx, p.x, p.y, p.w, 3, "#8f8c6b");
@@ -233,7 +282,7 @@
       const step = s.w / count;
       for (let j = 0; j < count; j++) {
         const x = s.x + j * step;
-        ctx.fillStyle = theme === "mine" ? "#8a6250" : theme === "mountain" ? "#c4d1db" : "#7a745e";
+        ctx.fillStyle = theme === "mine" ? "#8a6250" : theme === "mountain" ? "#c4d1db" : theme === "forge" ? "#b26b43" : theme === "temple" ? "#b0a47f" : theme === "desert" ? "#d8b06a" : theme === "void" ? "#7a58b0" : theme === "celestial" ? "#e8dfc0" : "#7a745e";
         ctx.beginPath();
         ctx.moveTo(x, s.y + 10);
         ctx.lineTo(x + step / 2, s.y - 8);
@@ -373,6 +422,52 @@
         ctx.fillRect(x, y, i % 6 === 0 ? 2 : 1, 1);
       }
       ctx.globalAlpha = 1;
+    } else if (theme === "forge") {
+      for (let i = 0; i < 26; i++) {
+        const x = ((i * 61 - cam * 0.5 + time * 0.12) % 720 + 720) % 720;
+        const y = 360 - ((i * 43 + time * 0.35) % 300);
+        ctx.globalAlpha = 0.2 + (i % 4) * 0.1;
+        ctx.fillStyle = i % 4 === 0 ? "#ffd18a" : "#ff8a45";
+        ctx.fillRect(x, y, i % 5 === 0 ? 2 : 1, 2);
+      }
+      ctx.globalAlpha = 1;
+    } else if (theme === "temple") {
+      for (let i = 0; i < 20; i++) {
+        const x = ((i * 79 - cam * 0.4 + Math.sin(time * 0.01 + i) * 10) % 720 + 720) % 720;
+        const y = 70 + (i * 47) % 240;
+        ctx.globalAlpha = 0.14 + (i % 3) * 0.06;
+        ctx.fillStyle = "#e8d9a8";
+        ctx.fillRect(x, y, 1, 1);
+      }
+      ctx.globalAlpha = 1;
+    } else if (theme === "desert") {
+      for (let i = 0; i < 30; i++) {
+        const x = ((i * 47 - cam * 0.7 + time * 0.16) % 720 + 720) % 720;
+        const y = 180 + (i * 29 + time * 0.08) % 180;
+        ctx.globalAlpha = 0.18 + (i % 3) * 0.06;
+        ctx.fillStyle = i % 4 === 0 ? "#7fd8cf" : "#ffe0a0";
+        ctx.fillRect(x, y, i % 5 === 0 ? 2 : 1, 1);
+      }
+      ctx.globalAlpha = 1;
+    } else if (theme === "void") {
+      for (let i = 0; i < 22; i++) {
+        const x = ((i * 83 - cam * 0.45 + time * 0.05) % 720 + 720) % 720;
+        const y = 40 + (i * 53) % 300 + Math.sin(time * 0.02 + i) * 8;
+        ctx.globalAlpha = 0.18 + (i % 4) * 0.08;
+        ctx.fillStyle = i % 3 === 0 ? "#e6d6ff" : "#8d6bc7";
+        ctx.fillRect(x, y, i % 6 === 0 ? 2 : 1, 1);
+      }
+      ctx.globalAlpha = 1;
+    } else if (theme === "celestial") {
+      for (let i = 0; i < 18; i++) {
+        const x = ((i * 67 - cam * 0.35 + time * 0.1) % 720 + 720) % 720;
+        const y = 50 + (i * 59 + time * 0.2) % 280;
+        ctx.globalAlpha = 0.2 + (i % 3) * 0.08;
+        ctx.fillStyle = "#fff0b0";
+        ctx.fillRect(x, y, 3, 1);
+        ctx.fillRect(x + 3, y + 1, 2, 1);
+      }
+      ctx.globalAlpha = 1;
     }
   }
 
@@ -410,6 +505,47 @@
         ctx.globalAlpha = 0.25 + (i % 3) * 0.12;
         ctx.fillStyle = "#ff9954";
         ctx.fillRect(x, y, 1, 2);
+      }
+    } else if (theme === "forge") {
+      for (let i = 0; i < 30; i++) {
+        const x = ((i * 53 + time * 0.1) % 680 + 680) % 680;
+        const y = 360 - ((i * 37 + time * 0.55) % 300);
+        ctx.globalAlpha = 0.2 + (i % 4) * 0.1;
+        ctx.fillStyle = i % 3 === 0 ? "#ffd18a" : "#ff8a45";
+        ctx.fillRect(x, y, i % 5 === 0 ? 2 : 1, 2);
+      }
+    } else if (theme === "temple") {
+      for (let i = 0; i < 24; i++) {
+        const x = ((i * 67 - time * 0.03) % 700 + 700) % 700;
+        const y = 60 + (i * 43) % 250 + Math.sin(time * 0.015 + i) * 7;
+        ctx.globalAlpha = 0.12 + (i % 3) * 0.05;
+        ctx.fillStyle = "#e8d9a8";
+        ctx.fillRect(x, y, 1, 1);
+      }
+    } else if (theme === "desert") {
+      for (let i = 0; i < 44; i++) {
+        const x = ((i * 47 + time * 0.35) % 700 + 700) % 700;
+        const y = ((i * 31 + time * 0.12) % 380) - 10;
+        ctx.globalAlpha = 0.15 + (i % 4) * 0.06;
+        ctx.fillStyle = i % 5 === 0 ? "#7fd8cf" : "#ffe0a0";
+        ctx.fillRect(x, y, i % 4 === 0 ? 2 : 1, 1);
+      }
+    } else if (theme === "void") {
+      for (let i = 0; i < 26; i++) {
+        const x = ((i * 61 - time * 0.02) % 700 + 700) % 700;
+        const y = 30 + (i * 47) % 280;
+        ctx.globalAlpha = 0.15 + (i % 4) * 0.08;
+        ctx.fillStyle = i % 3 === 0 ? "#e6d6ff" : "#8d6bc7";
+        ctx.fillRect(x, y, i % 6 === 0 ? 2 : 1, 1);
+      }
+    } else if (theme === "celestial") {
+      for (let i = 0; i < 20; i++) {
+        const x = ((i * 71 + time * 0.07) % 700 + 700) % 700;
+        const y = ((i * 43 + time * 0.14) % 330);
+        ctx.globalAlpha = 0.18 + (i % 3) * 0.07;
+        ctx.fillStyle = "#fff0b0";
+        ctx.fillRect(x, y, 3, 1);
+        ctx.fillRect(x + 3, y + 1, 2, 1);
       }
     } else {
       for (let i = 0; i < 16; i++) {

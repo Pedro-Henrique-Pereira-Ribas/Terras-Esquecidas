@@ -239,6 +239,11 @@ h2 { font-weight: 700; letter-spacing: .02em; }
 .rarity-text.epica { color: var(--purple); }
 .rarity-text.lendaria { color: var(--gold); }
 .rarity-text.mitica { color: var(--red); }
+.rarity-text.divina { color: #f3df9b; text-shadow: 0 0 8px rgba(243,223,155,.35); }
+.rarity-text.celestial { color: #9bd8ff; text-shadow: 0 0 8px rgba(155,216,255,.35); }
+.rarity-text.ancestral { color: #cba47a; text-shadow: 0 0 8px rgba(203,164,122,.3); }
+.rarity-text.suprema { color: #ff9b58; text-shadow: 0 0 8px rgba(255,155,88,.35); }
+.rarity-text.eterna { color: #d7a8ff; text-shadow: 0 0 10px rgba(215,168,255,.45); }
 
 .hud-mid {
   position: absolute;
@@ -764,6 +769,9 @@ h2 { font-weight: 700; letter-spacing: .02em; }
 .how-card b { color: #c8baa0; font-weight: 400; }
 .how-tip { border-color: rgba(216, 176, 106, .22); }
 .how-tip p { color: #c7b695; font-style: italic; font-size: clamp(8px, .9vw, 12px); }
+@media (min-width: 761px) {
+  .how-card.how-tip { grid-column: 1 / -1; }
+}
 kbd {
   display: inline-block;
   min-width: 18px;
@@ -888,7 +896,20 @@ kbd {
 .forge-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; }
 .forge-head h3 { margin: 0; font-size: clamp(14px, 1.8vw, 22px); color: #e8dcc6; }
 .forge-current { border: 1px solid var(--gold-soft); color: var(--gold); padding: 3px 7px; font-size: clamp(7px, .78vw, 9px); letter-spacing: .12em; text-transform: uppercase; }
-.weapon-path { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; margin: 10px 0; }
+.weapon-path { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 6px; margin: 10px 0; }
+@media (max-width: 1100px) {
+  .weapon-path { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+@media (max-width: 760px) {
+  .weapon-path { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+.weapon-path.outfit-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+@media (max-width: 1100px) {
+  .weapon-path.outfit-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+@media (max-width: 760px) {
+  .weapon-path.outfit-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
 .wp-card {
   border: 1px solid var(--line-soft);
   background: rgba(7, 9, 7, .6);
@@ -1020,6 +1041,12 @@ kbd {
 .true-choice:not(:disabled) strong { color: #ffe4a9; }
 .ending-text p { color: #c9bea9; font-size: clamp(9px, 1vw, 13px); line-height: 1.85; margin-bottom: 12px; max-width: 780px; }
 .ending-footer { display: flex; justify-content: space-between; align-items: center; gap: 14px; border-top: 1px solid var(--line-soft); padding-top: 14px; margin-top: 14px; }
+.ending-footer-actions { display: flex; flex-direction: column; align-items: stretch; gap: 8px; min-width: min(100%, 240px); }
+.ending-footer-actions .btn { justify-content: center; }
+#btn-ending-act2 { box-shadow: 0 0 24px rgba(216, 176, 106, .2); letter-spacing: .08em; }
+#ending-result-view.act2 #ending-result-kicker { color: #d7a8ff; }
+#ending-result-view.act2 #ending-result-title { color: #f3df9b; text-shadow: 0 0 24px rgba(215, 168, 255, .18); }
+#ending-result-view.act2 .ending-text p { color: #d8cbe8; }
 #ending-result-kicker { color: var(--gold); }
 #ending-result-title { letter-spacing: .12em; }
 

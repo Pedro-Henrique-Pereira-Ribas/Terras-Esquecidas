@@ -161,6 +161,7 @@
     equipWeapon: equipWeapon,
     campContinue: campContinue,
     chooseEnding: chooseEnding,
+    continueToAct2: continueToAct2,
     newJourney: newJourney
   };
   TP.game = G;
@@ -346,21 +347,25 @@
       playerName: TP.ui.account ? TP.ui.account.name : "Viajante",
       serverName: TP.ui.account ? TP.ui.account.server : "Reino Sem Nome",
       levelIndex: 0,
+      act: 1,
       coins: TP.ui.walletFor(char.id),
       weaponClass: char.weaponClass,
       weaponTier: ownedWeapons[weaponKey(char.weaponClass, loadedTier)] ? loadedTier : 0,
       ownedWeapons: ownedWeapons,
       memories: 0,
+      memoryGoal: 15,
       memoryIds: [],
       checkpoints: {},
-      bossCoins: [false, false, false, false],
+      bossCoins: [false, false, false, false, false, false, false, false, false, false],
       finalCoinClaimed: false,
       finalForgeDone: false,
       lastDrop: null,
       deaths: 0,
       quests: createQuestState(),
       startedAt: state.time,
-      ending: null
+      ending: null,
+      act1Ending: null,
+      act2Ending: null
     };
     state.campData = null;
     state.campContext = null;
@@ -959,6 +964,7 @@
     saveWallet(run);
     persistArmory(run);
     run.ending = key;
+    run.act1Ending = key;
     state.endingTone = ending.tone;
     state.mode = "endingText";
     const note = "Jornada de <strong>" + run.char.name + "</strong> · " + run.diff.name + " — " + run.diff.label +
@@ -966,6 +972,40 @@
       run.deaths + " queda(s).";
     TP.ui.showEndingResult(key, ending, run, note, ending.tone);
     TP.audio.startTheme(key === "true" ? 4 : 0);
+  }
+
+  function showAct2Ending() {
+    const run = state.run;
+    if (!run) return;
+    saveWallet(run);
+    persistArmory(run);
+    const key = run.memories >= 30 ? "act2true" : "act2";
+    const ending = DATA.ENDINGS[key];
+    if (!ending) return;
+    run.act2Ending = key;
+    state.endingTone = ending.tone;
+    state.mode = "endingText";
+    const note = "Jornada de <strong>" + run.char.name + "</strong> · Ato II · " + run.diff.name +
+      " · <strong>" + run.memories + "/30</strong> memórias · <strong>" + fmt(run.coins) + "</strong> moedas restantes · " +
+      run.deaths + " queda(s).";
+    TP.ui.showEndingResult(key, ending, run, note, ending.tone, { act2: true });
+    TP.audio.startTheme(ending.tone === "gold" ? 9 : 8);
+  }
+
+  function continueToAct2() {
+    const run = state.run;
+    if (!run || run.act !== 1 || !run.ending) return;
+    saveWallet(run);
+    persistArmory(run);
+    run.act1Ending = run.ending;
+    run.ending = null;
+    run.act = 2;
+    run.memoryGoal = 30;
+    state.mode = "cutscene";
+    TP.ui.hideScreens();
+    TP.ui.resetEnding();
+    TP.ui.showGameOver(false);
+    startLevel(5, false);
   }
 
   function newJourney() {
@@ -1409,12 +1449,12 @@
     e.kb = (dir || 1) * 2.2;
     addFloater(String(dealt), e.x + e.w / 2, e.y - 4, "#f6dca2");
     burst(e.x + e.w / 2, e.y + e.h / 2, "#e7b26b", 7, 1.8, 2, 0.1);
-    if (player && player.weapon.effect === "burn") {
+    if (player && (player.weapon.effect === "burn" || player.weapon.effect === "eternal")) {
       e.burn = 170;
       e.burnDmg = Math.max(2, Math.round(player.weapon.dmg * 0.13));
       e.burnTick = 0;
     }
-    if (player && player.weapon.effect === "lifesteal") {
+    if (player && (player.weapon.effect === "lifesteal" || player.weapon.effect === "eternal")) {
       healPlayer(Math.max(1, Math.round(dealt * 0.13)));
     }
     if (e.hp <= 0) {
@@ -1548,16 +1588,16 @@
     b.flash = 8;
     addFloater(String(dealt), b.x + b.w / 2, b.y - 6, "#ffe0a0");
     burst(b.x + b.w / 2, b.y + b.h / 2, "#f0bd72", 9, 2.1, 2, 0.08);
-    if (player && player.weapon.effect === "burn") {
+    if (player && (player.weapon.effect === "burn" || player.weapon.effect === "eternal")) {
       b.burn = 170;
       b.burnDmg = Math.max(3, Math.round(player.weapon.dmg * 0.13));
       b.burnTick = 0;
     }
-    if (player && player.weapon.effect === "lifesteal") {
+    if (player && (player.weapon.effect === "lifesteal" || player.weapon.effect === "eternal")) {
       healPlayer(Math.max(1, Math.round(dealt * 0.13)));
     }
     if (b.hp <= 0) {
-      if (b.cfg.final && b.phase === 1 && !b.phaseTransitioned) {
+      if ((b.cfg.final || b.cfg.act2Final) && b.phase === 1 && !b.phaseTransitioned) {
         b.hp = 1;
       } else {
         b.hp = 0;
@@ -1570,6 +1610,7 @@
       if (b.cfg.final) {
         triggerFinalForge(b);
       } else {
+        if (b.cfg.act2Final) b.hp = Math.ceil(b.maxHp * 0.5);
         b.phase = 2;
         b.state = "idle";
         b.timer = 45;
@@ -1645,7 +1686,7 @@
               x: ox, y: oy, vx: (dx / len) * 3.1, vy: (dy / len) * 3.1,
               kind: "orb", owner: "enemy", damage: e.damage * 0.9,
               r: 6, life: 160, maxLife: 160,
-              color: level.def.theme === "forest" ? "#a9dd85" : level.def.theme === "mine" ? "#ff9f5a" : level.def.theme === "mountain" ? "#a9d7ef" : level.def.theme === "frontier" ? "#ff7457" : "#82d9cc"
+              color: level.def.theme === "forest" ? "#a9dd85" : level.def.theme === "mine" ? "#ff9f5a" : level.def.theme === "mountain" ? "#a9d7ef" : level.def.theme === "frontier" ? "#ff7457" : level.def.theme === "forge" ? "#ffb066" : level.def.theme === "temple" ? "#d8c58a" : level.def.theme === "desert" ? "#e8c36a" : level.def.theme === "void" ? "#b48cff" : level.def.theme === "celestial" ? "#fff0b0" : "#82d9cc"
             });
             TP.audio.sfx("shoot");
           }
@@ -1800,7 +1841,7 @@
           spawnProjectile({
             x: fromX, y: fromY, vx: Math.cos(a) * 2.7, vy: Math.sin(a) * 2.7,
             kind: "orb", owner: "enemy", damage: b.cfg.contact * 0.85 * state.run.diff.bossDmgMul,
-            r: 7, life: 150, maxLife: 150, color: "#9be8a8"
+            r: 7, life: 150, maxLife: 150, color: b.cfg.attackColor || "#9be8a8"
           });
         }
         TP.audio.sfx("shoot");
@@ -1852,6 +1893,11 @@
       if (b.key === "vulto") list.push("volley");
       if (b.key === "ferrugem") list.push("acid");
       if (b.key === "colosso") list.push("volley");
+      if (b.key === "titao") list.push("volley");
+      if (b.key === "guardiao") list.push("pillars");
+      if (b.key === "farao") list.push("rain");
+      if (b.key === "imperador") list.push("volley");
+      if (b.key === "arcanjo") list.push("feathers", "dash");
     }
     if (list.length > 1) {
       for (let tries = 0; tries < 6; tries++) {
@@ -1915,7 +1961,7 @@
     }
 
     if (attack === "summon") {
-      const kind = b.key === "ferrugem" ? "walker" : "flyer";
+      const kind = b.key === "ferrugem" || b.key === "guardiao" ? "walker" : "flyer";
       spawnBossAdds(b, b.phase === 2 ? 3 : 2, kind);
       TP.audio.sfx("boss");
       return;
@@ -1929,7 +1975,7 @@
         spawnProjectile({
           x: cx, y: cy, vx: Math.cos(a) * 3.7, vy: Math.sin(a) * 3.7,
           kind: "feather", owner: "enemy", damage: 13 * diff.bossDmgMul,
-          r: 6, life: 160, maxLife: 160, color: "#8fa3bd", rot: a
+          r: 6, life: 160, maxLife: 160, color: b.cfg.attackColor || "#8fa3bd", rot: a
         });
       }
       TP.audio.sfx("shoot");
@@ -1948,12 +1994,12 @@
       spawnProjectile({
         x: cx, y: GROUND_Y - 3, vx: -4.6, vy: 0, kind: "beam", owner: "enemy",
         damage: 15 * diff.bossDmgMul, w: 16, h: 58, life: 85, maxLife: 85,
-        color: "#ff9a6e"
+        color: b.cfg.attackColor || "#ff9a6e"
       });
       spawnProjectile({
         x: cx, y: GROUND_Y - 3, vx: 4.6, vy: 0, kind: "beam", owner: "enemy",
         damage: 15 * diff.bossDmgMul, w: 16, h: 58, life: 85, maxLife: 85,
-        color: "#ff9a6e"
+        color: b.cfg.attackColor || "#ff9a6e"
       });
       TP.audio.sfx("wave");
       return;
@@ -1966,7 +2012,7 @@
         spawnProjectile({
           x: px, y: GROUND_Y - 100, vx: 0, vy: 0, kind: "pillar", owner: "enemy",
           damage: 17 * diff.bossDmgMul, w: 32, h: 100, life: 112, maxLife: 112,
-          warning: 42 + i * 5, color: "#ff8d54"
+          warning: 42 + i * 5, color: b.cfg.attackColor || "#ff8d54"
         });
       }
       TP.audio.sfx("boss");
@@ -1981,7 +2027,7 @@
           x: cx + rand(-20, 20), y: b.y + 20, vx: vx, vy: -5.2 - rand(0, 1.2),
           gravity: 0.23, kind: "orb", owner: "enemy",
           damage: 14 * diff.bossDmgMul, r: 7, life: 150, maxLife: 150,
-          color: "#d6c35d"
+          color: b.cfg.attackColor || "#d6c35d"
         });
       }
       TP.audio.sfx("shoot");
@@ -1995,7 +2041,7 @@
           x: rx, y: rand(-90, 10), vx: rand(-0.35, 0.35), vy: rand(2.2, 3.3),
           gravity: 0.1, kind: "rock", owner: "enemy",
           damage: 14 * diff.bossDmgMul, r: 8, life: 210, maxLife: 210,
-          color: "#9b8577"
+          color: b.cfg.attackColor || "#9b8577"
         });
       }
       TP.audio.sfx("boss");
@@ -2032,7 +2078,7 @@
           spawnProjectile({
             x: cx, y: cy, vx: Math.cos(a) * 3.2, vy: Math.sin(a) * 3.2,
             kind: "orb", owner: "enemy", damage: 13 * diff.bossDmgMul,
-            r: 6, life: 160, maxLife: 160, color: "#9be8a8"
+            r: 6, life: 160, maxLife: 160, color: b.cfg.attackColor || "#9be8a8"
           });
         }
       }
@@ -2061,7 +2107,7 @@
     spawnProjectile({
       x: b.x + b.w / 2, y: GROUND_Y - 36, vx: dir * 4.2, vy: 0,
       kind: "shock", owner: "enemy", damage: 13 * diff.bossDmgMul,
-      w: 38, h: 36, life: 62, maxLife: 62, color: "#e6ad64"
+      w: 38, h: 36, life: 62, maxLife: 62, color: b.cfg.attackColor || "#e6ad64"
     });
   }
 
@@ -2178,7 +2224,9 @@
     ]);
     TP.ui.showDialogue(lines, function () {
       TP.ui.hideDialogue(false);
-      if (b.cfg.final) {
+      if (b.cfg.act2Final) {
+        showAct2Ending();
+      } else if (b.cfg.final) {
         showEndingSelection();
       } else {
         showCamp({

@@ -538,6 +538,11 @@
     if (theme === "mountain") return { body: "#71839a", body2: "#95a6b8", dark: "#334052", eye: "#bfe6ff", glow: "#a9d6ee", accent: "#d8e6f0" };
     if (theme === "mine") return { body: "#8c583e", body2: "#aa6f4b", dark: "#432b22", eye: "#ffb05a", glow: "#ff8b45", accent: "#c99463" };
     if (theme === "frontier") return { body: "#6a4540", body2: "#85564c", dark: "#2c1b1c", eye: "#ff825f", glow: "#ff6e4a", accent: "#9b5e4b" };
+    if (theme === "forge") return { body: "#7a5a45", body2: "#9a7458", dark: "#3a2a22", eye: "#ffb066", glow: "#ff8a4e", accent: "#b7825b" };
+    if (theme === "temple") return { body: "#8d846c", body2: "#a49a7d", dark: "#453f35", eye: "#8fe6cb", glow: "#8fe6cb", accent: "#d8bd72" };
+    if (theme === "desert") return { body: "#c9b184", body2: "#8f7651", dark: "#3b3024", eye: "#ffcf5e", glow: "#7fd8cf", accent: "#e0b45e" };
+    if (theme === "void") return { body: "#35254f", body2: "#55368a", dark: "#120f21", eye: "#e6d6ff", glow: "#b48cff", accent: "#8d6bc7" };
+    if (theme === "celestial") return { body: "#d8cfb6", body2: "#f0e6d0", dark: "#7c6a8f", eye: "#fff0b0", glow: "#fff0b0", accent: "#f0cf7c" };
     return { body: "#767b69", body2: "#8d9077", dark: "#3f4439", eye: "#83e3d0", glow: "#73cab9", accent: "#99a17d" };
   }
 
@@ -557,6 +562,11 @@
     else if (b.key === "vulto") drawVulto(ctx, b, time);
     else if (b.key === "corvo") drawCorvo(ctx, b, time);
     else if (b.key === "ferrugem") drawFerrugem(ctx, b, time);
+    else if (b.key === "titao") drawTitao(ctx, b, time);
+    else if (b.key === "guardiao") drawGuardiao(ctx, b, time);
+    else if (b.key === "farao") drawFarao(ctx, b, time);
+    else if (b.key === "imperador") drawImperador(ctx, b, time);
+    else if (b.key === "arcanjo") drawArcanjo(ctx, b, time);
     else drawRei(ctx, b, time);
     ctx.restore();
 
@@ -905,6 +915,315 @@
     ctx.globalAlpha = 1;
   }
 
+  function drawTitao(ctx, b, time) {
+    const c = b.cfg.colors;
+    const pulse = Math.sin(time * 0.07) * 2;
+    const step = Math.sin(time * 0.06) * 4;
+    // pernas hidráulicas
+    ctx.strokeStyle = c.dark;
+    ctx.lineWidth = 8;
+    for (let i = 0; i < 2; i++) {
+      const sx = -28 + i * 56;
+      ctx.beginPath();
+      ctx.moveTo(sx, -34);
+      ctx.lineTo(sx - 16 - i * 4, -16);
+      ctx.lineTo(sx - 24 - i * 5 + step, 0);
+      ctx.stroke();
+      ctx.fillStyle = c.metal;
+      ctx.fillRect(sx - 32 - i * 5 + step, -6, 18, 7);
+    }
+    // torso
+    art.rect(ctx, -42, -76, 84, 44, c.metal);
+    art.rect(ctx, -34, -70, 68, 22, c.dark);
+    art.rect(ctx, -10, -72, 20, 36, c.rust);
+    art.rect(ctx, -38, -78, 76, 7, c.rust);
+    // placas e parafusos
+    art.rect(ctx, -32, -62, 10, 4, "#b58a62");
+    art.rect(ctx, 22, -62, 10, 4, "#b58a62");
+    art.rect(ctx, -28, -48, 8, 3, c.dark);
+    art.rect(ctx, 20, -48, 8, 3, c.dark);
+    // núcleo
+    art.pixelCircle(ctx, 0, -53, 15, "#1a100c");
+    art.pixelCircle(ctx, 0, -53, 10, c.core);
+    art.pixelCircle(ctx, -2, -55, 4, c.glow);
+    art.glow(ctx, 0, -53, 58 + pulse, c.glow, 0.18);
+    // cabeça
+    art.rect(ctx, -22, -93, 44, 20, c.metal);
+    art.rect(ctx, -16, -98, 32, 7, c.rust);
+    art.rect(ctx, -12, -88, 8, 4, c.eye);
+    art.rect(ctx, 4, -88, 8, 4, c.eye);
+    art.glow(ctx, 0, -86, 24, c.eye, 0.24);
+    // chaminés
+    art.rect(ctx, -38, -96, 8, 22, c.dark);
+    art.rect(ctx, 30, -92, 8, 18, c.dark);
+    ctx.globalAlpha = 0.2;
+    for (let i = 0; i < 3; i++) {
+      art.pixelCircle(ctx, -34 + Math.sin(time * 0.03 + i) * 5, -104 - i * 8, 5 + i * 2, "#c7a58c");
+      art.pixelCircle(ctx, 34 + Math.sin(time * 0.025 + i) * 4, -100 - i * 7, 4 + i * 2, "#c7a58c");
+    }
+    ctx.globalAlpha = 1;
+    // braço-martelo
+    ctx.save();
+    ctx.translate(44, -64);
+    ctx.rotate(b.state === "telegraph" ? -0.5 : 0.18);
+    art.rect(ctx, -4, 0, 9, 34, c.dark);
+    art.rect(ctx, -12, 32, 26, 16, c.rust);
+    art.rect(ctx, -8, 35, 18, 5, c.metal);
+    if (b.phase === 2) art.glow(ctx, 0, 36, 26, c.core, 0.2);
+    ctx.restore();
+    if (b.phase === 2) art.glow(ctx, 0, -50, 92, c.core, 0.12);
+  }
+
+  function drawGuardiao(ctx, b, time) {
+    const c = b.cfg.colors;
+    // pernas
+    art.rect(ctx, -28, -34, 20, 34, c.dark);
+    art.rect(ctx, 8, -34, 20, 34, c.dark);
+    art.rect(ctx, -30, -8, 24, 8, c.stone);
+    art.rect(ctx, 6, -8, 24, 8, c.stone);
+    // torso de pedra
+    art.rect(ctx, -34, -78, 68, 48, c.stone);
+    art.rect(ctx, -28, -74, 56, 18, c.dark);
+    art.rect(ctx, -6, -76, 12, 38, c.moss);
+    art.rect(ctx, -30, -80, 60, 6, c.gold);
+    // rachaduras
+    art.rect(ctx, -22, -62, 3, 14, c.dark);
+    art.rect(ctx, -19, -52, 10, 3, c.dark);
+    art.rect(ctx, 12, -70, 3, 18, c.dark);
+    // ombreiras
+    ctx.fillStyle = c.dark;
+    ctx.beginPath(); ctx.moveTo(-34, -76); ctx.lineTo(-48, -66); ctx.lineTo(-42, -48); ctx.lineTo(-26, -54); ctx.closePath(); ctx.fill();
+    ctx.beginPath(); ctx.moveTo(34, -76); ctx.lineTo(48, -66); ctx.lineTo(42, -48); ctx.lineTo(26, -54); ctx.closePath(); ctx.fill();
+    art.rect(ctx, -46, -62, 4, 9, c.gold);
+    art.rect(ctx, 42, -62, 4, 9, c.gold);
+    // cabeça
+    art.rect(ctx, -20, -98, 40, 22, c.stone);
+    art.rect(ctx, -16, -101, 32, 6, c.gold);
+    art.rect(ctx, -12, -90, 7, 4, c.eye);
+    art.rect(ctx, 5, -90, 7, 4, c.eye);
+    art.glow(ctx, 0, -88, 24, c.eye, 0.18);
+    // barba de pedra
+    art.rect(ctx, -13, -80, 26, 4, c.moss);
+    // escudo
+    ctx.save();
+    ctx.translate(-46, -56);
+    ctx.fillStyle = c.dark;
+    ctx.beginPath();
+    ctx.moveTo(0, -24); ctx.lineTo(24, -14); ctx.lineTo(22, 20); ctx.lineTo(0, 32); ctx.lineTo(-22, 20); ctx.lineTo(-24, -14);
+    ctx.closePath(); ctx.fill();
+    art.rect(ctx, -10, -10, 20, 18, c.stone);
+    art.rect(ctx, -2, -18, 4, 34, c.gold);
+    ctx.restore();
+    // lança
+    ctx.save();
+    ctx.translate(44, -58);
+    ctx.rotate(b.state === "telegraph" ? -0.5 : -0.08);
+    art.rect(ctx, -2, -52, 4, 82, "#6b5a3d");
+    ctx.fillStyle = "#d8c58a";
+    ctx.beginPath(); ctx.moveTo(-6, -52); ctx.lineTo(0, -74); ctx.lineTo(6, -52); ctx.closePath(); ctx.fill();
+    if (b.phase === 2) art.glow(ctx, 0, -60, 26, c.gold, 0.2);
+    ctx.restore();
+    // poeira
+    ctx.globalAlpha = 0.16;
+    for (let i = 0; i < 5; i++) {
+      art.pixelCircle(ctx, -30 + i * 15, -10 + Math.sin(time * 0.05 + i) * 3, 4 + (i % 2) * 2, c.gold);
+    }
+    ctx.globalAlpha = 1;
+    if (b.phase === 2) art.glow(ctx, 0, -50, 86, c.eye, 0.1);
+  }
+
+  function drawFarao(ctx, b, time) {
+    const c = b.cfg.colors;
+    const float = Math.sin(time * 0.05) * 3;
+    // pernas / faixas
+    art.rect(ctx, -20, -34 + float, 14, 34, c.bandage2);
+    art.rect(ctx, 6, -34 + float, 14, 34, c.bandage2);
+    art.rect(ctx, -24, -8 + float, 20, 8, c.gold);
+    art.rect(ctx, 4, -8 + float, 20, 8, c.gold);
+    // torso
+    art.rect(ctx, -28, -76 + float, 56, 45, c.bandage);
+    art.rect(ctx, -24, -70 + float, 48, 8, c.bandage2);
+    art.rect(ctx, -24, -54 + float, 48, 7, c.bandage2);
+    art.rect(ctx, -24, -38 + float, 48, 5, c.bandage2);
+    // colar
+    art.rect(ctx, -22, -78 + float, 44, 6, c.gold);
+    art.pixelCircle(ctx, 0, -75 + float, 4, c.glass);
+    // braços
+    art.rect(ctx, -40, -72 + float, 12, 38, c.bandage2);
+    art.rect(ctx, 28, -72 + float, 12, 38, c.bandage2);
+    art.rect(ctx, -42, -38 + float, 14, 7, c.gold);
+    art.rect(ctx, 28, -38 + float, 14, 7, c.gold);
+    // cabeça
+    art.rect(ctx, -17, -95 + float, 34, 22, c.bandage);
+    art.rect(ctx, -14, -92 + float, 28, 5, c.bandage2);
+    art.rect(ctx, -9, -86 + float, 6, 3, c.eye);
+    art.rect(ctx, 4, -86 + float, 6, 3, c.eye);
+    art.glow(ctx, 0, -85 + float, 18, c.eye, 0.2);
+    // nemes
+    art.rect(ctx, -24, -101 + float, 48, 7, c.gold);
+    art.rect(ctx, -20, -107 + float, 40, 7, c.gold);
+    art.rect(ctx, -26, -96 + float, 8, 22, c.gold);
+    art.rect(ctx, 18, -96 + float, 8, 22, c.gold);
+    art.rect(ctx, -2, -110 + float, 4, 10, c.glass);
+    // cajado de vidro
+    ctx.save();
+    ctx.translate(36, -58 + float);
+    ctx.rotate(b.state === "telegraph" ? -0.35 : 0.1);
+    art.rect(ctx, -2, -34, 4, 74, c.gold);
+    art.pixelCircle(ctx, 0, -38, 10, c.glass);
+    art.pixelCircle(ctx, -2, -40, 4, "#e9ffff");
+    art.glow(ctx, 0, -38, 28, c.glass, 0.22);
+    ctx.restore();
+    // escaravelhos de vidro
+    for (let i = 0; i < 4; i++) {
+      const a = time * 0.03 + i * 1.7;
+      const x = Math.cos(a) * (38 + i * 5);
+      const y = -52 + Math.sin(a * 1.3) * 24 + float;
+      ctx.fillStyle = c.glass;
+      ctx.fillRect(x, y, 4, 3);
+      ctx.fillStyle = "rgba(255,255,255,.35)";
+      ctx.fillRect(x + 1, y - 1, 1, 1);
+    }
+    if (b.phase === 2) art.glow(ctx, 0, -50 + float, 84, c.glass, 0.12);
+  }
+
+  function drawImperador(ctx, b, time) {
+    const c = b.cfg.colors;
+    const float = Math.sin(time * 0.045) * 5;
+    // manto flutuante
+    ctx.fillStyle = c.cloak;
+    ctx.beginPath();
+    ctx.moveTo(-26, -78 + float);
+    ctx.lineTo(-54 - Math.sin(time * 0.04) * 6, -30 + float);
+    ctx.lineTo(-38, -2 + float);
+    ctx.lineTo(-10, -18 + float);
+    ctx.lineTo(6, -4 + float);
+    ctx.lineTo(38, -22 + float);
+    ctx.lineTo(52, -42 + float);
+    ctx.lineTo(24, -78 + float);
+    ctx.closePath(); ctx.fill();
+    ctx.fillStyle = c.cloak2;
+    ctx.beginPath();
+    ctx.moveTo(-18, -70 + float);
+    ctx.lineTo(-34, -28 + float);
+    ctx.lineTo(-18, -14 + float);
+    ctx.lineTo(0, -48 + float);
+    ctx.lineTo(18, -12 + float);
+    ctx.lineTo(34, -30 + float);
+    ctx.lineTo(16, -70 + float);
+    ctx.closePath(); ctx.fill();
+    // torso
+    art.rect(ctx, -20, -82 + float, 40, 42, c.cloak2);
+    art.rect(ctx, -14, -76 + float, 28, 8, c.gold);
+    art.rect(ctx, -2, -74 + float, 4, 30, c.gold);
+    // ombreiras
+    ctx.fillStyle = c.void;
+    ctx.beginPath(); ctx.moveTo(-20, -80 + float); ctx.lineTo(-38, -70 + float); ctx.lineTo(-30, -52 + float); ctx.lineTo(-14, -60 + float); ctx.closePath(); ctx.fill();
+    ctx.beginPath(); ctx.moveTo(20, -80 + float); ctx.lineTo(38, -70 + float); ctx.lineTo(30, -52 + float); ctx.lineTo(14, -60 + float); ctx.closePath(); ctx.fill();
+    // cabeça
+    art.rect(ctx, -14, -100 + float, 28, 20, c.cloak2);
+    art.rect(ctx, -10, -96 + float, 20, 4, c.void);
+    art.rect(ctx, -7, -89 + float, 5, 3, c.eye);
+    art.rect(ctx, 2, -89 + float, 5, 3, c.eye);
+    art.glow(ctx, 0, -88 + float, 20, c.eye, 0.18);
+    // coroa de vazio
+    art.rect(ctx, -16, -108 + float, 32, 5, c.gold);
+    art.rect(ctx, -14, -116 + float, 4, 9, c.gold);
+    art.rect(ctx, -3, -120 + float, 6, 13, c.gold);
+    art.rect(ctx, 10, -114 + float, 4, 7, c.gold);
+    art.pixelCircle(ctx, 0, -118 + float, 3, c.glow);
+    // orbe
+    art.pixelCircle(ctx, 0, -58 + float, 13, "#0b0814");
+    art.pixelCircle(ctx, 0, -58 + float, 8, c.void);
+    art.pixelCircle(ctx, -2, -60 + float, 3, c.eye);
+    art.glow(ctx, 0, -58 + float, 44, c.glow, 0.2);
+    // tentáculos de vazio
+    ctx.strokeStyle = c.glow;
+    ctx.lineWidth = 2;
+    for (let i = 0; i < 5; i++) {
+      const a = time * 0.03 + i * 1.25;
+      ctx.globalAlpha = 0.35;
+      ctx.beginPath();
+      ctx.moveTo(Math.cos(a) * 22, -54 + float + Math.sin(a) * 18);
+      ctx.lineTo(Math.cos(a) * 42, -34 + float + Math.sin(a) * 28);
+      ctx.stroke();
+    }
+    ctx.globalAlpha = 1;
+    if (b.phase === 2) art.glow(ctx, 0, -56 + float, 100, c.glow, 0.1);
+  }
+
+  function drawArcanjo(ctx, b, time) {
+    const c = b.cfg.colors;
+    const float = Math.sin(time * 0.04) * 4;
+    const wingSwing = Math.sin(time * 0.05) * 8;
+    // asas
+    ctx.save();
+    ctx.translate(0, -62 + float);
+    for (let side = -1; side <= 1; side += 2) {
+      ctx.fillStyle = c.wing;
+      for (let f = 0; f < 5; f++) {
+        ctx.beginPath();
+        ctx.moveTo(side * 12, 0);
+        ctx.lineTo(side * (30 + f * 14), -22 - f * 7 + wingSwing * (f / 5));
+        ctx.lineTo(side * (42 + f * 16), -2 - f * 5 + wingSwing * (f / 5));
+        ctx.lineTo(side * (24 + f * 12), 12 - f * 2);
+        ctx.closePath(); ctx.fill();
+        ctx.fillStyle = f % 2 ? c.wing2 : c.wing;
+      }
+    }
+    ctx.restore();
+    // robe
+    ctx.fillStyle = c.robe;
+    ctx.beginPath();
+    ctx.moveTo(-24, -74 + float);
+    ctx.lineTo(-34, -18 + float);
+    ctx.lineTo(-18, -6 + float);
+    ctx.lineTo(0, -22 + float);
+    ctx.lineTo(18, -6 + float);
+    ctx.lineTo(34, -18 + float);
+    ctx.lineTo(24, -74 + float);
+    ctx.closePath(); ctx.fill();
+    art.rect(ctx, -18, -70 + float, 36, 34, c.dark);
+    art.rect(ctx, -2, -72 + float, 4, 42, c.gold);
+    // torso / ombros
+    art.rect(ctx, -20, -82 + float, 40, 18, c.robe);
+    art.rect(ctx, -24, -80 + float, 8, 22, c.gold);
+    art.rect(ctx, 16, -80 + float, 8, 22, c.gold);
+    // cabeça
+    art.rect(ctx, -12, -100 + float, 24, 20, "#d8c7a8");
+    art.rect(ctx, -8, -95 + float, 5, 3, c.eye);
+    art.rect(ctx, 3, -95 + float, 5, 3, c.eye);
+    art.glow(ctx, 0, -94 + float, 18, c.eye, 0.16);
+    // cabelo / auréola
+    art.rect(ctx, -14, -104 + float, 28, 6, c.wing2);
+    ctx.strokeStyle = c.halo;
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.ellipse(0, -116 + float, 22, 7, 0, 0, Math.PI * 2);
+    ctx.stroke();
+    art.glow(ctx, 0, -116 + float, 34, c.halo, 0.18);
+    // lança de luz
+    ctx.save();
+    ctx.translate(40, -58 + float);
+    ctx.rotate(b.state === "telegraph" ? -0.5 : 0.08);
+    art.rect(ctx, -2, -46, 4, 84, c.gold);
+    ctx.fillStyle = c.halo;
+    ctx.beginPath(); ctx.moveTo(-8, -46); ctx.lineTo(0, -72); ctx.lineTo(8, -46); ctx.closePath(); ctx.fill();
+    art.glow(ctx, 0, -58, 30, c.halo, 0.2);
+    ctx.restore();
+    // penas soltas
+    for (let i = 0; i < 7; i++) {
+      const a = time * 0.025 + i * 0.9;
+      const x = Math.cos(a) * (38 + (i % 3) * 8);
+      const y = -46 + float + Math.sin(a * 1.4) * 28;
+      ctx.globalAlpha = 0.3 + (i % 3) * 0.08;
+      ctx.fillStyle = i % 2 ? c.halo : c.wing;
+      ctx.fillRect(x, y, 4, 2);
+    }
+    ctx.globalAlpha = 1;
+    if (b.phase === 2) art.glow(ctx, 0, -58 + float, 112, c.halo, 0.12);
+  }
+
   /* ============================================================
      PROJÉTEIS
      ============================================================ */
@@ -985,20 +1304,20 @@
       if (pr.warning > 0) {
         ctx.save();
         ctx.globalAlpha = 0.25 + Math.sin(time * 0.4) * 0.1;
-        ctx.fillStyle = "#ff8054";
+        ctx.fillStyle = pr.color || "#ff8054";
         ctx.fillRect(x - 16, 0, 32, TP.art.GROUND_Y);
-        ctx.strokeStyle = "#ffb07e";
+        ctx.strokeStyle = pr.color || "#ffb07e";
         ctx.strokeRect(x - 12, 0, 24, TP.art.GROUND_Y);
         ctx.restore();
       } else {
         ctx.save();
         ctx.globalAlpha = 0.75;
-        ctx.fillStyle = "#ff8d54";
+        ctx.fillStyle = pr.color || "#ff8d54";
         for (let i = 0; i < 7; i++) {
           const ww = 18 - i * 2;
           ctx.fillRect(x - ww / 2 + Math.sin(time * 0.2 + i) * 2, TP.art.GROUND_Y - i * 28, ww, 30);
         }
-        art.glow(ctx, x, TP.art.GROUND_Y - 80, 45, "#ff9d54", 0.25);
+        art.glow(ctx, x, TP.art.GROUND_Y - 80, 45, pr.color || "#ff9d54", 0.25);
         ctx.restore();
       }
       return;

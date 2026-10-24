@@ -17,6 +17,11 @@
       else if (theme === "forest") drawForest(ctx, pal, cameraX, time);
       else if (theme === "mountain") drawMountain(ctx, pal, cameraX, time);
       else if (theme === "mine") drawMine(ctx, pal, cameraX, time);
+      else if (theme === "forge") drawForge(ctx, pal, cameraX, time);
+      else if (theme === "temple") drawTemple(ctx, pal, cameraX, time);
+      else if (theme === "desert") drawDesert(ctx, pal, cameraX, time);
+      else if (theme === "void") drawVoid(ctx, pal, cameraX, time);
+      else if (theme === "celestial") drawCelestial(ctx, pal, cameraX, time);
       else drawFrontier(ctx, pal, cameraX, time);
       // névoa baixa comum
       ctx.save();
@@ -109,6 +114,66 @@
     } else if (theme === "mine") {
       // brilho distante da mina
       art.glow(ctx, 320, 260, 220, "#c56535", 0.1);
+    } else if (theme === "forge") {
+      art.glow(ctx, 320, 250, 260, "#ff7a3d", 0.14);
+      ctx.save();
+      ctx.globalAlpha = 0.2;
+      for (let i = 0; i < 6; i++) {
+        const x = ((i * 151 + time * 0.018) % 760) - 60;
+        ctx.fillStyle = i % 2 ? "#3a1d15" : "#24120e";
+        ctx.fillRect(x, 48 + (i % 3) * 30, 120, 9);
+        ctx.fillRect(x + 28, 40 + (i % 3) * 30, 54, 8);
+      }
+      ctx.restore();
+    } else if (theme === "temple") {
+      art.pixelCircle(ctx, 500, 74, 34, "#d8c58a");
+      art.pixelCircle(ctx, 512, 68, 30, "#3c4058");
+      ctx.save();
+      ctx.globalAlpha = 0.12;
+      ctx.fillStyle = "#e8d9a8";
+      for (let i = 0; i < 18; i++) {
+        const x = (i * 47 + Math.sin(time * 0.01 + i) * 12) % W;
+        const y = 60 + ((i * 31) % 160);
+        ctx.fillRect(x, y, 2, 2);
+      }
+      ctx.restore();
+    } else if (theme === "desert") {
+      art.pixelCircle(ctx, 486, 92, 50, "#f0c070");
+      art.pixelCircle(ctx, 486, 92, 42, "#ffe0a0");
+      ctx.save();
+      ctx.globalAlpha = 0.12;
+      ctx.fillStyle = "#ffe0a0";
+      for (let i = 0; i < 6; i++) {
+        const y = 120 + i * 24 + Math.sin(time * 0.006 + i) * 2;
+        ctx.fillRect(0, y, W, 2);
+      }
+      ctx.restore();
+    } else if (theme === "void") {
+      ctx.save();
+      ctx.globalAlpha = 0.85;
+      art.pixelCircle(ctx, 500, 98, 42, "#120c20");
+      art.pixelCircle(ctx, 500, 98, 34, "#07050d");
+      ctx.globalAlpha = 0.2;
+      art.pixelCircle(ctx, 500, 98, 62, "#8d5cff");
+      ctx.restore();
+      ctx.fillStyle = "rgba(230,214,255,.7)";
+      for (let i = 0; i < 28; i++) {
+        const x = (i * 97 + time * 0.01) % W;
+        const y = 24 + ((i * 53) % 190);
+        ctx.fillRect(x, y, i % 4 ? 1 : 2, i % 4 ? 1 : 2);
+      }
+    } else if (theme === "celestial") {
+      ctx.save();
+      ctx.globalAlpha = 0.16;
+      ctx.fillStyle = "#fff0b0";
+      for (let i = 0; i < 5; i++) {
+        const x = 80 + i * 140 + Math.sin(time * 0.002 + i) * 14;
+        ctx.beginPath();
+        ctx.moveTo(x, 0); ctx.lineTo(x + 26, 0); ctx.lineTo(x + 100, 300); ctx.lineTo(x + 52, 300);
+        ctx.closePath(); ctx.fill();
+      }
+      ctx.restore();
+      art.glow(ctx, 520, 60, 160, "#fff0b0", 0.12);
     }
   }
 
@@ -635,6 +700,276 @@
       ctx.fillRect(x, y, i % 6 === 0 ? 2 : 1, 1);
     }
     ctx.globalAlpha = 1;
+  }
+
+  /* ============================================================
+     CENÁRIOS DO ATO II
+     ============================================================ */
+  function drawForge(ctx, pal, cam, time) {
+    const far = -(cam * 0.08) % 960;
+    ctx.save();
+    ctx.globalAlpha = 0.75;
+    for (let i = -1; i < 3; i++) {
+      const x = far + i * 420;
+      ctx.fillStyle = pal.far;
+      ctx.fillRect(x + 30, 176, 92, 150);
+      ctx.fillRect(x + 48, 132, 20, 48);
+      ctx.fillRect(x + 86, 148, 16, 34);
+      ctx.fillStyle = "rgba(255,140,80,.18)";
+      ctx.fillRect(x + 52, 206, 10, 14);
+      ctx.fillRect(x + 86, 192, 8, 10);
+      ctx.fillRect(x + 180, 202, 120, 120);
+      ctx.fillRect(x + 212, 156, 24, 52);
+    }
+    ctx.restore();
+
+    const mid = -(cam * 0.24) % 720;
+    for (let i = -1; i < 3; i++) {
+      const x = mid + i * 360;
+      ctx.fillStyle = pal.mid;
+      ctx.fillRect(x + 40, 230, 250, 96);
+      ctx.fillRect(x + 62, 190, 18, 42);
+      ctx.fillRect(x + 226, 174, 18, 58);
+      // boca da fornalha
+      ctx.fillStyle = "#140c09";
+      ctx.beginPath();
+      ctx.arc(x + 160, 266, 48, Math.PI, 0);
+      ctx.fill();
+      ctx.fillStyle = "rgba(255,150,80,.6)";
+      ctx.fillRect(x + 118, 270, 84, 5);
+      art.glow(ctx, x + 160, 270, 82, "#ff8a45", 0.18);
+      // tubos
+      ctx.fillStyle = pal.far;
+      ctx.fillRect(x + 8, 246, 42, 8);
+      ctx.fillRect(x + 284, 252, 50, 8);
+      ctx.fillRect(x + 308, 216, 8, 44);
+    }
+
+    const near = -(cam * 0.46) % 560;
+    for (let i = -1; i < 3; i++) {
+      const x = near + i * 280;
+      // correntes
+      ctx.fillStyle = "rgba(20,14,12,.75)";
+      for (let c = 0; c < 7; c++) {
+        ctx.fillRect(x + 40 + (c % 2) * 3, 92 + c * 18, 5, 14);
+      }
+      // engrenagem
+      ctx.save();
+      ctx.translate(x + 196, 252);
+      ctx.rotate(time * 0.002);
+      ctx.fillStyle = "rgba(34,23,19,.85)";
+      for (let g = 0; g < 8; g++) {
+        ctx.rotate(Math.PI / 4);
+        ctx.fillRect(-3, -40, 6, 12);
+      }
+      art.pixelCircle(ctx, 0, 0, 32, "rgba(34,23,19,.85)");
+      art.pixelCircle(ctx, 0, 0, 15, "rgba(120,72,44,.35)");
+      ctx.restore();
+    }
+  }
+
+  function drawTemple(ctx, pal, cam, time) {
+    const far = -(cam * 0.1) % 900;
+    ctx.save();
+    ctx.globalAlpha = 0.65;
+    for (let i = -1; i < 3; i++) {
+      const x = far + i * 380;
+      ctx.fillStyle = pal.far;
+      ctx.beginPath();
+      ctx.moveTo(x, 270); ctx.lineTo(x + 110, 120); ctx.lineTo(x + 210, 220);
+      ctx.lineTo(x + 310, 100); ctx.lineTo(x + 390, 270);
+      ctx.closePath(); ctx.fill();
+      drawArch(ctx, x + 90, 174, 100, 120, pal.mid, 0.55);
+    }
+    ctx.restore();
+
+    const mid = -(cam * 0.25) % 680;
+    for (let i = -1; i < 3; i++) {
+      const x = mid + i * 340;
+      drawArch(ctx, x + 24, 146, 138, 168, pal.mid, 0.8);
+      ctx.fillStyle = pal.near;
+      ctx.fillRect(x + 10, 140, 28, 190);
+      ctx.fillRect(x + 148, 140, 28, 190);
+      ctx.fillRect(x + 4, 128, 178, 16);
+      ctx.fillStyle = "rgba(216,197,138,.16)";
+      ctx.fillRect(x + 50, 200, 10, 90);
+      ctx.fillRect(x + 128, 200, 10, 90);
+    }
+
+    const near = -(cam * 0.46) % 520;
+    for (let i = -1; i < 3; i++) {
+      const x = near + i * 260;
+      ctx.fillStyle = "rgba(21,20,27,.9)";
+      ctx.fillRect(x + 20, 150, 22, 180);
+      ctx.fillRect(x + 8, 138, 46, 14);
+      ctx.fillRect(x + 4, 316, 54, 10);
+      // lanterna suspensa
+      ctx.fillStyle = "rgba(216,197,138,.25)";
+      ctx.fillRect(x + 88, 64, 2, 58);
+      art.glow(ctx, x + 89, 132, 24, "#e8d9a8", 0.22);
+      art.rect(ctx, x + 83, 122, 13, 18, "rgba(232,217,168,.55)");
+    }
+  }
+
+  function drawDesert(ctx, pal, cam, time) {
+    const far = -(cam * 0.06) % 1000;
+    ctx.save();
+    ctx.globalAlpha = 0.55;
+    ctx.fillStyle = pal.far;
+    for (let i = -1; i < 3; i++) {
+      const x = far + i * 420;
+      ctx.beginPath();
+      ctx.moveTo(x, 280); ctx.lineTo(x + 100, 120); ctx.lineTo(x + 200, 280);
+      ctx.closePath(); ctx.fill();
+      ctx.beginPath();
+      ctx.moveTo(x + 210, 280); ctx.lineTo(x + 280, 166); ctx.lineTo(x + 350, 280);
+      ctx.closePath(); ctx.fill();
+    }
+    ctx.restore();
+
+    const mid = -(cam * 0.2) % 760;
+    for (let i = -1; i < 3; i++) {
+      const x = mid + i * 380;
+      ctx.fillStyle = pal.mid;
+      ctx.fillRect(x + 40, 232, 220, 94);
+      ctx.fillStyle = pal.far;
+      ctx.fillRect(x + 70, 190, 24, 42);
+      ctx.fillRect(x + 206, 190, 24, 42);
+      ctx.fillRect(x + 54, 180, 192, 16);
+      // vidro quebrado
+      ctx.fillStyle = "rgba(127,216,207,.28)";
+      ctx.beginPath();
+      ctx.moveTo(x + 122, 240); ctx.lineTo(x + 146, 194); ctx.lineTo(x + 158, 240);
+      ctx.lineTo(x + 136, 226); ctx.lineTo(x + 128, 250);
+      ctx.closePath(); ctx.fill();
+      ctx.fillStyle = "rgba(232,195,106,.2)";
+      ctx.fillRect(x + 170, 248, 40, 4);
+    }
+
+    const near = -(cam * 0.42) % 540;
+    for (let i = -1; i < 3; i++) {
+      const x = near + i * 270;
+      ctx.fillStyle = "rgba(42,30,38,.8)";
+      ctx.fillRect(x + 30, 150, 14, 180);
+      ctx.fillRect(x + 18, 140, 38, 12);
+      ctx.fillStyle = "rgba(232,195,106,.35)";
+      ctx.fillRect(x + 34, 166, 6, 6);
+      // dunas próximas
+      ctx.fillStyle = "rgba(122,90,58,.45)";
+      ctx.beginPath();
+      ctx.moveTo(x + 80, 330); ctx.quadraticCurveTo(x + 150, 270, x + 240, 330);
+      ctx.closePath(); ctx.fill();
+    }
+  }
+
+  function drawVoid(ctx, pal, cam, time) {
+    const far = -(cam * 0.07) % 980;
+    ctx.save();
+    ctx.globalAlpha = 0.5;
+    for (let i = -1; i < 3; i++) {
+      const x = far + i * 430;
+      ctx.fillStyle = pal.far;
+      ctx.beginPath();
+      ctx.moveTo(x, 300); ctx.lineTo(x + 80, 200); ctx.lineTo(x + 130, 240);
+      ctx.lineTo(x + 220, 160); ctx.lineTo(x + 300, 260); ctx.lineTo(x + 360, 300);
+      ctx.closePath(); ctx.fill();
+    }
+    ctx.restore();
+
+    const mid = -(cam * 0.23) % 700;
+    for (let i = -1; i < 3; i++) {
+      const x = mid + i * 350;
+      ctx.fillStyle = pal.mid;
+      ctx.fillRect(x + 40, 208, 24, 122);
+      ctx.fillRect(x + 28, 196, 48, 14);
+      ctx.fillRect(x + 92, 236, 18, 94);
+      ctx.fillRect(x + 84, 226, 34, 12);
+      // rachadura roxa
+      ctx.fillStyle = "rgba(180,140,255,.3)";
+      ctx.fillRect(x + 52, 218, 4, 86);
+      ctx.fillRect(x + 48, 260, 12, 3);
+      art.glow(ctx, x + 55, 252, 42, "#b48cff", 0.12);
+    }
+
+    const near = -(cam * 0.44) % 560;
+    for (let i = -1; i < 3; i++) {
+      const x = near + i * 280;
+      // pedras flutuantes
+      const fy = 120 + Math.sin(time * 0.012 + i) * 10;
+      ctx.fillStyle = "rgba(23,17,38,.9)";
+      ctx.beginPath();
+      ctx.moveTo(x + 46, fy); ctx.lineTo(x + 92, fy - 18); ctx.lineTo(x + 126, fy + 4);
+      ctx.lineTo(x + 92, fy + 26); ctx.closePath(); ctx.fill();
+      ctx.fillStyle = "rgba(180,140,255,.22)";
+      ctx.fillRect(x + 70, fy - 4, 22, 3);
+      ctx.fillStyle = "rgba(23,17,38,.7)";
+      ctx.fillRect(x + 170, 168, 10, 152);
+      ctx.fillRect(x + 160, 160, 30, 8);
+    }
+  }
+
+  function drawCelestial(ctx, pal, cam, time) {
+    const far = -(cam * 0.08) % 940;
+    ctx.save();
+    ctx.globalAlpha = 0.55;
+    for (let i = -1; i < 3; i++) {
+      const x = far + i * 410;
+      ctx.fillStyle = pal.far;
+      ctx.beginPath();
+      ctx.moveTo(x, 260); ctx.lineTo(x + 80, 150); ctx.lineTo(x + 150, 230);
+      ctx.lineTo(x + 230, 120); ctx.lineTo(x + 310, 250); ctx.lineTo(x + 360, 260);
+      ctx.closePath(); ctx.fill();
+      // ilhas flutuantes
+      ctx.fillStyle = "rgba(201,195,172,.18)";
+      ctx.beginPath();
+      ctx.moveTo(x + 40, 196); ctx.lineTo(x + 120, 180); ctx.lineTo(x + 170, 198);
+      ctx.lineTo(x + 100, 222); ctx.closePath(); ctx.fill();
+    }
+    ctx.restore();
+
+    const mid = -(cam * 0.24) % 720;
+    for (let i = -1; i < 3; i++) {
+      const x = mid + i * 360;
+      ctx.fillStyle = pal.mid;
+      ctx.fillRect(x + 42, 234, 180, 88);
+      ctx.fillRect(x + 58, 204, 20, 30);
+      ctx.fillRect(x + 186, 204, 20, 30);
+      ctx.fillRect(x + 48, 194, 168, 14);
+      // janela partida
+      ctx.fillStyle = "rgba(255,240,176,.28)";
+      ctx.beginPath();
+      ctx.moveTo(x + 104, 260); ctx.lineTo(x + 130, 220); ctx.lineTo(x + 152, 260);
+      ctx.closePath(); ctx.fill();
+      ctx.fillStyle = "rgba(124,106,143,.5)";
+      ctx.fillRect(x + 124, 236, 8, 24);
+    }
+
+    const near = -(cam * 0.45) % 560;
+    for (let i = -1; i < 3; i++) {
+      const x = near + i * 280;
+      // asa caída
+      ctx.save();
+      ctx.translate(x + 120, 186 + Math.sin(time * 0.01 + i) * 4);
+      ctx.rotate(-0.24);
+      ctx.fillStyle = "rgba(231,223,196,.35)";
+      for (let f = 0; f < 5; f++) {
+        ctx.beginPath();
+        ctx.moveTo(0, 0);
+        ctx.lineTo(18 + f * 13, -10 - f * 5);
+        ctx.lineTo(24 + f * 14, 4 - f * 3);
+        ctx.lineTo(10 + f * 12, 10);
+        ctx.closePath(); ctx.fill();
+      }
+      ctx.restore();
+      // penas soltas
+      ctx.fillStyle = "rgba(255,240,176,.35)";
+      for (let p = 0; p < 3; p++) {
+        const py = 70 + ((time * 0.18 + p * 47 + i * 31) % 220);
+        const px = x + 40 + p * 33 + Math.sin(time * 0.02 + p) * 9;
+        ctx.fillRect(px, py, 4, 2);
+        ctx.fillRect(px + 4, py + 2, 4, 2);
+      }
+    }
   }
 
   /* ============================================================

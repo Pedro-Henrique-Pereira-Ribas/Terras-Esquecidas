@@ -43,6 +43,41 @@
         ground: "#3a2f2d", groundDark: "#241d1b", top: "#6e5143",
         moss: "#79362c", light: "#ffb072", fog: "rgba(157,91,68,.08)",
         hazard: "#4d1e1b", accent: "#ff8a5c"
+      },
+      forge: {
+        skyTop: "#120d0c", skyMid: "#3b1c14", skyLow: "#8a3c22",
+        far: "#2a1a17", mid: "#1c1210", near: "#100b0a",
+        ground: "#4a3830", groundDark: "#2b201b", top: "#8a5a3a",
+        moss: "#7a3d24", light: "#ffb066", fog: "rgba(255,140,80,.06)",
+        hazard: "#6b2e1c", accent: "#ffb066"
+      },
+      temple: {
+        skyTop: "#191b2a", skyMid: "#3c4058", skyLow: "#9b9278",
+        far: "#4e4b55", mid: "#34333d", near: "#1d1c24",
+        ground: "#5a5647", groundDark: "#353229", top: "#9b9172",
+        moss: "#6d7650", light: "#e8d9a8", fog: "rgba(210,200,160,.07)",
+        hazard: "#4a4436", accent: "#d8c58a"
+      },
+      desert: {
+        skyTop: "#2a1730", skyMid: "#6b3b4a", skyLow: "#d79b5b",
+        far: "#6b4a4e", mid: "#4b323d", near: "#2a1e26",
+        ground: "#b68a5a", groundDark: "#7a5a3a", top: "#e0b878",
+        moss: "#9a6a3f", light: "#ffe0a0", fog: "rgba(230,190,120,.08)",
+        hazard: "#7a4a2e", accent: "#e8c36a"
+      },
+      void: {
+        skyTop: "#07050d", skyMid: "#171028", skyLow: "#2f2147",
+        far: "#241a3d", mid: "#171126", near: "#0b0814",
+        ground: "#2a2038", groundDark: "#160f20", top: "#55368a",
+        moss: "#3a2a55", light: "#b48cff", fog: "rgba(130,90,200,.08)",
+        hazard: "#3a2458", accent: "#b48cff"
+      },
+      celestial: {
+        skyTop: "#1b2a42", skyMid: "#49698c", skyLow: "#e6d8b0",
+        far: "#6f7e95", mid: "#4b5a72", near: "#2a3446",
+        ground: "#7a7a78", groundDark: "#4b4b50", top: "#c9c3ac",
+        moss: "#8f967d", light: "#fff0b0", fog: "rgba(255,245,210,.10)",
+        hazard: "#5a6170", accent: "#fff0b0"
       }
     }
   };

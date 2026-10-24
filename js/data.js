@@ -10,7 +10,12 @@
     rara: { label: "Rara", color: "#72a7d8", dark: "#20384f", glow: "#b9dcff" },
     epica: { label: "Épica", color: "#b98add", dark: "#38254d", glow: "#e7ccff" },
     lendaria: { label: "Lendária", color: "#e0b45e", dark: "#4b3618", glow: "#ffe6a8" },
-    mitica: { label: "Mítica", color: "#e06755", dark: "#4b1d18", glow: "#ffb6a1" }
+    mitica: { label: "Mítica", color: "#e06755", dark: "#4b1d18", glow: "#ffb6a1" },
+    divina: { label: "Divina", color: "#f3df9b", dark: "#493715", glow: "#fff6cf" },
+    celestial: { label: "Celestial", color: "#9bd8ff", dark: "#17384f", glow: "#dff4ff" },
+    ancestral: { label: "Ancestral", color: "#cba47a", dark: "#3f2b1c", glow: "#f1d7b2" },
+    suprema: { label: "Suprema", color: "#ff9b58", dark: "#4c2415", glow: "#ffd0a6" },
+    eterna: { label: "Eterna", color: "#d7a8ff", dark: "#33204a", glow: "#f1d9ff" }
   };
 
   const CHARACTERS = [
@@ -411,6 +416,31 @@
         name: "Espada Sombria", rarity: "mitica", tier: 3, dmg: 24, speed: "Média",
         cooldown: 24, weight: 6, effect: "lifesteal",
         desc: "Corta lembranças. Devolve um pouco da vida que elas levam."
+      },
+      {
+        name: "Espada da Eternidade", rarity: "divina", tier: 4, dmg: 48, speed: "Muito Rápida",
+        cooldown: 17, weight: 5, effect: "burn", bonus: 25, bonusLabel: "Precisão",
+        desc: "A lâmina lembra de todas as mãos que a ergueram. Nenhuma delas soltou."
+      },
+      {
+        name: "Espada Celestial", rarity: "celestial", tier: 5, dmg: 42, speed: "Rápida",
+        cooldown: 19, weight: 5, effect: "spirit", bonus: 20, bonusLabel: "Precisão",
+        desc: "Cada corte deixa uma luz fina no ar, como uma promessa que não sabe cair."
+      },
+      {
+        name: "Espada Ancestral", rarity: "ancestral", tier: 6, dmg: 38, speed: "Média",
+        cooldown: 22, weight: 6, effect: "burn", bonus: 18, bonusLabel: "Precisão",
+        desc: "O punho é de pedra. A vontade que a move é mais antiga que o Reino."
+      },
+      {
+        name: "Espada Suprema", rarity: "suprema", tier: 7, dmg: 56, speed: "Muito Rápida",
+        cooldown: 16, weight: 5, effect: "lifesteal", bonus: 30, bonusLabel: "Precisão",
+        desc: "Não pede licença ao vazio. Corta primeiro, ouve o silêncio depois."
+      },
+      {
+        name: "Espada Eterna", rarity: "eterna", tier: 8, dmg: 62, speed: "Rápida",
+        cooldown: 19, weight: 6, effect: "eternal", bonus: 35, bonusLabel: "Precisão",
+        desc: "A última lâmina do Ato II. Queima e devolve vida: o fim que insiste em continuar."
       }
     ],
     bow: [
@@ -433,6 +463,31 @@
         name: "Arco Sombrio", rarity: "mitica", tier: 3, dmg: 26, speed: "Média",
         cooldown: 24, weight: 5, effect: "lifesteal",
         desc: "Onde a flecha toca, a sombra bebe. A arqueira aprendeu a não olhar."
+      },
+      {
+        name: "Arco da Floresta Eterna", rarity: "divina", tier: 4, dmg: 36, speed: "Muito Rápida",
+        cooldown: 17, weight: 4, effect: "burn", bonus: 20, bonusLabel: "Precisão",
+        desc: "A madeira ainda está viva. Cada flecha nasce de um galho que se ofereceu."
+      },
+      {
+        name: "Arco das Sombras", rarity: "celestial", tier: 5, dmg: 34, speed: "Rápida",
+        cooldown: 19, weight: 5, effect: "lifesteal", bonus: 18, bonusLabel: "Precisão",
+        desc: "A sombra puxa a corda junto com você. O alvo nunca vê de onde veio."
+      },
+      {
+        name: "Arco Solar", rarity: "ancestral", tier: 6, dmg: 38, speed: "Muito Rápida",
+        cooldown: 17, weight: 4, effect: "spirit", bonus: 22, bonusLabel: "Precisão",
+        desc: "Dispara a última luz da tarde. Onde acerta, deixa um dia inteiro para trás."
+      },
+      {
+        name: "Arco do Caos", rarity: "suprema", tier: 7, dmg: 42, speed: "Muito Rápida",
+        cooldown: 16, weight: 5, effect: "burn", bonus: 25, bonusLabel: "Precisão",
+        desc: "A corda range como o Reino se partindo. A flecha escolhe um caos e o segue."
+      },
+      {
+        name: "Arco da Lua Sangrenta", rarity: "eterna", tier: 8, dmg: 40, speed: "Rápida",
+        cooldown: 19, weight: 4, effect: "eternal", bonus: 24, bonusLabel: "Precisão",
+        desc: "Atira sob uma lua que nunca nasce. A ferida que abre também alimenta quem atirou."
       }
     ],
     pickaxe: [
@@ -455,6 +510,31 @@
         name: "Picareta do Abismo", rarity: "mitica", tier: 3, dmg: 28, speed: "Média",
         cooldown: 30, weight: 8, effect: "lifesteal",
         desc: "Foi encontrada onde a mina deixa de ter fundo. Ainda está descendo."
+      },
+      {
+        name: "Picareta da Eternidade", rarity: "divina", tier: 4, dmg: 46, speed: "Muito Rápida",
+        cooldown: 18, weight: 5, effect: "spirit", bonus: 20, bonusLabel: "Precisão",
+        desc: "Cava devagar, mas cada golpe encontra uma camada que o tempo esqueceu."
+      },
+      {
+        name: "Picareta Celestial", rarity: "celestial", tier: 5, dmg: 40, speed: "Rápida",
+        cooldown: 21, weight: 5, effect: "burn", bonus: 22, bonusLabel: "Precisão",
+        desc: "A ponta brilha como um pedaço de céu. A pedra se abre para não ser tocada."
+      },
+      {
+        name: "Picareta Ancestral", rarity: "ancestral", tier: 6, dmg: 36, speed: "Média",
+        cooldown: 24, weight: 6, effect: "lifesteal", bonus: 24, bonusLabel: "Precisão",
+        desc: "O cabo tem marcas de mãos que viveram antes das minas. Elas ainda puxam junto."
+      },
+      {
+        name: "Picareta Suprema", rarity: "suprema", tier: 7, dmg: 52, speed: "Rápida",
+        cooldown: 20, weight: 5, effect: "spirit", bonus: 28, bonusLabel: "Precisão",
+        desc: "Não quebra a pedra: convence a pedra de que já era pó."
+      },
+      {
+        name: "Picareta Eterna", rarity: "eterna", tier: 8, dmg: 58, speed: "Muito Rápida",
+        cooldown: 18, weight: 6, effect: "eternal", bonus: 32, bonusLabel: "Precisão",
+        desc: "O último golpe do Ato II. Abre a terra e devolve a vida que ela guardou."
       }
     ],
     staff: [
@@ -477,13 +557,38 @@
         name: "Cajado Sombrio", rarity: "mitica", tier: 3, dmg: 25, speed: "Média",
         cooldown: 25, weight: 5, effect: "lifesteal",
         desc: "A escuridão não é vazia. Ela tem dentes, e aprendeu a morder por você."
+      },
+      {
+        name: "Cajado do Vórtice", rarity: "divina", tier: 4, dmg: 34, speed: "Muito Rápida",
+        cooldown: 18, weight: 5, effect: "burn", bonus: 25, bonusLabel: "Inteligência",
+        desc: "Gira o ar até ele esquecer para onde ia. O que sobra vira fogo."
+      },
+      {
+        name: "Cajado dos Elementos", rarity: "celestial", tier: 5, dmg: 28, speed: "Média",
+        cooldown: 23, weight: 6, effect: "spirit", bonus: 20, bonusLabel: "Inteligência",
+        desc: "Pedra, vento e água discutem dentro do cristal. Você só precisa escolher o lado."
+      },
+      {
+        name: "Cajado do Arcano", rarity: "ancestral", tier: 6, dmg: 32, speed: "Lenta",
+        cooldown: 29, weight: 7, effect: "burn", bonus: 30, bonusLabel: "Inteligência",
+        desc: "As runas são mais velhas que a linguagem. Elas não pedem permissão para queimar."
+      },
+      {
+        name: "Cajado do Abismo", rarity: "suprema", tier: 7, dmg: 36, speed: "Média",
+        cooldown: 23, weight: 6, effect: "lifesteal", bonus: 35, bonusLabel: "Inteligência",
+        desc: "O fundo do mundo cabe na palma da mão. Ele bebe primeiro e pergunta depois."
+      },
+      {
+        name: "Cajado da Névoa Lunar", rarity: "eterna", tier: 8, dmg: 30, speed: "Média",
+        cooldown: 25, weight: 5, effect: "eternal", bonus: 28, bonusLabel: "Inteligência",
+        desc: "A névoa cobre o campo e a vida escorre de volta para quem a conjurou."
       }
     ]
   };
 
-  /* As armas não são compradas: Colosso, Vulto e Corvo entregam,
-     respectivamente, os degraus Épico, Lendário e Mítico da classe
-     equipada. Ferrugem e o Rei rendem moedas para o vestiário. */
+  /* As armas não são compradas: os chefes de progressão entregam
+     automaticamente o próximo degrau da classe equipada. Todos os
+     chefes também rendem moedas para o vestiário. */
 
   const DIFFICULTIES = [
     {
@@ -554,6 +659,51 @@
       taunt2: "ENTÃO VOCÊ LEMBRA. NÃO DEVERIA.",
       deathLine: "A coroa rola pelo chão. O Rei continua de pé, pequeno como um homem.",
       colors: { armor: "#1c1b20", gold: "#c69b4b", cape: "#7d2626", ash: "#6b5f58", eye: "#ff6a52", crown: "#e0b45e" }
+    },
+    titao: {
+      name: "Titã Mecânico", title: "O Coração da Forja", hp: 450, w: 110, h: 88,
+      contact: 22, speed: 0.8, flying: false, attacks: ["slam", "charge", "volley", "pillars"],
+      coin: 750, dropTier: 4, theme: "forge", attackColor: "#ffb066",
+      taunt: "A FORJA NÃO ESQUENTOU PARA VOCÊ. ELA ESQUENTOU PARA O QUE VAI SER FEITO DE VOCÊ.",
+      taunt2: "O CORAÇÃO AINDA BATE. ISSO É O PIOR.",
+      deathLine: "O Titã para. As engrenagens continuam girando por um instante, sem lembrar por quê.",
+      colors: { metal: "#6f6258", dark: "#332c28", rust: "#a65d3f", core: "#ff9b4e", glow: "#ffd18a", eye: "#ff6b45" }
+    },
+    guardiao: {
+      name: "Guardião Ancestral", title: "A Pedra Que Lembra", hp: 550, w: 96, h: 100,
+      contact: 24, speed: 0.88, flying: false, attacks: ["slashwave", "pillars", "summon", "slam"],
+      coin: 900, dropTier: 5, theme: "temple", attackColor: "#d8c58a",
+      taunt: "ESTE TEMPLO NÃO GUARDA OURO. GUARDA O QUE VOCÊ AINDA VAI PERDER.",
+      taunt2: "A PEDRA LEMBRA. VOCÊ NÃO.",
+      deathLine: "O Guardião se ajoelha. Pela primeira vez, a pedra parece descansar.",
+      colors: { stone: "#8d846c", dark: "#453f35", moss: "#7d8a5b", gold: "#d8bd72", eye: "#8fe6cb" }
+    },
+    farao: {
+      name: "Faraó Maldito", title: "O Rei de Vidro e Areia", hp: 650, w: 88, h: 96,
+      contact: 26, speed: 0.94, flying: false, attacks: ["rain", "acid", "dash", "pillars"],
+      coin: 1050, dropTier: 6, theme: "desert", attackColor: "#e8c36a",
+      taunt: "A AREIA TOMA TUDO. ATÉ O NOME QUE VOCÊ ACHA QUE É SEU.",
+      taunt2: "O SOL JÁ MORREU. POR QUE VOCÊ NÃO?",
+      deathLine: "O Faraó se desfaz em vidro moído. O deserto respira como quem dormiu demais.",
+      colors: { bandage: "#c9b184", bandage2: "#8f7651", gold: "#e0b45e", glass: "#7fd8cf", eye: "#ffcf5e", dark: "#3b3024" }
+    },
+    imperador: {
+      name: "Imperador do Vazio", title: "Aquele Que Não Tem Nome", hp: 750, w: 100, h: 94,
+      contact: 30, speed: 1, flying: true, hover: 252, attacks: ["teleport", "volley", "dash", "rain"],
+      coin: 1200, dropTier: 7, theme: "void", attackColor: "#b48cff",
+      taunt: "OLHE PARA O TRONO. ELE ESTÁ VAZIO PORQUE VOCÊ NUNCA ESTEVE LÁ.",
+      taunt2: "O VAZIO NÃO É UM LUGAR. É UMA DECISÃO.",
+      deathLine: "O Imperador se apaga como uma vela. O vazio fica, mas perde a voz.",
+      colors: { cloak: "#241a3d", cloak2: "#120f21", void: "#55368a", glow: "#b48cff", eye: "#e6d6ff", gold: "#8d6bc7" }
+    },
+    arcanjo: {
+      name: "Arcanjo Caído", title: "A Última Asa do Céu", hp: 900, w: 104, h: 98,
+      contact: 34, speed: 1.08, flying: true, hover: 238, attacks: ["feathers", "dive", "pillars", "volley"],
+      coin: 2000, dropTier: 8, theme: "celestial", act2Final: true, attackColor: "#fff0b0",
+      taunt: "O CÉU NÃO FOI FEITO PARA OS QUE SOBEM. FOI FEITO PARA OS QUE NÃO TÊM PARA ONDE VOLTAR.",
+      taunt2: "AINDA HÁ UMA ASA. ELA BASTA PARA O SEU FIM.",
+      deathLine: "O Arcanjo cai sem pressa. A última pena dourada escolhe o chão, não o céu.",
+      colors: { wing: "#e7dfc4", wing2: "#b9ae91", robe: "#7c6a8f", gold: "#f0cf7c", halo: "#fff0b0", eye: "#fff6d8", dark: "#3a3442" }
     }
   };
 
@@ -572,7 +722,22 @@
     { id: "m3", name: "A Luz no Fundo", text: "No ponto mais fundo, havia uma lanterna acesa. Nenhuma mão viva a carregava." },
     { id: "f1", name: "O Trono Vazio", text: "O Rei mandou construir um trono para o Reino. Quando ficou pronto, não havia mais ninguém para coroar." },
     { id: "f2", name: "A Coroa de Cinzas", text: "O ouro pesa. As cinzas pesam menos, mas se espalham por todo lugar." },
-    { id: "f3", name: "O Nome Verdadeiro", text: "Atrás do título, existe um homem. Atrás do homem, existe um nome que o Reino tentou queimar." }
+    { id: "f3", name: "O Nome Verdadeiro", text: "Atrás do título, existe um homem. Atrás do homem, existe um nome que o Reino tentou queimar." },
+    { id: "a1", name: "A Engrenagem Mãe", text: "A primeira peça da forja ainda gira no escuro. Ela não move mais nada, mas se recusa a parar." },
+    { id: "a2", name: "O Turno Que Não Acabou", text: "Os operários saíram para o jantar e nunca voltaram. As máquinas continuaram trabalhando por eles, por hábito." },
+    { id: "a3", name: "A Manopla Vazia", text: "Uma manopla de couro descansa sobre a bigorna. Dentro dela, cinco dedos de ar ainda seguram o martelo." },
+    { id: "a4", name: "A Prece de Pedra", text: "O templo não tem deuses. Tem paredes que aprenderam a repetir as palavras dos que rezaram antes de partir." },
+    { id: "a5", name: "O Guardião Sem Nome", text: "Ele foi esculpido para proteger um nome que ninguém mais lembra. Por isso não pode descansar." },
+    { id: "a6", name: "A Oferenda de Barro", text: "Alguém deixou uma tigela vazia no altar. O barro rachou esperando um alimento que nunca veio." },
+    { id: "a7", name: "O Sol Engolido", text: "O Faraó mandou selar o sol dentro da tumba. O deserto ficou escuro por três gerações, e ninguém reclamou." },
+    { id: "a8", name: "A Fome do Faraó", text: "Ele não queria ouro. Queria que o tempo parasse quando ele dissesse. O tempo não obedeceu." },
+    { id: "a9", name: "A Última Vassoura", text: "Uma serva varreu o mesmo corredor por quarenta anos. A areia sempre voltava. Ela também." },
+    { id: "a10", name: "O Chão Que Falta", text: "No vazio, não há chão. Há apenas a memória de um passo que você ainda não deu." },
+    { id: "a11", name: "A Voz Que Volta", text: "Tudo o que você grita aqui retorna com a sua voz, mas um pouco mais velho e sem perdão." },
+    { id: "a12", name: "O Trono Sem Nome", text: "O Imperador se sentou no trono para ser lembrado. O trono esqueceu o corpo, mas manteve o formato." },
+    { id: "a13", name: "A Asa Cortada", text: "O Arcanjo caiu porque olhou para baixo. A asa ficou no céu, ainda batendo, procurando o resto dele." },
+    { id: "a14", name: "O Céu Sem Dono", text: "Depois que o último anjo caiu, o céu ficou livre. Ninguém quis. Ninguém sabia como possuir uma coisa tão grande." },
+    { id: "a15", name: "A Memória Eterna", text: "Todas as trinta memórias se encontram aqui. O Reino não termina. Ele apenas aprende a continuar sem esquecer." }
   ];
 
   /* ============================================================
@@ -680,6 +845,106 @@
         ],
         active: "A Cinza ainda queima. Não deixe que ela veja o trono.",
         done: "A estrada está limpa. As moedas são suas, e a última sentinela pode descansar."
+      }
+    },
+    {
+      id: "forja", levelId: "forja", reward: 300,
+      npc: {
+        name: "Lira", role: "Engenheira de Cinzas", x: 960, kind: "miner",
+        palette: { skin: "#b97a55", hair: "#3a2118", cloth: "#58443a", accent: "#ffb066", dark: "#251914" }
+      },
+      target: {
+        name: "Sentinela de Escória", type: "walker", x: 2280, range: 150,
+        hpMul: 2.8, dmgMul: 1.2,
+        palette: { body: "#7a5a45", body2: "#9a7458", dark: "#3a2a22", eye: "#ffb066", glow: "#ff8a4e", accent: "#b7825b" }
+      },
+      lines: {
+        intro: [
+          "O Titã não é a forja. É o que a forja se tornou depois de passar séculos sem ninguém para aquecer.",
+          "Uma Sentinela de Escória ainda patrulha o corredor oeste. Se você a parar, eu pago trezentas moedas e volto a acreditar que este lugar pode ser desligado."
+        ],
+        active: "A Sentinela ainda anda. Ouça as engrenagens antes de chegar perto.",
+        done: "O corredor ficou quieto. As moedas são suas, e a forja pode esfriar em paz."
+      }
+    },
+    {
+      id: "pedra", levelId: "templo", reward: 350,
+      npc: {
+        name: "Tovan", role: "Ancião do Templo", x: 1040, kind: "scholar",
+        palette: { skin: "#a9825e", hair: "#d8d0c0", cloth: "#6b6148", accent: "#d8c58a", dark: "#2b271e" }
+      },
+      target: {
+        name: "Guardião de Pedra", type: "walker", x: 2460, range: 170,
+        hpMul: 2.9, dmgMul: 1.2,
+        palette: { body: "#8d846c", body2: "#a49a7d", dark: "#453f35", eye: "#8fe6cb", glow: "#8fe6cb", accent: "#d8bd72" }
+      },
+      lines: {
+        intro: [
+          "O Guardião Ancestral protege a porta há mais tempo do que o templo existe. Nós construímos o templo ao redor dele.",
+          "Um Guardião de Pedra menor ainda bloqueia a nave leste. Duzentas e cinquenta... não, trezentas e cinquenta moedas. O templo não precisa de ouro, mas você precisa de um motivo."
+        ],
+        active: "A pedra ainda está de pé. Ela não sente dor, mas sente a sua pressa.",
+        done: "A nave está aberta. As moedas são suas. O templo lembrará de você por mais tempo do que gostaria."
+      }
+    },
+    {
+      id: "areia", levelId: "tumba", reward: 400,
+      npc: {
+        name: "Nefra", role: "Ladra de Túmulos", x: 900, kind: "hunter",
+        palette: { skin: "#8b5a3c", hair: "#1b1310", cloth: "#8a6a3f", accent: "#e8c36a", dark: "#2b2116" }
+      },
+      target: {
+        name: "Múmia de Vidro", type: "spitter", x: 2520, range: 100,
+        hpMul: 2.9, dmgMul: 1.2,
+        palette: { body: "#c9b184", body2: "#8f7651", dark: "#3b3024", eye: "#ffcf5e", glow: "#7fd8cf", accent: "#e0b45e" }
+      },
+      lines: {
+        intro: [
+          "Eu não vim roubar o Faraó. Vim roubar o que ele roubou primeiro. A diferença é importante para o meu sono.",
+          "Uma Múmia de Vidro guarda a câmara central. Quatrocentas moedas se você a quebrar. O vidro não grita, mas a areia lembra."
+        ],
+        active: "A Múmia ainda está lá. O vidro reflete o que você não quer ver.",
+        done: "O vidro virou pó. As moedas são suas. Eu vou sair antes que o deserto mude de ideia."
+      }
+    },
+    {
+      id: "vazio", levelId: "fenda", reward: 450,
+      npc: {
+        name: "Eco de Aldric", role: "Voz sem Corpo", x: 1000, kind: "sentinel",
+        palette: { skin: "#6f5a7d", hair: "#241a3d", cloth: "#3a2a55", accent: "#b48cff", dark: "#120f21" }
+      },
+      target: {
+        name: "Devorador do Vazio", type: "flyer", x: 2580, y: 220, range: 160,
+        hpMul: 3, dmgMul: 1.25,
+        palette: { body: "#35254f", body2: "#55368a", dark: "#120f21", eye: "#e6d6ff", glow: "#b48cff", accent: "#8d6bc7" }
+      },
+      lines: {
+        intro: [
+          "Você ouve a minha voz? Então ainda existe alguém para ouvir. O Imperador não gostou disso.",
+          "Um Devorador do Vazio está entre nós e o trono. Ele come nomes. Quatrocentas e cinquenta moedas se você chegar antes que ele coma o seu."
+        ],
+        active: "O Devorador ainda está faminto. Não diga o seu nome em voz alta.",
+        done: "A voz ficou mais fraca. Ou mais livre. As moedas são suas, e o vazio aprendeu a engolir sem mastigar."
+      }
+    },
+    {
+      id: "asa", levelId: "ceu", reward: 500,
+      npc: {
+        name: "Seraphina", role: "Anja Exilada", x: 1120, kind: "sentinel",
+        palette: { skin: "#e0c7a8", hair: "#f0e6d0", cloth: "#7c6a8f", accent: "#fff0b0", dark: "#3a3442" }
+      },
+      target: {
+        name: "Arauto do Arcanjo", type: "flyer", x: 2700, y: 210, range: 170,
+        hpMul: 3.1, dmgMul: 1.25,
+        palette: { body: "#d8cfb6", body2: "#f0e6d0", dark: "#7c6a8f", eye: "#fff0b0", glow: "#fff0b0", accent: "#f0cf7c" }
+      },
+      lines: {
+        intro: [
+          "Eu servi ao Arcanjo antes de ele decidir que o céu era pequeno demais para nós dois.",
+          "Um Arauto ainda carrega a ordem dele: impedir que qualquer um chegue à última porta. Quinhentas moedas para calar o mensageiro. A mensagem já está velha."
+        ],
+        active: "O Arauto ainda anuncia a queda. Ele não sabe que já caiu.",
+        done: "O céu ficou em silêncio. As moedas são suas. Agora só resta a última asa."
       }
     }
   ];
@@ -872,6 +1137,190 @@
         "Pedro: Eu conto essa história do jeito que você quiser. Mas primeiro... respire."
       ],
       camp: "A última fogueira. Depois desta noite, o Reino vai precisar de um nome novo."
+    },
+    {
+      id: "forja", name: "Forja Profunda", numeral: "VI", act: 2,
+      subtitle: "Onde o ferro sonha com o dia em que parou",
+      theme: "forge", bossKey: "titao", quest: "forja", width: 3600, arenaStart: 3220,
+      groundGaps: [[620, 740], [1340, 1460], [2050, 2160], [2680, 2780]],
+      platforms: [
+        { x: 360, y: 250, w: 100 }, { x: 500, y: 195, w: 80 },
+        { x: 820, y: 255, w: 110 }, { x: 980, y: 205, w: 90 }, { x: 1140, y: 250, w: 100 },
+        { x: 1520, y: 235, w: 110 }, { x: 1690, y: 185, w: 90 }, { x: 1850, y: 245, w: 100 },
+        { x: 2230, y: 240, w: 110 }, { x: 2400, y: 190, w: 80 }, { x: 2550, y: 250, w: 100 },
+        { x: 2880, y: 235, w: 110 }, { x: 3050, y: 180, w: 80 }
+      ],
+      spikes: [{ x: 1050, y: 310, w: 70 }, { x: 1760, y: 310, w: 64 }, { x: 2470, y: 310, w: 60 }],
+      checkpoints: [{ x: 1220 }, { x: 2960 }],
+      memories: [{ x: 535, y: 162 }, { x: 1730, y: 152 }, { x: 3070, y: 150 }],
+      heals: [{ x: 1015, y: 215 }, { x: 2440, y: 210 }],
+      enemies: [
+        { type: "walker", x: 380, range: 160 },
+        { type: "walker", x: 900, range: 180 },
+        { type: "spitter", x: 1200, range: 90 },
+        { type: "flyer", x: 1600, y: 215, range: 140 },
+        { type: "walker", x: 1950, range: 180 },
+        { type: "spitter", x: 2350, range: 90 },
+        { type: "walker", x: 2850, range: 190 }
+      ],
+      intro: [
+        "Pedro: O trono ficou para trás, {hero}. Mas o Reino não terminou — ele só mostrou a porta de baixo.",
+        "Pedro: Esta é a Forja Profunda. O lugar onde fizeram o primeiro coração de ferro e esqueceram de desligá-lo.",
+        "Pedro: O que ainda anda aqui não é gente. É trabalho que não soube parar."
+      ],
+      outro: [
+        "Pedro: O Titã parou. A forja continua quente, mas já não tem dono.",
+        "Pedro: Ainda tem uma estrada descendo. E eu não vou te pedir para voltar."
+      ],
+      camp: "A forja estala atrás de você. O calor demora a ir embora, como uma culpa bem-feita."
+    },
+    {
+      id: "templo", name: "Templo Ancestral", numeral: "VII", act: 2,
+      subtitle: "Onde a pedra ainda reza por um nome",
+      theme: "temple", bossKey: "guardiao", quest: "pedra", width: 3750, arenaStart: 3370,
+      groundGaps: [[700, 820], [1400, 1520], [2120, 2240], [2760, 2860]],
+      platforms: [
+        { x: 390, y: 250, w: 100 }, { x: 550, y: 195, w: 80 },
+        { x: 900, y: 255, w: 110 }, { x: 1060, y: 205, w: 90 }, { x: 1220, y: 250, w: 100 },
+        { x: 1580, y: 235, w: 110 }, { x: 1750, y: 185, w: 90 }, { x: 1910, y: 245, w: 100 },
+        { x: 2300, y: 240, w: 110 }, { x: 2470, y: 190, w: 80 }, { x: 2620, y: 250, w: 100 },
+        { x: 2950, y: 235, w: 110 }, { x: 3120, y: 180, w: 80 }, { x: 3240, y: 200, w: 80 }
+      ],
+      spikes: [{ x: 980, y: 310, w: 70 }, { x: 1830, y: 310, w: 64 }, { x: 2530, y: 310, w: 60 }],
+      checkpoints: [{ x: 1280 }, { x: 3120 }],
+      memories: [{ x: 570, y: 162 }, { x: 1800, y: 152 }, { x: 3160, y: 150 }],
+      heals: [{ x: 1040, y: 215 }, { x: 2500, y: 210 }],
+      enemies: [
+        { type: "walker", x: 360, range: 160 },
+        { type: "spitter", x: 870, range: 90 },
+        { type: "flyer", x: 1250, y: 215, range: 140 },
+        { type: "walker", x: 1700, range: 180 },
+        { type: "spitter", x: 2000, range: 90 },
+        { type: "walker", x: 2380, range: 180 },
+        { type: "flyer", x: 2700, y: 215, range: 140 },
+        { type: "walker", x: 3200, range: 190 }
+      ],
+      intro: [
+        "Pedro: Este templo é mais velho que o Reino. Ele já estava aqui quando o primeiro rei aprendeu a mentir.",
+        "Pedro: As paredes rezam por um nome que ninguém lembra. O Guardião ainda acha que precisa protegê-lo.",
+        "Pedro: Não destrua a pedra por raiva. Ela só está fazendo o que mandaram."
+      ],
+      outro: [
+        "Pedro: O Guardião descansou. A prece acabou, mas o templo continua de pé.",
+        "Pedro: Há uma porta atrás do altar. Ela estava esperando alguém que não tivesse medo de areia."
+      ],
+      camp: "O templo fica em silêncio quando você para de andar. Até a pedra parece respirar."
+    },
+    {
+      id: "tumba", name: "Tumba de Vidro", numeral: "VIII", act: 2,
+      subtitle: "Onde o sol foi enterrado com o rei",
+      theme: "desert", bossKey: "farao", quest: "areia", width: 3900, arenaStart: 3520,
+      groundGaps: [[560, 680], [1280, 1400], [1980, 2100], [2660, 2780], [3180, 3280]],
+      platforms: [
+        { x: 350, y: 250, w: 100 }, { x: 510, y: 195, w: 80 },
+        { x: 820, y: 255, w: 110 }, { x: 980, y: 205, w: 90 }, { x: 1140, y: 250, w: 100 },
+        { x: 1480, y: 235, w: 110 }, { x: 1650, y: 185, w: 90 }, { x: 1810, y: 245, w: 100 },
+        { x: 2200, y: 240, w: 110 }, { x: 2370, y: 190, w: 80 }, { x: 2520, y: 250, w: 100 },
+        { x: 2860, y: 235, w: 110 }, { x: 3030, y: 180, w: 80 }, { x: 3340, y: 200, w: 80 }
+      ],
+      spikes: [{ x: 880, y: 310, w: 70 }, { x: 1720, y: 310, w: 64 }, { x: 2440, y: 310, w: 60 }, { x: 3110, y: 310, w: 60 }],
+      checkpoints: [{ x: 1200 }, { x: 3350 }],
+      memories: [{ x: 540, y: 162 }, { x: 1700, y: 152 }, { x: 3380, y: 150 }],
+      heals: [{ x: 940, y: 215 }, { x: 2430, y: 210 }],
+      enemies: [
+        { type: "walker", x: 380, range: 160 },
+        { type: "spitter", x: 860, range: 90 },
+        { type: "flyer", x: 1180, y: 215, range: 140 },
+        { type: "walker", x: 1600, range: 180 },
+        { type: "spitter", x: 1900, range: 90 },
+        { type: "walker", x: 2280, range: 180 },
+        { type: "flyer", x: 2900, y: 215, range: 140 },
+        { type: "walker", x: 3300, range: 190 }
+      ],
+      intro: [
+        "Pedro: O deserto não é natural, {hero}. Ele nasceu quando o Faraó mandou enterrar o sol.",
+        "Pedro: A tumba é feita de vidro porque o rei queria ver o que estava perdendo. Ainda está tudo aqui.",
+        "Pedro: Respire pelo pano. A areia tem memória, e ela morde."
+      ],
+      outro: [
+        "Pedro: O Faraó virou pó. O sol não voltou, mas o deserto ficou menos faminto.",
+        "Pedro: A próxima passagem não tem chão. Só uma fenda. Eu preferia que você não olhasse para baixo."
+      ],
+      camp: "A areia não esfria. Você senta mesmo assim, e o vento cobre seus pés como uma promessa antiga."
+    },
+    {
+      id: "fenda", name: "Fenda do Vazio", numeral: "IX", act: 2,
+      subtitle: "Onde o Reino esqueceu de terminar",
+      theme: "void", bossKey: "imperador", quest: "vazio", width: 4050, arenaStart: 3670,
+      groundGaps: [[620, 760], [1380, 1500], [2140, 2260], [2840, 2960]],
+      platforms: [
+        { x: 380, y: 250, w: 100 }, { x: 540, y: 195, w: 80 },
+        { x: 880, y: 255, w: 110 }, { x: 1040, y: 205, w: 90 }, { x: 1200, y: 250, w: 100 },
+        { x: 1580, y: 235, w: 110 }, { x: 1750, y: 185, w: 90 }, { x: 1910, y: 245, w: 100 },
+        { x: 2320, y: 240, w: 110 }, { x: 2490, y: 190, w: 80 }, { x: 2640, y: 250, w: 100 },
+        { x: 3040, y: 235, w: 110 }, { x: 3210, y: 180, w: 80 }, { x: 3480, y: 200, w: 80 }
+      ],
+      spikes: [{ x: 960, y: 310, w: 70 }, { x: 1820, y: 310, w: 64 }, { x: 2500, y: 310, w: 60 }],
+      checkpoints: [{ x: 1280 }, { x: 3500 }],
+      memories: [{ x: 550, y: 162 }, { x: 1760, y: 152 }, { x: 3540, y: 150 }],
+      heals: [{ x: 1020, y: 215 }, { x: 2500, y: 210 }],
+      enemies: [
+        { type: "walker", x: 400, range: 160 },
+        { type: "spitter", x: 900, range: 90 },
+        { type: "flyer", x: 1240, y: 215, range: 140 },
+        { type: "walker", x: 1650, range: 180 },
+        { type: "spitter", x: 1980, range: 90 },
+        { type: "flyer", x: 2380, y: 205, range: 150 },
+        { type: "walker", x: 2760, range: 190 },
+        { type: "walker", x: 3300, range: 190 }
+      ],
+      intro: [
+        "Pedro: A partir daqui, o Reino não tem chão. Ele tem escolhas que você ainda não fez.",
+        "Pedro: O Imperador do Vazio não quer conquistar nada. Ele quer que nada exista para ser conquistado.",
+        "Pedro: Se ouvir a sua própria voz voltando, não responda. Ela está do lado dele."
+      ],
+      outro: [
+        "Pedro: O trono vazio ficou vazio de verdade. O Imperador não estava lá.",
+        "Pedro: Só falta o céu. E o céu está partido."
+      ],
+      camp: "A fenda se fecha devagar atrás de você. O silêncio que sobra é quase gentil."
+    },
+    {
+      id: "ceu", name: "Céu Partido", numeral: "X", act: 2,
+      subtitle: "Onde a última asa ainda procura o chão",
+      theme: "celestial", bossKey: "arcanjo", quest: "asa", width: 4200, arenaStart: 3820,
+      groundGaps: [[700, 820], [1460, 1580], [2220, 2340], [2960, 3080]],
+      platforms: [
+        { x: 400, y: 250, w: 100 }, { x: 560, y: 195, w: 80 },
+        { x: 920, y: 255, w: 110 }, { x: 1080, y: 205, w: 90 }, { x: 1240, y: 250, w: 100 },
+        { x: 1660, y: 235, w: 110 }, { x: 1830, y: 185, w: 90 }, { x: 1990, y: 245, w: 100 },
+        { x: 2420, y: 240, w: 110 }, { x: 2590, y: 190, w: 80 }, { x: 2740, y: 250, w: 100 },
+        { x: 3180, y: 235, w: 110 }, { x: 3350, y: 180, w: 80 }, { x: 3680, y: 200, w: 80 }
+      ],
+      spikes: [{ x: 1000, y: 310, w: 70 }, { x: 1900, y: 310, w: 64 }, { x: 2600, y: 310, w: 60 }, { x: 3270, y: 310, w: 60 }],
+      checkpoints: [{ x: 1360 }, { x: 3700 }],
+      memories: [{ x: 570, y: 162 }, { x: 1860, y: 152 }, { x: 3740, y: 150 }],
+      heals: [{ x: 1060, y: 215 }, { x: 2600, y: 210 }],
+      enemies: [
+        { type: "walker", x: 420, range: 160 },
+        { type: "spitter", x: 940, range: 90 },
+        { type: "flyer", x: 1320, y: 215, range: 140 },
+        { type: "walker", x: 1750, range: 180 },
+        { type: "spitter", x: 2080, range: 90 },
+        { type: "flyer", x: 2500, y: 205, range: 150 },
+        { type: "walker", x: 2880, range: 180 },
+        { type: "walker", x: 3400, range: 190 }
+      ],
+      intro: [
+        "Pedro: Este é o Céu Partido, {hero}. O lugar onde os anjos caíram e ninguém teve coragem de recolher as asas.",
+        "Pedro: O Arcanjo Caído era o último. Ele acredita que ficar no céu é uma forma de morrer sem testemunha.",
+        "Pedro: Eu não sei o que existe depois dele. Mas eu sei que você não vai estar sozinho."
+      ],
+      outro: [
+        "Pedro: A última asa caiu. O céu não tem mais dono.",
+        "Pedro: O Reino inteiro está esperando. E eu também. Dessa vez, não há coroa — só o que você escolheu lembrar."
+      ],
+      camp: "O céu se abre pela primeira vez em séculos. Não há mais nada acima de você — só espaço."
     }
   ];
 
@@ -904,6 +1353,27 @@
         "— Eu só queria que alguém se lembrasse — ele diz. A voz não é de rei. É de quem pede.",
         "Pedro se aproxima e coloca a mão no ombro dele. Então os dois choram, e o Reino aprende que ser lembrado também é uma forma de terminar o inverno.",
         "Quando o sol nasce, não há Rei das Cinzas. Há Aldric. E há uma história, afinal, com todas as memórias no lugar."
+      ],
+      tone: "gold"
+    },
+    act2: {
+      title: "O CÉU SEM DONO",
+      text: [
+        "O Arcanjo cai. A última pena dourada pousa no chão, e o céu fica sem voz.",
+        "Você atravessa a porta partida. O Reino Sem Nome não tem mais coroa, mais forja, mais faraó ou mais vazio para oferecer.",
+        "Pedro caminha ao seu lado. Nenhum dos dois sabe o que vem depois, mas a estrada é larga o bastante para os dois.",
+        "Algumas memórias ficaram para trás. O céu não cobra por elas. Ele apenas espera que alguém volte para contá-las."
+      ],
+      tone: "warm"
+    },
+    act2true: {
+      title: "A MEMÓRIA ETERNA",
+      text: [
+        "O Arcanjo cai, e você não o deixa sozinho. A asa partida encontra o chão antes do corpo.",
+        "As trinta memórias se erguem ao seu redor. Não são fantasmas: são tudo o que o Reino tentou esquecer e você decidiu carregar.",
+        "Pedro pronuncia o seu nome. Não o título, não a classe, não o grau. O seu nome.",
+        "O céu não se fecha. O Reino não termina. A forja, o templo, a tumba e o vazio continuam existindo — mas agora alguém sabe por quê.",
+        "Quando o sol nasce, ele nasce para todos. E a história, finalmente, tem um lugar para ficar."
       ],
       tone: "gold"
     }

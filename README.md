@@ -1,8 +1,8 @@
 # Terra Perdida
 
-**Cinco terras. Uma memória esquecida.**
+**Dez terras. Duas jornadas. Uma memória esquecida.**
 
-Um jogo de plataforma 2D em pixel art, feito para rodar direto no navegador. Atravesse cinco terras esquecidas, enfrente os guardiões que sobraram e reúna as memórias que o Reino Sem Nome tentou apagar.
+Um jogo de plataforma 2D em pixel art, feito para rodar direto no navegador. Atravesse as cinco terras clássicas, derrote o Rei das Cinzas e escolha um final — depois, se quiser, continue para o Ato II e descubra o que o Reino escondeu embaixo do trono.
 
 > “A estrada não me assusta. Só o silêncio dela.” — Pedro, arquivista do Reino Sem Nome
 
@@ -12,16 +12,17 @@ Um jogo de plataforma 2D em pixel art, feito para rodar direto no navegador. Atr
 
 ## O que tem no jogo
 
-- **5 terras** com cenários, plataformas, perigos e chefes próprios: Ruínas Antigas, Trilha Perdida, Serra Sombria, Mina Enferrujada e Última Fronteira.
+- **10 terras** com cenários, plataformas, perigos e chefes próprios. As cinco clássicas são Ruínas Antigas, Trilha Perdida, Serra Sombria, Mina Enferrujada e Última Fronteira; o Ato II acrescenta Forja Profunda, Templo Ancestral, Tumba de Vidro, Fenda do Vazio e Céu Partido.
 - **5 heróis jogáveis**, cada um com arma, passiva, peso e estilo de movimento diferentes.
-- **4 chefes** pelo caminho e o **Rei das Cinzas** no fim, com fases e padrões de ataque distintos.
-- **4 degraus de arma** por classe. As armas não são compradas: o Colosso, o Vulto e o Corvo entregam automaticamente os degraus Épico, Lendário e Mítico da classe equipada.
+- **10 chefes**: Colosso, Vulto, Corvo Cinzento, Ferrugem e Rei das Cinzas no Ato I; Titã Mecânico, Guardião Ancestral, Faraó Maldito, Imperador do Vazio e Arcanjo Caído no Ato II. Cada um tem fases, ataques e cores próprias.
+- **9 degraus de arma por classe** (espada, arco, picareta e cajado), com **20 armas novas** no Ato II. As armas não são compradas: cada chefe de progressão entrega automaticamente o próximo degrau da classe equipada.
+- **10 tarefas de fase** com NPCs e alvos únicos, pagando de 200 a 500 moedas. As tarefas voltam a cada Nova Jornada.
 - **Vestiário no acampamento** para comprar roupas e novas paletas para os cinco heróis. As peças são cosméticas, ficam salvas no navegador e valem para as próximas jornadas.
 - **Conta local e servidor opcionais**, com nome e chave de acesso guardados apenas no navegador. Dá para jogar como visitante sem criar nada.
-- **15 memórias** escondidas pelas fases. Elas não aumentam seu poder — mudam o que você pode dizer no final.
+- **30 memórias** escondidas pelas dez fases. Elas não aumentam seu poder — mudam o que você pode dizer no final.
 - **3 dificuldades** (Raiz, Selva e Ruína) com ajustes reais de dano, vida, velocidade e cura.
-- **3 finais**, incluindo um final verdadeiro para quem encontrar todas as memórias.
-- **Diário de Memórias** no menu de pausa, com as lembranças encontradas e pistas para as que faltam.
+- **5 finais**: três clássicos após o Rei das Cinzas e dois no fim do Ato II, incluindo o final verdadeiro do Arcanjo para quem reunir as 30 memórias.
+- **Diário de Memórias** no menu de pausa, com as lembranças encontradas, tarefas e pistas para as que faltam.
 - **Arte e áudio 100% procedurais**: retratos, cenários, sprites, efeitos e trilha sonora são gerados por código. Nenhum asset externo.
 
 ### Conta e servidor
@@ -53,7 +54,23 @@ O viajante tem um salto extra no ar. Nas fases com chefes voadores, pule e ataqu
 - **Arco:** longa distância. Perto demais, a flecha perde força; no alcance máximo, causa mais dano.
 - **Cajado:** distância média. O feitiço é mais forte na faixa ideal e perde força de perto ou longe demais.
 
-As armas não custam moedas. Cada chefe derrotado entrega o próximo degrau da classe equipada, já em uso. Ferrugem e o Rei rendem moedas, que podem ser gastas no **Vestiário** em roupas para qualquer herói. As roupas são cosméticas e permanecem desbloqueadas no `localStorage` deste navegador, mesmo depois de voltar ao título.
+As armas não custam moedas. Os chefes de progressão entregam automaticamente o próximo degrau da classe equipada, já em uso. Todos os chefes rendem moedas — de 750 a 2.000 no Ato II — que podem ser gastas no **Vestiário** em roupas para qualquer herói. As roupas são cosméticas e permanecem desbloqueadas no `localStorage` deste navegador, mesmo depois de voltar ao título.
+
+## Ato I → Ato II
+
+O Ato I termina no Rei das Cinzas, com os três finais clássicos. Depois de qualquer um deles, a tela de resultado mostra **CONTINUAR PARA O ATO II**. A escolha é opcional: **Nova Jornada** recomeça o clássico do zero, e **Voltar ao título** encerra a sessão.
+
+Ao continuar, o herói mantém classe, arma, moedas, roupas, tarefas e memórias. O Ato II começa na Forja Profunda e segue por Templo Ancestral, Tumba de Vidro, Fenda do Vazio e Céu Partido. Cada fase tem três memórias, uma tarefa e um chefe que entrega o próximo degrau de arma:
+
+| Fase | Chefe | Arma entregue |
+| --- | --- | --- |
+| Forja Profunda | Titã Mecânico | Divina |
+| Templo Ancestral | Guardião Ancestral | Celestial |
+| Tumba de Vidro | Faraó Maldito | Ancestral |
+| Fenda do Vazio | Imperador do Vazio | Suprema |
+| Céu Partido | Arcanjo Caído | Eterna |
+
+O Arcanjo não usa o acampamento final do Rei. Ao vencê-lo, o jogo mostra automaticamente o final do Ato II: **O Céu Sem Dono** com menos de 30 memórias, ou **A Memória Eterna** com as 30.
 
 ## Como rodar localmente
 

@@ -4,8 +4,8 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <meta name="theme-color" content="#0b0d0b">
-  <meta name="description" content="Terra Perdida — uma jornada de plataforma em pixel art por cinco terras esquecidas. Escolha seu herói, tome armas dos chefes, vista seu traje e decida o destino de um reino sem nome.">
-  <title>Terra Perdida — Cinco terras. Uma memória esquecida.</title>
+  <meta name="description" content="Terra Perdida — uma jornada de plataforma em pixel art por cinco terras clássicas e cinco terras do Ato II. Escolha seu herói, tome armas dos chefes, vista seu traje e decida o destino de um reino sem nome.">
+  <title>Terra Perdida — Dez terras. Duas jornadas. Uma memória esquecida.</title>
   <link rel="icon" href="favicon.svg" type="image/svg+xml">
   <link rel="stylesheet" href="css/style.css">
 </head>
@@ -191,7 +191,7 @@
           <div class="title-wrap">
             <p class="kicker"><span></span> PEDRO APRESENTA <span></span></p>
             <h1>TERRA<br><em>PERDIDA</em></h1>
-            <p class="title-sub">Cinco terras apagadas da memória.<br>Cinco heróis. Uma coroa esperando no fim.</p>
+            <p class="title-sub">Cinco terras apagadas da memória.<br>Cinco heróis. Uma coroa — e o que existe depois dela.</p>
             <div class="title-buttons">
               <button id="btn-start" class="btn btn-primary" type="button">INICIAR JORNADA <span>›</span></button>
               <button id="btn-how" class="btn btn-ghost" type="button">COMO JOGAR</button>
@@ -263,23 +263,29 @@
                 <h3>Combate e tarefas</h3>
                 <p><kbd>J</kbd> ou <kbd>X</kbd> para atacar. Clique esquerdo no canvas também ataca. Perto de um NPC, <kbd>E</kbd> fala (gamepad: <kbd>Y</kbd>; toque: <b>FALAR</b>).</p>
                 <p>Espada e picareta são corpo a corpo. O arco fere mais longe; o cajado é mais forte na distância média. A arma define o alcance, o dano e o efeito.</p>
-                <p>Cada fase tem uma tarefa com um NPC e um alvo único. Fale com o NPC, derrote o alvo e receba <b>200 a 300 moedas</b>. As tarefas voltam a cada Nova Jornada.</p>
+                <p>Cada fase tem uma tarefa com um NPC e um alvo único. Fale com o NPC, derrote o alvo e receba <b>200 a 500 moedas</b>. As tarefas voltam a cada Nova Jornada.</p>
               </article>
               <article class="how-card">
                 <h3>Armas e trajes</h3>
-                <p>Os três primeiros chefes deixam uma arma melhor. Ela é equipada automaticamente:</p>
+                <p>Estes chefes deixam uma arma melhor. Ela é equipada automaticamente:</p>
                 <ul class="how-list">
                   <li><b>Colosso</b> → arma <b>Épica</b></li>
                   <li><b>Vulto</b> → arma <b>Lendária</b></li>
                   <li><b>Corvo Cinzento</b> → arma <b>Mítica</b></li>
+                  <li><b>Ato II</b> → <b>Divina</b>, <b>Celestial</b>, <b>Ancestral</b>, <b>Suprema</b> e <b>Eterna</b></li>
                 </ul>
                 <p>As armas ficam guardadas por herói. Na aba <b>Armas</b>, clique em qualquer arma obtida para equipá-la; não há loja de armas.</p>
                 <p>O <b>Vestiário</b> tem 7 trajes por herói. Os trajes 2 a 6 dão bônus leves (2% a 4%). O 7º é o traje final: <b>250 de vida máxima</b>, sem outro bônus. Cada herói só compra e veste o próprio traje, com a própria carteira.</p>
               </article>
               <article class="how-card">
                 <h3>Memórias e escolhas</h3>
-                <p>Há <b>3 memórias</b> em cada uma das 5 fases. Elas não aumentam seu poder: mudam o que você sabe — e o que pode dizer no final.</p>
-                <p>As três memórias da última fase são necessárias para o final verdadeiro. Sem todas as 15, a coroa ainda pode ser tomada ou partida.</p>
+                <p>Há <b>3 memórias</b> em cada uma das <b>10 fases</b>. Elas não aumentam seu poder: mudam o que você sabe — e o que pode dizer no final.</p>
+                <p>As 15 memórias clássicas liberam o final verdadeiro do Rei das Cinzas. Depois, o Ato II acrescenta mais 15: com as <b>30</b>, o Arcanjo Caído tem seu próprio final verdadeiro.</p>
+              </article>
+              <article class="how-card">
+                <h3>Depois do Rei</h3>
+                <p>Os três finais clássicos continuam existindo. Depois de qualquer um deles, o botão <b>CONTINUAR PARA O ATO II</b> abre cinco novas terras: Forja Profunda, Templo Ancestral, Tumba de Vidro, Fenda do Vazio e Céu Partido.</p>
+                <p>O Ato II tem cinco chefes, cinco tarefas, cinco temas e cinco novos degraus de arma por classe. O Arcanjo Caído fecha a jornada com dois finais próprios — um deles exige todas as 30 memórias.</p>
               </article>
               <article class="how-card">
                 <h3>Outros controles</h3>
@@ -443,6 +449,7 @@
               <div class="ending-footer">
                 <p id="ending-result-note" class="foot-note"></p>
                 <div class="ending-footer-actions">
+                  <button id="btn-ending-act2" class="btn btn-primary hidden" type="button">CONTINUAR PARA O ATO II <span>›</span></button>
                   <button id="btn-ending-new" class="btn btn-primary" type="button">NOVA JORNADA <span>›</span></button>
                   <button id="btn-ending-title" class="btn btn-ghost" type="button">VOLTAR AO TÍTULO</button>
                 </div>
