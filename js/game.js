@@ -602,7 +602,9 @@
     const phase2 = !!(run.finalForgeDone && cfg.final);
     const hp = phase2 ? Math.ceil(maxHp * 0.5) : maxHp;
     let y;
-    if (cfg.flying) y = (cfg.hover || 218) - cfg.h / 2;
+    // O hover e a base do sprite: o hitbox precisa terminar na mesma linha
+    // para nao causar dano de contato em uma area invisivel abaixo do chefe.
+    if (cfg.flying) y = (cfg.hover || 218) - cfg.h;
     else y = GROUND_Y - cfg.h;
     const b = {
       key: level.def.bossKey, cfg: cfg, x: level.arena.start + 200, y: y, w: cfg.w, h: cfg.h,
@@ -1768,13 +1770,13 @@
       } else {
         b.vy += 0.12;
         b.y += b.vy;
-        if (b.y < b.hoverBase - b.h / 2) {
-          b.y = b.hoverBase - b.h / 2;
+        if (b.y < b.hoverBase - b.h) {
+          b.y = b.hoverBase - b.h;
           b.vy = 0;
         }
       }
       if (b.timer <= 0) {
-        b.y = b.hoverBase - b.h / 2;
+        b.y = b.hoverBase - b.h;
         b.state = "recover";
         b.timer = b.phase === 2 ? 20 : 30;
       }
@@ -1787,7 +1789,7 @@
         burst(b.x + b.w / 2, b.y + b.h / 2, "#7fbd8e", 16, 2.2, 2, 0.03);
         b.oldX = b.x;
         b.x = clamp(p.x + p.w / 2 - b.w / 2 + (p.facing > 0 ? 70 : -70), arena.left + 20, arena.right - b.w - 20);
-        b.y = b.hoverBase - b.h / 2;
+        b.y = b.hoverBase - b.h;
         burst(b.x + b.w / 2, b.y + b.h / 2, "#b8e8b4", 20, 2.4, 2, 0.02);
       }
       if (b.timer <= 0) {
@@ -1833,7 +1835,7 @@
     if (b.cfg.flying) {
       const tx = clamp(p.x + p.w / 2 - b.w / 2, arena.left + 20, arena.right - b.w - 20);
       b.x = approach(b.x, tx, 0.55 * amount);
-      b.y = b.hoverBase - b.h / 2 + Math.sin(b.anim * 0.04) * 7;
+      b.y = b.hoverBase - b.h + Math.sin(b.anim * 0.04) * 7;
     } else {
       const dx = (p.x + p.w / 2) - (b.x + b.w / 2);
       if (Math.abs(dx) > 115) b.x += sign(dx) * b.cfg.speed * 0.5 * amount;
@@ -2080,7 +2082,7 @@
 
   function bossContact(b) {
     const p = state.player;
-    if (!p || p.dead || b.state === "intro" || b.dead) return;
+    if (!p || p.dead || b.state === "intro" || b.state === "teleport" || b.dead) return;
     if (b.contactCd > 0) return;
     if (aabb(p, { x: b.x, y: b.y, w: b.w, h: b.h })) {
       b.contactCd = 58;

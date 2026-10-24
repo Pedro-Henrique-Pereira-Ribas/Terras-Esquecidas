@@ -549,9 +549,6 @@
     if (!b.cfg.flying) art.shadow(ctx, b.x + b.w / 2, TP.art.GROUND_Y + 2, b.w * 0.52, 0.35);
     ctx.save();
     ctx.translate(Math.round(b.x + b.w / 2), Math.round(b.y + b.h));
-    if (b.cfg.flying) {
-      ctx.translate(0, -b.h / 2);
-    }
     const tilt = b.state === "charge" ? (b.vx > 0 ? 0.16 : -0.16) : 0;
     ctx.rotate(tilt);
     if (b.facing < 0 && !b.cfg.flying) ctx.scale(-1, 1);
