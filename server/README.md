@@ -155,7 +155,7 @@ Passos:
 2. Confirme a criação dos dois recursos.
 3. Aguarde o deploy. O health check usa `GET /health`.
 4. Copie a URL pública do Web Service, por exemplo
-   `https://terra-perdida-api.onrender.com`.
+   `https://terras-esquecidas.onrender.com`.
 5. Se a URL for diferente, ajuste `apiBase` em `js/config.js`.
 6. Confira se `CORS_ORIGIN` contém a origem do GitHub Pages.
 

@@ -128,7 +128,7 @@ cp .env.example .env
 npm run dev
 ```
 
-A API sobe em `http://localhost:3001`. Em desenvolvimento, `js/config.js` já aponta o frontend local para essa porta. Para produção, o frontend usa `https://terra-perdida-api.onrender.com`; se o serviço do Render tiver outro nome, altere `apiBase` em `js/config.js`.
+A API sobe em `http://localhost:3001`. Em desenvolvimento, `js/config.js` já aponta o frontend local para essa porta. Para produção, o frontend usa `https://terras-esquecidas.onrender.com`; se o serviço do Render tiver outro nome, altere `apiBase` em `js/config.js`.
 
 ## Estrutura
 
@@ -161,7 +161,7 @@ O workflow em `.github/workflows/pages.yml` publica o frontend no GitHub Pages a
 1. No Render, escolha **New → Blueprint** e conecte este repositório.
 2. O `render.yaml` cria o Web Service `terra-perdida-api` e o Postgres `terra-perdida-db`.
 3. Aguarde o deploy e confira `GET /health`.
-4. Se a URL pública for diferente de `https://terra-perdida-api.onrender.com`, ajuste `apiBase` em `js/config.js`.
+4. Se a URL pública for diferente de `https://terras-esquecidas.onrender.com`, ajuste `apiBase` em `js/config.js`.
 5. Confira `CORS_ORIGIN` no Render: ela precisa incluir `https://pedro-henrique-pereira-ribas.github.io` (e as origens locais, se for testar).
 
 Instruções completas, endpoints, variáveis de ambiente e exemplos de `curl` estão em [`server/README.md`](server/README.md).
