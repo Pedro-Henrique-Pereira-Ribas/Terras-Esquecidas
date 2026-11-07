@@ -120,13 +120,13 @@
             <div class="account-lore">
               <p class="kicker"><span></span> PORTAL DO VIAJANTE <span></span></p>
               <h1>TERRA<br><em>PERDIDA</em></h1>
-              <p class="account-lore-copy">Toda jornada começa com um nome. O seu pode ficar guardado aqui — ou apenas na memória.</p>
+              <p class="account-lore-copy">Toda jornada começa com um nome. O seu pode ficar guardado no Reino — ou apenas na memória.</p>
               <div class="server-badge">
                 <span class="server-dot" aria-hidden="true"></span>
                 <span>Servidor</span>
                 <strong id="account-brand-server">Reino Sem Nome</strong>
               </div>
-              <p class="account-local-note">Conta local, guardada neste navegador.<br>Nenhum dado sai do seu dispositivo.</p>
+              <p class="account-local-note">Sua conta e seu save ficam guardados no servidor do Reino.<br>Você também pode jogar sem conta.</p>
             </div>
 
             <div class="account-panel">
@@ -136,7 +136,7 @@
                 <h2 id="account-welcome-name">O Viajante</h2>
                 <p class="account-welcome-sub">Sua memória está guardada no servidor<br><strong id="account-welcome-server">Reino Sem Nome</strong>.</p>
                 <div class="account-meta">
-                  <span>Conta local</span>
+                  <span id="account-kind">Conta online</span>
                   <span id="account-created">Criada agora</span>
                 </div>
                 <div class="account-actions">
@@ -173,6 +173,7 @@
                     <input id="account-server-custom" class="account-server-custom hidden" type="text" maxlength="24" spellcheck="false" placeholder="Digite o nome do servidor">
                   </div>
                   <p id="account-error" class="account-error" role="alert"></p>
+                  <p id="account-cloud-status" class="account-cloud-status" role="status"></p>
                   <button id="btn-account-create" class="btn btn-primary account-main-action" type="submit">CRIAR CONTA <span>›</span></button>
                   <p class="account-form-note">Já criou uma conta antes? Use a aba <b>ENTRAR</b> com o mesmo nome e chave.</p>
                 </form>
@@ -508,7 +509,9 @@
     <p class="rotate-copy">A jornada foi feita para ser vivida na horizontal.<br>Vire o celular para continuar.</p>
   </div>
 
+  <script src="js/config.js" defer></script>
   <script src="js/data.js" defer></script>
+  <script src="js/api.js" defer></script>
   <script src="js/audio.js" defer></script>
   <script src="js/art.js" defer></script>
   <script src="js/scenery.js" defer></script>

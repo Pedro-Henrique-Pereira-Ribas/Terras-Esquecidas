@@ -18,8 +18,8 @@ Um jogo de plataforma 2D em pixel art, feito para rodar direto no navegador. Atr
 - **9 degraus de arma por classe** (espada, arco, picareta e cajado), com **20 armas novas** no Ato II. As armas não são compradas: cada chefe de progressão entrega automaticamente o próximo degrau da classe equipada.
 - **10 tarefas de fase** com NPCs e alvos únicos, pagando de 200 a 500 moedas. As tarefas voltam a cada Nova Jornada.
 - **3 mercadores de encantamentos** no Ato II, um em cada uma das três últimas fases. Eles vendem melhorias permanentes de dano e velocidade de ataque para as armas do herói.
-- **Vestiário no acampamento** para comprar roupas e novas paletas para os cinco heróis. As peças são cosméticas, ficam salvas no navegador e valem para as próximas jornadas.
-- **Conta local e servidor opcionais**, com nome e chave de acesso guardados apenas no navegador. Dá para jogar como visitante sem criar nada.
+- **Vestiário no acampamento** para comprar roupas e novas paletas para os cinco heróis. As peças são cosméticas, ficam salvas no navegador e, com conta, também no servidor.
+- **Conta online opcional** com nome, chave de 4 dígitos e servidor. O save completo — carteira, roupas, armas e encantamentos — é sincronizado com uma API em TypeScript + Postgres. Dá para jogar como visitante sem criar nada.
 - **30 memórias** escondidas pelas dez fases. Elas não aumentam seu poder — mudam o que você pode dizer no final.
 - **3 dificuldades** (Raiz, Selva e Ruína) com ajustes reais de dano, vida, velocidade e cura.
 - **5 finais**: três clássicos após o Rei das Cinzas e dois no fim do Ato II, incluindo o final verdadeiro do Arcanjo para quem reunir as 30 memórias.
@@ -28,7 +28,11 @@ Um jogo de plataforma 2D em pixel art, feito para rodar direto no navegador. Atr
 
 ### Conta e servidor
 
-O jogo abre direto no título e pode ser jogado como **Visitante**, sem criar conta. Se quiser guardar um nome e um servidor, use o botão **Entrar** no canto do título para criar uma conta local com nome, uma chave de 4 dígitos e o nome do servidor. A conta, as roupas desbloqueadas e os encantamentos comprados ficam salvos no `localStorage` do próprio navegador — não há login remoto nem envio de dados. Para voltar depois, use a aba **Entrar** com o mesmo nome e chave; o botão **Conta** no título permite trocar de perfil ou voltar a jogar sem conta.
+O jogo abre direto no título e pode ser jogado como **Visitante**, sem criar conta. Se quiser guardar um nome e um servidor, use o botão **Entrar** no canto do título para criar uma conta com nome, uma chave de 4 dígitos e o nome do servidor. A conta e o save completo — carteira, roupas, armas e encantamentos — são sincronizados com a API em TypeScript + Postgres do projeto.
+
+O `localStorage` continua sendo usado como cache e como fallback: se o servidor estiver fora ou demorar demais, o jogo avisa e permite criar/entrar com uma conta local, sem perder o que já estava no navegador. Para voltar depois, use a aba **Entrar** com o mesmo nome e chave; o botão **Conta** no título permite trocar de perfil ou voltar a jogar sem conta.
+
+A API e as instruções de deploy ficam em [`server/README.md`](server/README.md). O Blueprint do Render está em [`render.yaml`](render.yaml).
 
 ## Controles
 
@@ -56,7 +60,7 @@ O viajante tem um salto extra no ar. Nas fases com chefes voadores, pule e ataqu
 - **Arco:** longa distância. Perto demais, a flecha perde força; no alcance máximo, causa mais dano.
 - **Cajado:** distância média. O feitiço é mais forte na faixa ideal e perde força de perto ou longe demais.
 
-As armas não custam moedas. Os chefes de progressão entregam automaticamente o próximo degrau da classe equipada, já em uso. Todos os chefes rendem moedas — de 750 a 2.000 no Ato II — que podem ser gastas no **Vestiário** em roupas para qualquer herói ou nos mercadores das três últimas fases do Ato II em encantamentos permanentes. As roupas são cosméticas e permanecem desbloqueadas no `localStorage` deste navegador, mesmo depois de voltar ao título.
+As armas não custam moedas. Os chefes de progressão entregam automaticamente o próximo degrau da classe equipada, já em uso. Todos os chefes rendem moedas — de 750 a 2.000 no Ato II — que podem ser gastas no **Vestiário** em roupas para qualquer herói ou nos mercadores das três últimas fases do Ato II em encantamentos permanentes. As roupas são cosméticas e permanecem desbloqueadas no save local e, com conta, no servidor, mesmo depois de voltar ao título.
 
 ## Ato I → Ato II
 
@@ -89,11 +93,11 @@ As três últimas fases do Ato II têm um mercador perto do início da fase. Ele
 
 Os bônus somam entre si. Comprar os seis encantamentos custa **10.800 moedas** e deixa o herói com **+21% de dano** e **+15% de velocidade de ataque**. Cada encantamento é comprado uma única vez por herói e vale para **todas as armas do herói** — a melhoria não fica presa a uma arma específica.
 
-As compras são permanentes no navegador e ficam separadas por herói em `terraPerdida.enchantments.v1`. Elas valem em todas as jornadas, inclusive no Ato I e em uma Nova Jornada. O controle de encantamentos fica na própria loja e no menu de pausa: desligá-lo remove os bônus imediatamente, mas não apaga nem devolve as compras. Os mercadores não alteram tarefas, chefes, memórias ou finais.
+As compras são permanentes no save do herói e ficam separadas por herói em `terraPerdida.enchantments.v1`. Elas valem em todas as jornadas, inclusive no Ato I e em uma Nova Jornada. O controle de encantamentos fica na própria loja e no menu de pausa: desligá-lo remove os bônus imediatamente, mas não apaga nem devolve as compras. Os mercadores não alteram tarefas, chefes, memórias ou finais.
 
 ## Como rodar localmente
 
-Não precisa de build nem de dependências para jogar:
+O frontend não precisa de build nem de dependências para jogar:
 
 ```bash
 # opção 1: abra o index.html no navegador
@@ -103,27 +107,64 @@ npx serve .
 
 Também funciona apenas abrindo `index.html` com dois cliques. O jogo não usa módulos ES, então não exige servidor.
 
+### API de contas e saves (opcional)
+
+A API fica em `server/` e usa TypeScript, Express 5 e Postgres. Os testes não precisam de banco real:
+
+```bash
+cd server
+npm ci
+npm test
+npm run typecheck
+npm run build
+```
+
+Para rodar com um Postgres:
+
+```bash
+cd server
+cp .env.example .env
+# edite DATABASE_URL no .env
+npm run dev
+```
+
+A API sobe em `http://localhost:3001`. Em desenvolvimento, `js/config.js` já aponta o frontend local para essa porta. Para produção, o frontend usa `https://terra-perdida-api.onrender.com`; se o serviço do Render tiver outro nome, altere `apiBase` em `js/config.js`.
+
 ## Estrutura
 
 ```
 index.html          # telas, HUD e estrutura
 css/style.css       # identidade visual e responsividade
+js/config.js        # URL da API e tempo de timeout do cliente
+js/api.js           # cliente HTTP de contas, sessão e saves
 js/data.js          # heróis, armas, chefes, memórias, encantamentos e fases
 js/game.js          # fluxo da jornada, combate, camp, mercadores, drops e finais
-js/ui.js            # telas, HUD, loja de encantamentos, cartões, diálogos e diário
+js/ui.js            # telas, HUD, conta, loja de encantamentos, cartões e diálogos
 js/art.js           # retratos, ícones de encantamento e arte procedural
 js/sprites.js       # sprites de inimigos, chefes e NPCs
 js/scenery.js       # cenários de fundo
 js/renderer.js      # desenho do mundo no canvas
 js/audio.js         # WebAudio procedural (trilha e efeitos)
 js/input.js         # teclado, mouse, toque e gamepad
+server/             # API TypeScript + Express + Postgres
+render.yaml         # Blueprint do Render (Web Service + Postgres)
 ```
 
 O canvas tem resolução interna de **640 × 360** e é ampliado preservando 16:9 com `image-rendering: pixelated`. Em janelas múltiplas de 640 × 360 (como 1280 × 720) a escala é inteira e os pixels ficam sem suavização; em telas menores, o jogo se ajusta ao espaço disponível sem esticar a imagem.
 
 ## Publicação
 
-O workflow em `.github/workflows/pages.yml` publica o jogo no GitHub Pages a cada push na branch `main`. O site é estático e não precisa de backend.
+O workflow em `.github/workflows/pages.yml` publica o frontend no GitHub Pages a cada push na branch `main`. O site continua estático: a API é um serviço separado, opcional, e o jogo cai para o save local se ela não estiver disponível.
+
+### Publicar a API no Render
+
+1. No Render, escolha **New → Blueprint** e conecte este repositório.
+2. O `render.yaml` cria o Web Service `terra-perdida-api` e o Postgres `terra-perdida-db`.
+3. Aguarde o deploy e confira `GET /health`.
+4. Se a URL pública for diferente de `https://terra-perdida-api.onrender.com`, ajuste `apiBase` em `js/config.js`.
+5. Confira `CORS_ORIGIN` no Render: ela precisa incluir `https://pedro-henrique-pereira-ribas.github.io` (e as origens locais, se for testar).
+
+Instruções completas, endpoints, variáveis de ambiente e exemplos de `curl` estão em [`server/README.md`](server/README.md).
 
 ## Créditos
 

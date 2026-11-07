@@ -1,6 +1,16 @@
 # Dependências usadas apenas para testes locais
 node_modules/
 package-lock.json
+!server/package-lock.json
+
+# Build da API
+server/dist/
+dist/
+
+# Variáveis de ambiente (nunca commitar segredos)
+.env
+.env.*
+!server/.env.example
 
 # Versões antigas / rascunhos que não fazem parte da versão publicada
 terra-perdida/

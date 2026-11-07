@@ -31,7 +31,18 @@
     accounts: [],
     accountTab: "create",
     serverChoice: "Reino Sem Nome",
-    serverCustom: ""
+    serverCustom: "",
+    cloud: {
+      enabled: false,
+      ready: false,
+      syncing: false,
+      applying: false,
+      timer: null,
+      dirty: false,
+      lastSavedAt: null,
+      error: null,
+      status: ""
+    }
   };
   TP.ui = UI;
 
@@ -117,6 +128,7 @@
       accountName: q("account-name"), accountPin: q("account-pin"),
       accountServerGroup: q("account-server-group"), accountServerOptions: q("account-server-options"),
       accountServerCustom: q("account-server-custom"), accountError: q("account-error"),
+      accountCloudStatus: q("account-cloud-status"), accountKind: q("account-kind"),
       accountCreate: q("btn-account-create"), accountTabs: q("account-tabs"),
       accountSkip: q("btn-account-skip"),
       titleAccount: q("title-account"), titleAccountName: q("title-account-name"),
@@ -139,6 +151,7 @@
     buildCharacterCards();
     buildDifficultyCards();
     loadAccountStore();
+    initCloud();
     updateSoundLabels();
 
     const touchButtons = Array.from(document.querySelectorAll("#touch-controls [data-action]"));
@@ -188,7 +201,11 @@
     });
     UI.el.accountForm.addEventListener("submit", function (e) {
       e.preventDefault();
-      submitAccountForm();
+      submitAccountForm().catch(function () {
+        setAccountBusy(false);
+        setAccountError("Não foi possível concluir a operação. Tente novamente.");
+        UI.renderCloudStatus("Falha inesperada · modo local", "offline");
+      });
     });
     [UI.el.accountName, UI.el.accountPin].forEach(function (input) {
       input.addEventListener("input", function () { setAccountError(""); });
@@ -394,10 +411,11 @@
       btn.classList.toggle("active", on);
       btn.setAttribute("aria-selected", on ? "true" : "false");
     });
+    const cloud = !!(TP.api && TP.api.enabled);
     UI.el.accountFormTitle.textContent = isLogin ? "Bem-vindo de volta" : "Escolha seu nome";
     UI.el.accountFormSub.textContent = isLogin
-      ? "Entre com o nome do viajante e a chave criada neste navegador."
-      : "Ele aparecerá no título e nos registros da jornada.";
+      ? (cloud ? "Entre com o nome do viajante e a chave da sua conta." : "Entre com o nome do viajante e a chave criada neste navegador.")
+      : (cloud ? "Sua conta e seu save ficam guardados no servidor do Reino." : "Ele aparecerá no título e nos registros da jornada.");
     UI.el.accountServerGroup.classList.toggle("hidden", isLogin);
     UI.el.accountCreate.innerHTML = (isLogin ? "ENTRAR NO REINO" : "CRIAR CONTA") + " <span>›</span>";
     UI.el.accountPin.setAttribute("autocomplete", isLogin ? "current-password" : "new-password");
@@ -423,6 +441,9 @@
   function chosenServer() {
     return UI.serverChoice === "__custom" ? UI.serverCustom.trim() : UI.serverChoice;
   }
+  function cloudEnabled() {
+    return !!(TP.api && TP.api.enabled);
+  }
   function loginAccount(account) {
     if (!account) return;
     account.lastLogin = new Date().toISOString();
@@ -433,13 +454,294 @@
     UI.refreshAccountGate();
   }
   function switchAccount() {
+    const wasCloud = !!(UI.account && UI.account.cloud);
+    if (wasCloud && TP.api && TP.api.enabled) TP.api.logout().catch(function () {});
+    if (wasCloud) {
+      UI.cloud.ready = false;
+      UI.cloud.error = null;
+    }
     setAccountSession(null);
     UI.account = null;
     UI.accountTab = UI.accounts.length ? "login" : "create";
     if (UI.el.accountPin) UI.el.accountPin.value = "";
     UI.refreshAccountGate();
+    UI.renderCloudStatus();
   }
-  function submitAccountForm() {
+  function findLocalAccount(name) {
+    const wanted = normalizeAccountName(name);
+    return UI.accounts.find(function (a) { return normalizeAccountName(a.name) === wanted; }) || null;
+  }
+  function localLogin(name, pin, silent) {
+    const account = findLocalAccount(name);
+    if (!account) {
+      if (!silent) setAccountError("Nenhuma conta com esse nome neste dispositivo.");
+      return false;
+    }
+    if (account.pin !== hashPin(pin)) {
+      if (!silent) {
+        setAccountError("Chave de acesso incorreta.");
+        UI.el.accountPin.select();
+      }
+      return false;
+    }
+    loginAccount(account);
+    return true;
+  }
+  function localCreate(name, pin, server, silent) {
+    if (findLocalAccount(name)) {
+      if (!silent) setAccountError("Já existe uma conta com esse nome. Use a aba ENTRAR.");
+      return false;
+    }
+    const account = {
+      name: name,
+      pin: hashPin(pin),
+      server: server,
+      createdAt: new Date().toISOString(),
+      lastLogin: new Date().toISOString(),
+      cloud: false
+    };
+    UI.accounts.push(account);
+    saveAccountStore();
+    setAccountSession(account);
+    UI.account = account;
+    UI.el.accountPin.value = "";
+    setAccountError("");
+    UI.refreshAccountGate();
+    return true;
+  }
+  function setAccountBusy(busy) {
+    const button = UI.el.accountCreate;
+    if (!button) return;
+    button.disabled = !!busy;
+    button.setAttribute("aria-busy", busy ? "true" : "false");
+    if (busy) {
+      button.textContent = "CONECTANDO...";
+    } else {
+      button.innerHTML = (UI.accountTab === "login" ? "ENTRAR NO REINO" : "CRIAR CONTA") + " <span>›</span>";
+    }
+  }
+  function upsertLocalAccount(account, pinHash) {
+    const nameKey = normalizeAccountName(account.name);
+    let local = UI.accounts.find(function (a) { return normalizeAccountName(a.name) === nameKey; });
+    if (!local) {
+      local = {
+        name: account.name,
+        server: account.server,
+        createdAt: account.createdAt || new Date().toISOString(),
+        lastLogin: account.lastLoginAt || new Date().toISOString()
+      };
+      UI.accounts.push(local);
+    }
+    local.name = account.name;
+    local.server = account.server;
+    local.createdAt = account.createdAt || local.createdAt;
+    local.lastLogin = account.lastLoginAt || new Date().toISOString();
+    local.cloud = true;
+    local.cloudId = account.id || local.cloudId || null;
+    if (pinHash) local.pin = pinHash;
+    saveAccountStore();
+    return local;
+  }
+  function hasCloudSave(save) {
+    if (!save || typeof save !== "object") return false;
+    const wallet = save.wallet && typeof save.wallet === "object" ? save.wallet : {};
+    if (Object.keys(wallet).some(function (key) { return Number(wallet[key]) > 0; })) return true;
+    const owned = save.wardrobe && save.wardrobe.owned && typeof save.wardrobe.owned === "object" ? save.wardrobe.owned : {};
+    if (Object.keys(owned).length) return true;
+    if (save.armory && typeof save.armory === "object" && Object.keys(save.armory).length) return true;
+    if (save.enchantments && typeof save.enchantments === "object" && Object.keys(save.enchantments).length) return true;
+    if (save.progress && typeof save.progress === "object" && Object.keys(save.progress).length) return true;
+    return false;
+  }
+  function exportSave() {
+    return {
+      version: 1,
+      wallet: UI.wallet,
+      wardrobe: UI.wardrobe,
+      armory: UI.armory,
+      enchantments: UI.enchantments,
+      progress: (UI.cloud && UI.cloud.progress) || {}
+    };
+  }
+  function applyCloudSave(save) {
+    if (!save || typeof save !== "object") return;
+    UI.cloud.applying = true;
+    try {
+      accountStorageSet(WARDROBE_KEY, JSON.stringify(save.wardrobe || {}));
+      accountStorageSet(ARMORY_KEY, JSON.stringify(save.armory || {}));
+      accountStorageSet(WALLET_KEY, JSON.stringify(save.wallet || {}));
+      accountStorageSet(ENCHANT_KEY, JSON.stringify(save.enchantments || {}));
+      loadWardrobe();
+      loadArmory();
+      loadWallet();
+      loadEnchantments();
+      rebuildCharacterCards();
+      UI.cloud.dirty = false;
+    } finally {
+      UI.cloud.applying = false;
+    }
+  }
+  function scheduleCloudSave() {
+    if (!cloudEnabled() || !UI.cloud.ready || !TP.api.token || UI.cloud.applying) return;
+    UI.cloud.dirty = true;
+    if (UI.cloud.timer) clearTimeout(UI.cloud.timer);
+    UI.cloud.timer = setTimeout(function () {
+      UI.cloud.timer = null;
+      flushCloudSave();
+    }, 700);
+    UI.renderCloudStatus("Sincronizando save...", "syncing");
+  }
+  async function flushCloudSave() {
+    if (!cloudEnabled() || !UI.cloud.ready || !TP.api.token || UI.cloud.syncing) return;
+    UI.cloud.syncing = true;
+    UI.cloud.dirty = false;
+    const payload = exportSave();
+    try {
+      const data = await TP.api.save(payload);
+      UI.cloud.lastSavedAt = data && data.updatedAt ? data.updatedAt : new Date().toISOString();
+      UI.cloud.error = null;
+      UI.renderCloudStatus("Servidor conectado · save sincronizado", "online");
+    } catch (error) {
+      UI.cloud.error = error;
+      if (error && error.status === 401) {
+        TP.api.clearSession();
+        UI.cloud.ready = false;
+        if (UI.account && UI.account.cloud) {
+          UI.account = null;
+          setAccountSession(null);
+        }
+        UI.refreshAccountGate();
+        UI.renderCloudStatus("Sessão expirada · entre novamente", "offline");
+      } else {
+        UI.renderCloudStatus("Falha ao sincronizar · save local ativo", "offline");
+      }
+      UI.cloud.dirty = true;
+    } finally {
+      UI.cloud.syncing = false;
+      if (UI.cloud.dirty && UI.cloud.ready && !UI.cloud.timer) {
+        UI.cloud.timer = setTimeout(function () {
+          UI.cloud.timer = null;
+          flushCloudSave();
+        }, 3000);
+      }
+    }
+  }
+  async function initCloud() {
+    UI.cloud.enabled = cloudEnabled();
+    if (!UI.cloud.enabled) {
+      UI.renderCloudStatus();
+      return;
+    }
+    const cached = TP.api.getCachedAccount();
+    if (TP.api.token && cached) {
+      UI.account = upsertLocalAccount(cached, null);
+      setAccountSession(UI.account);
+      UI.refreshAccountGate();
+    }
+    if (!TP.api.token) {
+      UI.renderCloudStatus();
+      return;
+    }
+    UI.renderCloudStatus("Conectando ao servidor...", "syncing");
+    try {
+      const data = await TP.api.me();
+      UI.cloud.ready = true;
+      UI.cloud.error = null;
+      UI.account = upsertLocalAccount(data.account, null);
+      setAccountSession(UI.account);
+      if (hasCloudSave(data.save)) applyCloudSave(data.save);
+      else await TP.api.save(exportSave());
+      UI.refreshAccountGate();
+      UI.renderCloudStatus("Servidor conectado · save sincronizado", "online");
+    } catch (error) {
+      UI.cloud.ready = false;
+      UI.cloud.error = error;
+      if (error && error.status === 401) {
+        TP.api.clearSession();
+        if (UI.account && UI.account.cloud) {
+          UI.account = null;
+          setAccountSession(null);
+        }
+        UI.refreshAccountGate();
+        UI.renderCloudStatus("Sessão expirada · entre novamente", "offline");
+      } else {
+        UI.refreshAccountGate();
+        UI.renderCloudStatus("Servidor indisponível · save local ativo", "offline");
+      }
+    }
+  }
+  async function cloudLogin(name, pin) {
+    setAccountBusy(true);
+    try {
+      const data = await TP.api.login({ name: name, pin: pin });
+      UI.cloud.ready = true;
+      UI.cloud.error = null;
+      const local = upsertLocalAccount(data.account, hashPin(pin));
+      loginAccount(local);
+      if (hasCloudSave(data.save)) {
+        applyCloudSave(data.save);
+      } else {
+        try { await TP.api.save(exportSave()); } catch (seedError) { /* cache local continua válido */ }
+      }
+      UI.el.accountPin.value = "";
+      setAccountError("");
+      UI.refreshAccountGate();
+      UI.renderCloudStatus("Servidor conectado · save sincronizado", "online");
+    } catch (error) {
+      if (!TP.api.isNetworkError(error)) {
+        setAccountError(error.message || "Não foi possível entrar.");
+        UI.renderCloudStatus("Servidor recusou a entrada", "offline");
+        return;
+      }
+      UI.cloud.ready = false;
+      UI.cloud.error = error;
+      if (localLogin(name, pin, true)) {
+        setAccountError("Servidor indisponível. Entrando com o save local deste navegador.");
+      } else {
+        setAccountError("Servidor indisponível e não há conta local com essa chave.");
+      }
+      UI.renderCloudStatus("Servidor indisponível · modo local", "offline");
+    } finally {
+      setAccountBusy(false);
+    }
+  }
+  async function cloudCreate(name, pin, server) {
+    setAccountBusy(true);
+    try {
+      const data = await TP.api.createAccount({
+        name: name,
+        pin: pin,
+        server: server,
+        save: exportSave()
+      });
+      UI.cloud.ready = true;
+      UI.cloud.error = null;
+      const local = upsertLocalAccount(data.account, hashPin(pin));
+      loginAccount(local);
+      applyCloudSave(data.save);
+      UI.el.accountPin.value = "";
+      setAccountError("");
+      UI.refreshAccountGate();
+      UI.renderCloudStatus("Conta criada · save sincronizado", "online");
+    } catch (error) {
+      if (!TP.api.isNetworkError(error)) {
+        setAccountError(error.message || "Não foi possível criar a conta.");
+        UI.renderCloudStatus("Servidor recusou o cadastro", "offline");
+        return;
+      }
+      UI.cloud.ready = false;
+      UI.cloud.error = error;
+      if (localCreate(name, pin, server, true)) {
+        setAccountError("Servidor indisponível. Conta criada apenas neste navegador.");
+      } else {
+        setAccountError("Servidor indisponível e já existe uma conta local com esse nome.");
+      }
+      UI.renderCloudStatus("Servidor indisponível · modo local", "offline");
+    } finally {
+      setAccountBusy(false);
+    }
+  }
+  async function submitAccountForm() {
     const name = UI.el.accountName.value.trim().replace(/\s+/g, " ");
     const pin = UI.el.accountPin.value.trim();
     if (!/^[^\u0000-\u001f<>]{3,18}$/.test(name)) {
@@ -454,44 +756,28 @@
     }
 
     if (UI.accountTab === "login") {
-      const account = UI.accounts.find(function (a) { return normalizeAccountName(a.name) === normalizeAccountName(name); });
-      if (!account) {
-        setAccountError("Nenhuma conta com esse nome neste dispositivo.");
-        return;
-      }
-      if (account.pin !== hashPin(pin)) {
-        setAccountError("Chave de acesso incorreta.");
-        UI.el.accountPin.select();
-        return;
-      }
-      loginAccount(account);
+      if (cloudEnabled()) await cloudLogin(name, pin);
+      else localLogin(name, pin, false);
       return;
     }
 
-    if (UI.accounts.some(function (a) { return normalizeAccountName(a.name) === normalizeAccountName(name); })) {
-      setAccountError("Já existe uma conta com esse nome. Use a aba ENTRAR.");
-      return;
-    }
     const server = chosenServer();
     if (!/^[^\u0000-\u001f<>]{3,24}$/.test(server)) {
       setAccountError("Escolha um servidor ou digite um nome com 3 a 24 caracteres.");
       return;
     }
-    const account = {
-      name: name,
-      pin: hashPin(pin),
-      server: server,
-      createdAt: new Date().toISOString(),
-      lastLogin: new Date().toISOString()
-    };
-    UI.accounts.push(account);
-    saveAccountStore();
-    setAccountSession(account);
-    UI.account = account;
-    UI.el.accountPin.value = "";
-    setAccountError("");
-    UI.refreshAccountGate();
+    if (cloudEnabled()) await cloudCreate(name, pin, server);
+    else localCreate(name, pin, server, false);
   }
+
+  window.addEventListener("pagehide", function () {
+    if (!UI.cloud.ready || !TP.api || !TP.api.token) return;
+    if (UI.cloud.timer) {
+      clearTimeout(UI.cloud.timer);
+      UI.cloud.timer = null;
+    }
+    TP.api.save(exportSave(), { keepalive: true }).catch(function () {});
+  });
 
   UI.refreshAccountGate = function () {
     if (!UI.el.accountSigned) return;
@@ -505,15 +791,20 @@
       UI.el.accountWelcomeServer.textContent = a.server;
       UI.el.accountCreated.textContent = accountCreatedLabel(a.createdAt);
       UI.el.accountBrandServer.textContent = a.server;
-      UI.el.accountCreated.title = "Conta guardada apenas neste navegador";
+      if (UI.el.accountKind) UI.el.accountKind.textContent = a.cloud ? "Conta online" : "Conta local";
+      UI.el.accountCreated.title = a.cloud
+        ? (UI.cloud.ready ? "Conta sincronizada no servidor" : "Conta do servidor; usando cache local")
+        : "Conta guardada apenas neste navegador";
     } else {
       setAccountTab(UI.accountTab);
       UI.el.accountBrandServer.textContent = chosenServer() || DEFAULT_SERVER;
+      if (UI.el.accountKind) UI.el.accountKind.textContent = cloudEnabled() ? "Conta online" : "Conta local";
       if (!UI.el.accountName.value && UI.accounts.length === 1) {
         UI.el.accountName.value = UI.accounts[0].name;
       }
     }
     UI.renderAccountBadge();
+    UI.renderCloudStatus();
   };
 
   UI.renderAccountBadge = function () {
@@ -531,6 +822,43 @@
     if (UI.el.pauseAccount) UI.el.pauseAccount.textContent = a
       ? a.name + "  ·  Servidor " + a.server
       : "Visitante  ·  Jogando sem conta";
+  };
+
+  UI.renderCloudStatus = function (message, tone) {
+    const el = UI.el.accountCloudStatus;
+    if (!el) return;
+    let text = message;
+    let state = tone || "";
+    if (!text) {
+      if (!cloudEnabled()) {
+        text = "Modo local · servidor não configurado";
+        state = "offline";
+      } else if (UI.cloud.ready) {
+        if (UI.cloud.syncing) {
+          text = "Sincronizando save...";
+          state = "syncing";
+        } else if (UI.cloud.error) {
+          text = "Servidor instável · save local ativo";
+          state = "offline";
+        } else {
+          text = "Servidor conectado · save sincronizado";
+          state = "online";
+        }
+      } else if (UI.cloud.error) {
+        text = "Servidor indisponível · save local ativo";
+        state = "offline";
+      } else if (TP.api && TP.api.token) {
+        text = "Conectando ao servidor...";
+        state = "syncing";
+      } else {
+        text = "Servidor pronto · entre para sincronizar";
+        state = "";
+      }
+    }
+    el.textContent = text;
+    el.classList.remove("online", "offline", "syncing");
+    if (state) el.classList.add(state);
+    UI.cloud.status = text;
   };
 
   /* ============================================================
@@ -593,6 +921,7 @@
 
   function saveWardrobe() {
     accountStorageSet(WARDROBE_KEY, JSON.stringify(UI.wardrobe));
+    scheduleCloudSave();
   }
 
   function loadWardrobe() {
@@ -674,6 +1003,7 @@
 
   function saveArmoryStore() {
     accountStorageSet(ARMORY_KEY, JSON.stringify(UI.armory));
+    scheduleCloudSave();
   }
 
   UI.armoryFor = function (charId) {
@@ -710,6 +1040,7 @@
 
   function saveWalletStore() {
     accountStorageSet(WALLET_KEY, JSON.stringify(UI.wallet));
+    scheduleCloudSave();
   }
 
   UI.walletFor = function (charId) {
@@ -755,6 +1086,7 @@
 
   function saveEnchantmentsStore() {
     accountStorageSet(ENCHANT_KEY, JSON.stringify(UI.enchantments));
+    scheduleCloudSave();
   }
 
   UI.enchantmentsFor = function (charId) {
