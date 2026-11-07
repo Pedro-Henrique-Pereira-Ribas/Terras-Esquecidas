@@ -60,6 +60,13 @@
     return !!error && (!error.status || error.status === 0);
   };
 
+  // 404 e 5xx também contam como indisponibilidade: pode ser um serviço
+  // do Render hibernando, uma URL errada ou uma rota ainda não publicada.
+  API.isUnavailable = function (error) {
+    const status = Number(error && error.status) || 0;
+    return status === 0 || status === 404 || status >= 500;
+  };
+
   API.storeSession = function (token, account) {
     API.token = token || null;
     API.account = account || null;

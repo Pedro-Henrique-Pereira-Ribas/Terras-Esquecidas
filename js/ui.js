@@ -688,7 +688,16 @@
       UI.refreshAccountGate();
       UI.renderCloudStatus("Servidor conectado · save sincronizado", "online");
     } catch (error) {
-      if (!TP.api.isNetworkError(error)) {
+      if (!TP.api.isUnavailable(error)) {
+        if (error.status === 401) {
+          const legacy = findLocalAccount(name);
+          if (legacy && !legacy.cloud && legacy.pin === hashPin(pin)) {
+            loginAccount(legacy);
+            setAccountError("Conta local antiga. Crie uma conta online para sincronizar este save.");
+            UI.renderCloudStatus("Modo local · conta antiga", "offline");
+            return;
+          }
+        }
         setAccountError(error.message || "Não foi possível entrar.");
         UI.renderCloudStatus("Servidor recusou a entrada", "offline");
         return;
@@ -724,7 +733,7 @@
       UI.refreshAccountGate();
       UI.renderCloudStatus("Conta criada · save sincronizado", "online");
     } catch (error) {
-      if (!TP.api.isNetworkError(error)) {
+      if (!TP.api.isUnavailable(error)) {
         setAccountError(error.message || "Não foi possível criar a conta.");
         UI.renderCloudStatus("Servidor recusou o cadastro", "offline");
         return;
