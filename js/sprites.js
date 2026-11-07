@@ -186,6 +186,8 @@
       ctx.fillRect(-5, 12, 10, 2);
     }
 
+    if (char.outfitPrestige) drawPrestigeSprite(ctx, char, p, time);
+
     // arma e ataque
     drawHeroWeapon(ctx, char, p, atkProg, attacking, time);
 
@@ -213,30 +215,236 @@
     }
   };
 
+  function drawPrestigeSprite(ctx, char, p, time) {
+    const pal = char.palette || {};
+    const accent = pal.accent || "#ffd36e";
+    const metal = pal.metal || "#c9c9d8";
+    const dark = pal.dark || "#171410";
+    const cloth = pal.hood || pal.cloak || pal.robe2 || pal.armor || "#3a3a42";
+    const glow = (char.outfitFx && (char.outfitFx.glow || char.outfitFx.color)) || accent;
+    const pulse = 0.65 + Math.sin(time * 0.09) * 0.25;
+    switch (char.outfitStyle) {
+      case "archaeologist":
+        ctx.fillStyle = pal.helmet || "#7a5a38";
+        ctx.fillRect(-11, 0, 22, 2);
+        ctx.fillRect(-6, -3, 12, 3);
+        ctx.fillStyle = accent;
+        ctx.fillRect(-10, 2, 20, 1);
+        ctx.fillStyle = "#5a3f2a";
+        ctx.fillRect(8, 18, 6, 8);
+        ctx.fillStyle = accent;
+        ctx.fillRect(7, 21, 8, 2);
+        break;
+      case "mountaineer":
+        ctx.fillStyle = "#e8f2f5";
+        ctx.fillRect(-9, -3, 18, 3);
+        ctx.fillRect(-10, 0, 4, 7);
+        ctx.fillRect(6, 0, 4, 7);
+        ctx.fillStyle = "#c8d8e0";
+        ctx.fillRect(-10, 11, 20, 3);
+        ctx.strokeStyle = accent;
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.arc(0, 20, 3, 0, Math.PI * 2);
+        ctx.stroke();
+        break;
+      case "streetthief":
+        ctx.fillStyle = cloth;
+        ctx.fillRect(-9, -2, 18, 3);
+        ctx.fillRect(-10, 1, 3, 8);
+        ctx.fillRect(7, 1, 3, 8);
+        ctx.fillStyle = dark;
+        ctx.fillRect(-5, 6, 10, 2);
+        ctx.fillStyle = accent;
+        ctx.fillRect(-5, 8, 10, 1);
+        ctx.fillStyle = metal;
+        ctx.fillRect(9, 17, 1, 11);
+        ctx.fillStyle = accent;
+        ctx.fillRect(8, 16, 4, 1);
+        break;
+      case "stormarcher":
+        ctx.fillStyle = cloth;
+        ctx.fillRect(-9, -2, 18, 3);
+        ctx.fillRect(-10, 1, 3, 8);
+        ctx.fillStyle = glow;
+        ctx.fillRect(1, 13, 3, 3);
+        ctx.fillRect(-1, 16, 3, 3);
+        ctx.fillRect(1, 19, 3, 3);
+        ctx.fillStyle = "#3a2a20";
+        ctx.fillRect(8, 12, 4, 13);
+        ctx.fillStyle = accent;
+        ctx.fillRect(9, 10, 2, 3);
+        break;
+      case "northwalker":
+        ctx.fillStyle = "#f0f7fa";
+        ctx.fillRect(-9, -3, 18, 3);
+        ctx.fillRect(-10, 0, 4, 8);
+        ctx.fillRect(6, 0, 4, 8);
+        ctx.fillStyle = "#d6e8f0";
+        ctx.fillRect(-10, 11, 20, 4);
+        ctx.fillStyle = accent;
+        ctx.fillRect(-8, 24, 16, 2);
+        break;
+      case "shadowthief":
+        ctx.fillStyle = cloth;
+        ctx.fillRect(-9, -2, 18, 4);
+        ctx.fillRect(-10, 2, 3, 9);
+        ctx.fillRect(7, 2, 3, 9);
+        ctx.fillStyle = "#2a1a24";
+        ctx.fillRect(-6, 6, 12, 2);
+        ctx.fillStyle = accent;
+        ctx.fillRect(-8, 13, 16, 2);
+        ctx.fillStyle = metal;
+        ctx.fillRect(9, 16, 1, 12);
+        ctx.fillRect(-10, 16, 1, 12);
+        break;
+      case "arcane":
+        ctx.fillStyle = metal;
+        ctx.fillRect(-8, -3, 16, 4);
+        ctx.fillRect(-10, 0, 3, 4);
+        ctx.fillRect(7, 0, 3, 4);
+        ctx.fillStyle = accent;
+        ctx.fillRect(-1, -6, 2, 4);
+        ctx.globalAlpha = pulse;
+        ctx.fillStyle = glow;
+        ctx.fillRect(-2, 16, 4, 4);
+        ctx.globalAlpha = 1;
+        break;
+      case "nordic":
+        ctx.fillStyle = metal;
+        ctx.fillRect(-8, -3, 16, 4);
+        ctx.fillRect(-10, 0, 3, 4);
+        ctx.fillRect(7, 0, 3, 4);
+        ctx.fillStyle = accent;
+        ctx.fillRect(-1, -5, 2, 3);
+        ctx.fillStyle = "#d8e6ec";
+        ctx.fillRect(-11, 10, 22, 3);
+        ctx.fillRect(-9, 13, 18, 2);
+        break;
+      case "imperial":
+        ctx.fillStyle = accent;
+        ctx.fillRect(-7, -4, 14, 2);
+        ctx.fillRect(-6, -7, 2, 3);
+        ctx.fillRect(-1, -8, 2, 4);
+        ctx.fillRect(4, -7, 2, 3);
+        ctx.fillStyle = metal;
+        ctx.fillRect(-10, 1, 3, 5);
+        ctx.fillRect(7, 1, 3, 5);
+        ctx.fillStyle = "#6a4a20";
+        ctx.fillRect(-10, 12, 20, 16);
+        ctx.fillStyle = accent;
+        ctx.fillRect(-9, 11, 18, 2);
+        break;
+      case "time":
+        ctx.globalAlpha = 0.7;
+        ctx.strokeStyle = glow;
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.arc(0, 6, 12, 0, Math.PI * 2);
+        ctx.stroke();
+        ctx.globalAlpha = 1;
+        ctx.fillStyle = accent;
+        ctx.fillRect(-2, 15, 4, 2);
+        ctx.fillRect(-1, 17, 2, 2);
+        ctx.fillRect(-2, 19, 4, 2);
+        break;
+      case "astral":
+        ctx.fillStyle = glow;
+        ctx.fillRect(-8, -3, 2, 2);
+        ctx.fillRect(-2, -5, 2, 2);
+        ctx.fillRect(5, -2, 2, 2);
+        ctx.fillStyle = accent;
+        ctx.fillRect(-8, 1, 16, 2);
+        ctx.globalAlpha = pulse;
+        ctx.fillStyle = glow;
+        ctx.fillRect(-2, 17, 4, 4);
+        ctx.globalAlpha = 1;
+        break;
+      case "flame":
+        ctx.fillStyle = glow;
+        ctx.fillRect(-7, -3, 2, 4);
+        ctx.fillRect(-2, -6, 2, 6);
+        ctx.fillRect(3, -3, 2, 4);
+        ctx.fillStyle = accent;
+        ctx.fillRect(-8, 1, 16, 2);
+        ctx.fillStyle = glow;
+        ctx.fillRect(-11, 12, 3, 3);
+        ctx.fillRect(8, 12, 3, 3);
+        break;
+      case "runemaster":
+        ctx.fillStyle = pal.helmet || "#5a4a6a";
+        ctx.fillRect(-8, -3, 16, 4);
+        ctx.fillRect(-10, 0, 3, 4);
+        ctx.fillRect(7, 0, 3, 4);
+        ctx.globalAlpha = pulse;
+        ctx.strokeStyle = glow;
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.moveTo(-4, 3); ctx.lineTo(-2, 5); ctx.lineTo(-4, 7);
+        ctx.moveTo(4, 3); ctx.lineTo(2, 5); ctx.lineTo(4, 7);
+        ctx.stroke();
+        ctx.fillStyle = glow;
+        ctx.fillRect(-2, 16, 4, 4);
+        ctx.globalAlpha = 1;
+        break;
+      case "frostdigger":
+        ctx.fillStyle = "#e6f7ff";
+        ctx.fillRect(-9, -3, 18, 3);
+        ctx.fillRect(-10, 0, 4, 7);
+        ctx.fillRect(6, 0, 4, 7);
+        ctx.fillStyle = "#c8e0e8";
+        ctx.fillRect(-10, 11, 20, 3);
+        ctx.strokeStyle = glow;
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.moveTo(-8, 19); ctx.lineTo(-6, 16); ctx.lineTo(-4, 19);
+        ctx.moveTo(7, 21); ctx.lineTo(9, 18); ctx.lineTo(11, 21);
+        ctx.stroke();
+        break;
+      case "hardminer":
+        ctx.fillStyle = pal.helmet || "#8a7a5e";
+        ctx.fillRect(-8, -2, 16, 5);
+        ctx.fillRect(-10, 1, 3, 4);
+        ctx.fillRect(7, 1, 3, 4);
+        ctx.fillStyle = metal;
+        ctx.fillRect(-3, -4, 6, 3);
+        ctx.fillStyle = accent;
+        ctx.fillRect(-2, -3, 4, 2);
+        ctx.fillStyle = "#6a5238";
+        ctx.fillRect(-10, 12, 20, 3);
+        ctx.fillStyle = "#c9b08a";
+        ctx.fillRect(-9, 15, 18, 2);
+        break;
+      default:
+        break;
+    }
+  }
+
   function drawOutfitFx(ctx, p, time) {
     const fx = p.char && p.char.outfitFx;
     if (!fx) return;
     const final = !!p.char.outfitFinal;
+    const prestige = !!p.char.outfitPrestige;
     const cx = p.x + p.w / 2;
     const cy = p.y + p.h / 2;
-    const count = final ? 8 : 4;
+    const count = final ? 8 : prestige ? 6 : 4;
     ctx.save();
     ctx.globalCompositeOperation = "lighter";
-    if (final) {
-      art.glow(ctx, cx, cy, 34, fx.glow || fx.color, 0.13 + Math.sin(time * 0.05) * 0.03);
-      ctx.globalAlpha = 0.18 + Math.sin(time * 0.06) * 0.04;
+    if (final || prestige) {
+      art.glow(ctx, cx, cy, final ? 34 : 27, fx.glow || fx.color, (final ? 0.13 : 0.1) + Math.sin(time * 0.05) * 0.03);
+      ctx.globalAlpha = (final ? 0.18 : 0.13) + Math.sin(time * 0.06) * 0.04;
       ctx.strokeStyle = fx.color;
       ctx.lineWidth = 1;
       ctx.beginPath();
-      ctx.arc(cx, cy, 23 + Math.sin(time * 0.07) * 2, 0, Math.PI * 2);
+      ctx.arc(cx, cy, (final ? 23 : 18) + Math.sin(time * 0.07) * 2, 0, Math.PI * 2);
       ctx.stroke();
     }
     for (let i = 0; i < count; i++) {
       const a = time * (final ? 0.045 : 0.06) + i * (Math.PI * 2 / count);
-      const r = (final ? 20 : 12) + Math.sin(time * 0.07 + i) * 3;
+      const r = (final ? 20 : prestige ? 16 : 12) + Math.sin(time * 0.07 + i) * 3;
       const x = Math.round(cx + Math.cos(a) * r);
       const y = Math.round(cy + Math.sin(a * 1.2) * r * 0.7);
-      const s = final ? 2 : 1;
+      const s = final || prestige ? 2 : 1;
       ctx.globalAlpha = 0.5 + Math.sin(time * 0.1 + i) * 0.25;
       ctx.fillStyle = i % 3 === 0 ? (fx.glow || fx.color) : fx.color;
       ctx.fillRect(x, y, s, s);

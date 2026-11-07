@@ -146,10 +146,12 @@
     }
   ];
 
-  /* Sete trajes por herói. O inicial é gratuito; os outros são comprados
+  /* Dez trajes por herói. O inicial é gratuito; os outros são comprados
      uma única vez com moedas dos chefes. Os trajes 2 a 6 dão bônus leves
      (2%, 2%, 2%, 3% e 4%). O sétimo é o traje final: 250 de vida máxima,
-     sem outro bônus. As cores são aplicadas sobre a paleta base. */
+     sem outro bônus. Os trajes 8 a 10 são as skins de prestígio do quadro:
+     também dão 250 de vida máxima, sem outro bônus, e usam acessórios
+     próprios. As cores são aplicadas sobre a paleta base. */
   const OUTFITS = {
     viajante: [
       {
@@ -191,6 +193,24 @@
         colors: { hood: "#4a2f1d", cloak: "#6b4326", tunic: "#9a6433", accent: "#ffe0a0", metal: "#e0b45e", dark: "#2a1810", boot: "#4a2e1c" },
         bonus: null, fx: { type: "horizon", color: "#ffd27a", glow: "#fff1c2" },
         desc: "O último traje de quem já viu o fim da estrada. Não dá mais força: dá mais vida. 250 de vida máxima."
+      },
+      {
+        id: "arqueologo", name: "Arqueólogo", price: 4000, prestige: true, skin: 8, maxHp: 250,
+        colors: { hood: "#6b4f34", cloak: "#7a5a3c", tunic: "#b08a58", accent: "#e8c36a", metal: "#c9a86a", dark: "#2a2116", boot: "#3a2c1e" },
+        bonus: null, fx: { type: "dust", color: "#e8c36a", glow: "#fff0b0" }, style: "archaeologist",
+        desc: "O chapéu de aba larga e o caderno de campo de quem escava o passado sem medo do que vai encontrar. 250 de vida máxima."
+      },
+      {
+        id: "montanhista", name: "Montanhista", price: 5000, prestige: true, skin: 9, maxHp: 250,
+        colors: { hood: "#3a4a58", cloak: "#4a5a68", tunic: "#6a7a88", accent: "#cfefff", metal: "#b8c8d0", dark: "#1e2a32", boot: "#2e3a42" },
+        bonus: null, fx: { type: "snow", color: "#cfefff", glow: "#ffffff" }, style: "mountaineer",
+        desc: "Cordas, pelo e uma coragem que não escorrega. O topo é só o começo. 250 de vida máxima."
+      },
+      {
+        id: "ladrao_ruas", name: "Ladrão de Ruas", price: 6250, prestige: true, skin: 10, maxHp: 250,
+        colors: { hood: "#3a1a1e", cloak: "#4a2228", tunic: "#5a2a2e", accent: "#ffb05a", metal: "#a86a4a", dark: "#160c0e", boot: "#2a1416" },
+        bonus: null, fx: { type: "shadow", color: "#ffb05a", glow: "#ffe0a0" }, style: "streetthief",
+        desc: "Um capuz gasto, uma faca curta e a lição de que toda cidade tem um atalho. 250 de vida máxima."
       }
     ],
     arqueira: [
@@ -233,6 +253,24 @@
         colors: { hood: "#234a2a", tunic: "#3f6b3a", accent: "#c8ff9a", metal: "#b8d88f", dark: "#122414", boot: "#28402a" },
         bonus: null, fx: { type: "forestheart", color: "#b6ff8a", glow: "#e6ffd0" },
         desc: "O traje que a própria Trilha ofereceu. Não pede pontaria: pede fôlego. 250 de vida máxima."
+      },
+      {
+        id: "arco_tempestade", name: "Arco da Tempestade", price: 4000, prestige: true, skin: 8, maxHp: 250,
+        colors: { hood: "#1e2a4a", tunic: "#2e3a6a", accent: "#8fd8ff", metal: "#b8d8f0", dark: "#121a2e", boot: "#1e2c4a" },
+        bonus: null, fx: { type: "storm", color: "#8fd8ff", glow: "#e6f8ff" }, style: "stormarcher",
+        desc: "A corda guarda um relâmpago. O céu responde antes da flecha. 250 de vida máxima."
+      },
+      {
+        id: "viajante_norte", name: "Viajante do Norte", price: 5000, prestige: true, skin: 9, maxHp: 250,
+        colors: { hood: "#d8e8f0", tunic: "#a8c8d8", accent: "#f0fbff", metal: "#e0f0f8", dark: "#4a5f70", boot: "#5a7284" },
+        bonus: null, fx: { type: "snow", color: "#e6f7ff", glow: "#ffffff" }, style: "northwalker",
+        desc: "Peles claras, passo silencioso e o frio como velho conhecido. 250 de vida máxima."
+      },
+      {
+        id: "ladras_sombria", name: "Ladras Sombria", price: 6250, prestige: true, skin: 10, maxHp: 250,
+        colors: { hood: "#1c1418", tunic: "#3a1a22", accent: "#ff6a7a", metal: "#8a4a55", dark: "#0e090b", boot: "#241016" },
+        bonus: null, fx: { type: "shadow", color: "#ff6a7a", glow: "#ffb0b8" }, style: "shadowthief",
+        desc: "Duas irmãs, uma sombra e nenhuma testemunha. O vermelho é só para quem olha tarde. 250 de vida máxima."
       }
     ],
     guerreiro: [
@@ -275,6 +313,24 @@
         colors: { armor: "#6b542e", metal: "#d8b56a", accent: "#ffe0a0", plume: "#ffcf7a", dark: "#2e2416", boot: "#4a3820" },
         bonus: null, fx: { type: "dawnwall", color: "#ffd28a", glow: "#fff0c8" },
         desc: "A última armadura não é para atacar. É para continuar de pé quando o sol nascer. 250 de vida máxima."
+      },
+      {
+        id: "arcano", name: "Arcano", price: 4000, prestige: true, skin: 8, maxHp: 250,
+        colors: { armor: "#3a2a5a", metal: "#b8a8e0", accent: "#8fe6ff", plume: "#c9a5ff", dark: "#171226", boot: "#241a3a" },
+        bonus: null, fx: { type: "arcane", color: "#b98aff", glow: "#efe0ff" }, style: "arcane",
+        desc: "Placas gravadas com runas que não pedem licença à matéria. A armadura brilha antes do golpe. 250 de vida máxima."
+      },
+      {
+        id: "nordico", name: "Nórdico", price: 5000, prestige: true, skin: 9, maxHp: 250,
+        colors: { armor: "#3a4a5a", metal: "#c8d8e0", accent: "#bfe6ff", plume: "#e8f4ff", dark: "#18202a", boot: "#2a3442" },
+        bonus: null, fx: { type: "frost", color: "#bfe6ff", glow: "#ffffff" }, style: "nordic",
+        desc: "Aço frio, pelo de lobo e o eco de um trovão antigo. 250 de vida máxima."
+      },
+      {
+        id: "imperial", name: "Imperial", price: 6250, prestige: true, skin: 10, maxHp: 250,
+        colors: { armor: "#6b1f1f", metal: "#e0b45e", accent: "#ffe08a", plume: "#ff6a5a", dark: "#2a1412", boot: "#4a2a1e" },
+        bonus: null, fx: { type: "imperial", color: "#ffd36e", glow: "#fff4c2" }, style: "imperial",
+        desc: "Ouro sobre rubro, coroa sobre aço. O império inteiro cabe nos ombros. 250 de vida máxima."
       }
     ],
     mago: [
@@ -317,6 +373,24 @@
         colors: { robe: "#4a3a28", robe2: "#33281c", accent: "#ffe0a0", dark: "#1e1710", staff: "#6b4f3a", boot: "#30241a" },
         bonus: null, fx: { type: "ashcrown", color: "#ffe0a0", glow: "#fff4d0" },
         desc: "O manto que o Reino tentou queimar. Ele ainda cabe em você. 250 de vida máxima."
+      },
+      {
+        id: "mago_tempo", name: "Mago do Tempo", price: 4000, prestige: true, skin: 8, maxHp: 250,
+        colors: { robe: "#5a4a2e", robe2: "#3a3020", accent: "#ffd27a", dark: "#1a1a14", staff: "#7a5a3a", boot: "#2a2a1e" },
+        bonus: null, fx: { type: "time", color: "#ffd27a", glow: "#fff0c0" }, style: "time",
+        desc: "O relógio não anda para trás. O manto, sim. 250 de vida máxima."
+      },
+      {
+        id: "astral", name: "Astral", price: 5000, prestige: true, skin: 9, maxHp: 250,
+        colors: { robe: "#1e2450", robe2: "#121836", accent: "#8fe6ff", dark: "#0a0e22", staff: "#4a3a6a", boot: "#141a38" },
+        bonus: null, fx: { type: "astral", color: "#8fe6ff", glow: "#e0f8ff" }, style: "astral",
+        desc: "Um céu inteiro costurado em seda escura, com estrelas que não se apagam. 250 de vida máxima."
+      },
+      {
+        id: "flamejante", name: "Flamejante", price: 6250, prestige: true, skin: 10, maxHp: 250,
+        colors: { robe: "#5a1e16", robe2: "#3a120e", accent: "#ff8a4e", dark: "#1e0c08", staff: "#5a2a1a", boot: "#2a100a" },
+        bonus: null, fx: { type: "inferno", color: "#ff8a4e", glow: "#ffd0a0" }, style: "flame",
+        desc: "O fogo não queima o tecido. Queima o que vem depois. 250 de vida máxima."
       }
     ],
     minerador: [
@@ -359,6 +433,24 @@
         colors: { armor: "#3a3a42", helmet: "#8a8a98", accent: "#ffcf7a", metal: "#c9c9d8", dark: "#1c1c22", boot: "#2e2e38" },
         bonus: null, fx: { type: "mountainheart", color: "#ffcf7a", glow: "#fff0c8" },
         desc: "A montanha inteira bate dentro do peito. O fundo não assusta mais. 250 de vida máxima."
+      },
+      {
+        id: "mestre_runas", name: "Mestre das Runas", price: 4000, prestige: true, skin: 8, maxHp: 250,
+        colors: { armor: "#2e2a3a", helmet: "#5a4a6a", accent: "#8fe6ff", metal: "#b8a8d8", dark: "#16121e", boot: "#241e30" },
+        bonus: null, fx: { type: "runes", color: "#8fe6ff", glow: "#d8f8ff" }, style: "runemaster",
+        desc: "Cada runa no elmo é uma promessa feita à pedra. A mina responde em silêncio. 250 de vida máxima."
+      },
+      {
+        id: "explorador_gelido", name: "Explorador Gélido", price: 5000, prestige: true, skin: 9, maxHp: 250,
+        colors: { armor: "#3a4a5a", helmet: "#c8e0e8", accent: "#bfe6ff", metal: "#d8eef8", dark: "#1a2630", boot: "#2a3a46" },
+        bonus: null, fx: { type: "frost", color: "#bfe6ff", glow: "#ffffff" }, style: "frostdigger",
+        desc: "Peles de inverno, cristais no casaco e um lampião que nunca apagou. 250 de vida máxima."
+      },
+      {
+        id: "duro_minerar", name: "Duro de Minerar", price: 6250, prestige: true, skin: 10, maxHp: 250,
+        colors: { armor: "#4a3a2e", helmet: "#8a7a5e", accent: "#ff9a4e", metal: "#c9b08a", dark: "#241c14", boot: "#3a2c20" },
+        bonus: null, fx: { type: "iron", color: "#ff9a4e", glow: "#ffd0a0" }, style: "hardminer",
+        desc: "A armadura de quem já nasceu com uma picareta nas mãos. A rocha aprendeu a sair da frente. 250 de vida máxima."
       }
     ]
   };
@@ -1027,6 +1119,7 @@
     {
       id: "ruinas", name: "Ruínas Antigas", numeral: "I",
       subtitle: "Onde a pedra aprendeu a ficar em silêncio",
+      cutscene: "Antes de haver Reino, estas pedras eram um templo. O tempo levou os nomes, mas não levou o que elas guardam.",
       theme: "ruins", bossKey: "colosso", quest: "eco", width: 2940, arenaStart: 2580,
       groundGaps: [[640, 750], [1430, 1550], [2110, 2210]],
       platforms: [
@@ -1062,6 +1155,7 @@
     {
       id: "trilha", name: "Trilha Perdida", numeral: "II",
       subtitle: "Onde até as raízes esquecem o caminho",
+      cutscene: "A floresta cresceu sobre uma estrada que ligava o Reino aos mortos. Quem se perde aqui ouve a própria voz em outra boca.",
       theme: "forest", bossKey: "vulto", quest: "lobo", width: 3140, arenaStart: 2780,
       groundGaps: [[560, 680], [1290, 1410], [1970, 2080], [2380, 2470]],
       platforms: [
@@ -1099,6 +1193,7 @@
     {
       id: "serra", name: "Serra Sombria", numeral: "III",
       subtitle: "Onde o inverno guarda o que o Rei esqueceu",
+      cutscene: "O inverno desceu quando o Rei mandou fechar o céu. O vale ficou branco, e o Corvo aprendeu a comer silêncio.",
       theme: "mountain", bossKey: "corvo", quest: "pena", width: 3300, arenaStart: 2940,
       groundGaps: [[720, 850], [1380, 1500], [2140, 2250], [2570, 2660]],
       platforms: [
@@ -1136,6 +1231,7 @@
     {
       id: "mina", name: "Mina Enferrujada", numeral: "IV",
       subtitle: "Onde a máquina aprendeu a sentir dor",
+      cutscene: "A mina foi aberta para alimentar a guerra. Quando a guerra acabou, as máquinas continuaram cavando atrás de um coração que nunca tiveram.",
       theme: "mine", bossKey: "ferrugem", quest: "sombra", width: 3400, arenaStart: 3020,
       groundGaps: [[480, 600], [1040, 1160], [1800, 1920], [2350, 2460]],
       platforms: [
@@ -1174,6 +1270,7 @@
     {
       id: "fronteira", name: "Última Fronteira", numeral: "V",
       subtitle: "Onde a coroa pesa mais que o Reino",
+      cutscene: "A última estrada do Ato I termina no trono. Não há muro: só a coroa, o peso dela e a escolha de quem chega.",
       theme: "frontier", bossKey: "rei", quest: "cinza", width: 3500, arenaStart: 3100,
       groundGaps: [[620, 750], [1320, 1450], [2070, 2190], [2670, 2810]],
       platforms: [
@@ -1211,6 +1308,7 @@
     {
       id: "forja", name: "Forja Profunda", numeral: "VI", act: 2,
       subtitle: "Onde o ferro sonha com o dia em que parou",
+      cutscene: "Debaixo do trono, a forja ainda trabalha. Foi aqui que o primeiro Rei aprendeu que ferro pode virar obediência.",
       theme: "forge", bossKey: "titao", quest: "forja", width: 3600, arenaStart: 3220,
       groundGaps: [[620, 740], [1340, 1460], [2050, 2160], [2680, 2780]],
       platforms: [
@@ -1247,6 +1345,7 @@
     {
       id: "templo", name: "Templo Ancestral", numeral: "VII", act: 2,
       subtitle: "Onde a pedra ainda reza por um nome",
+      cutscene: "O templo é mais velho que o Reino. Suas preces continuam de pé porque ninguém teve coragem de responder.",
       theme: "temple", bossKey: "guardiao", quest: "pedra", width: 3750, arenaStart: 3370,
       groundGaps: [[700, 820], [1400, 1520], [2120, 2240], [2760, 2860]],
       platforms: [
@@ -1284,6 +1383,7 @@
     {
       id: "tumba", name: "Tumba de Vidro", numeral: "VIII", act: 2,
       subtitle: "Onde o sol foi enterrado com o rei",
+      cutscene: "O Faraó enterrou o sol para que ninguém visse o que ele fez. O deserto é a cicatriz que ficou.",
       theme: "desert", bossKey: "farao", quest: "areia", merchant: "khepri", width: 3900, arenaStart: 3520,
       groundGaps: [[560, 680], [1280, 1400], [1980, 2100], [2660, 2780], [3180, 3280]],
       platforms: [
@@ -1321,6 +1421,7 @@
     {
       id: "fenda", name: "Fenda do Vazio", numeral: "IX", act: 2,
       subtitle: "Onde o Reino esqueceu de terminar",
+      cutscene: "O Reino tentou terminar aqui e desistiu no meio. O vazio não é ausência: é tudo o que não foi escolhido.",
       theme: "void", bossKey: "imperador", quest: "vazio", merchant: "nul", width: 4050, arenaStart: 3670,
       groundGaps: [[620, 760], [1380, 1500], [2140, 2260], [2840, 2960]],
       platforms: [
@@ -1358,6 +1459,7 @@
     {
       id: "ceu", name: "Céu Partido", numeral: "X", act: 2,
       subtitle: "Onde a última asa ainda procura o chão",
+      cutscene: "O céu partiu quando o último anjo caiu. As asas ainda procuram o chão, e o chão já não se lembra delas.",
       theme: "celestial", bossKey: "arcanjo", quest: "asa", merchant: "vesper", width: 4200, arenaStart: 3820,
       groundGaps: [[700, 820], [1460, 1580], [2220, 2340], [2960, 3080]],
       platforms: [

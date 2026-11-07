@@ -186,7 +186,7 @@
       "screen-pause": "#btn-resume",
       "screen-journal": "#btn-journal-back",
       "screen-gameover": "#btn-continue-checkpoint",
-      "screen-ending": ".ending-choice:not([disabled])",
+      "screen-ending": ".ending-choice:not([disabled]), #ending-result-view:not(.hidden) .ending-footer-actions .btn:not(.hidden):not([disabled])",
       "screen-camp": "#camp-wardrobe-panel:not(.hidden) #wardrobe-action [data-wardrobe-act], #btn-camp-continue",
       "screen-enchant": "#enchant-grid .enchant-card:not([disabled]), #btn-enchant-close"
     };

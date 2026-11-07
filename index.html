@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <meta name="theme-color" content="#0b0d0b">
-  <meta name="description" content="Terra Perdida — uma jornada de plataforma em pixel art por cinco terras clássicas e cinco terras do Ato II. Escolha seu herói, tome armas dos chefes, vista seu traje e decida o destino de um reino sem nome.">
+  <meta name="description" content="Terra Perdida — uma jornada de plataforma em pixel art por 10 mapas: cinco terras clássicas e cinco terras do Ato II. Escolha seu herói, tome armas dos chefes, vista seu traje e decida o destino de um reino sem nome.">
   <title>Terra Perdida — Dez terras. Duas jornadas. Uma memória esquecida.</title>
   <link rel="icon" href="favicon.svg" type="image/svg+xml">
   <link rel="stylesheet" href="css/style.css">
@@ -104,9 +104,13 @@
       <div id="toast-layer" class="toast-layer" aria-live="polite"></div>
 
       <div id="level-card" class="level-card hidden" aria-hidden="true">
-        <p id="level-card-numeral">I</p>
-        <h2 id="level-card-name">Ruínas Antigas</h2>
-        <p id="level-card-subtitle">Onde a pedra aprendeu a ficar em silêncio</p>
+        <div class="level-card-copy">
+          <p id="level-card-numeral">FASE I</p>
+          <h2 id="level-card-name">Ruínas Antigas</h2>
+          <p id="level-card-subtitle">Onde a pedra aprendeu a ficar em silêncio</p>
+          <p id="level-card-lore" class="level-card-lore"></p>
+        </div>
+        <button id="btn-level-skip" class="level-skip" type="button">PULAR <span>›</span></button>
       </div>
 
       <!-- ================= TELAS ================= -->
@@ -192,7 +196,7 @@
           <div class="title-wrap">
             <p class="kicker"><span></span> PEDRO APRESENTA <span></span></p>
             <h1>TERRA<br><em>PERDIDA</em></h1>
-            <p class="title-sub">Cinco terras apagadas da memória.<br>Cinco heróis. Uma coroa — e o que existe depois dela.</p>
+            <p class="title-sub">Dez mapas apagados da memória.<br>Cinco heróis. Uma coroa — e o que existe depois dela.</p>
             <div class="title-buttons">
               <button id="btn-start" class="btn btn-primary" type="button">INICIAR JORNADA <span>›</span></button>
               <button id="btn-how" class="btn btn-ghost" type="button">COMO JOGAR</button>
@@ -256,51 +260,26 @@
             </header>
             <div class="how-grid">
               <article class="how-card">
-                <h3>Movimento</h3>
+                <h3>Mover e pular</h3>
                 <p><kbd>A</kbd><kbd>D</kbd> ou <kbd>←</kbd><kbd>→</kbd> para andar. <kbd>Espaço</kbd>, <kbd>W</kbd> ou <kbd>↑</kbd> para pular — todos têm salto duplo; o Viajante tem um terceiro.</p>
-                <p><kbd>Shift</kbd> ou <kbd>K</kbd> para uma esquiva curta. Ela também serve para atravessar vãos.</p>
+                <p><kbd>Shift</kbd> ou <kbd>K</kbd> para uma esquiva curta, útil para atravessar vãos.</p>
               </article>
               <article class="how-card">
-                <h3>Combate e tarefas</h3>
-                <p><kbd>J</kbd> ou <kbd>X</kbd> para atacar. Clique esquerdo no canvas também ataca. Perto de um NPC, <kbd>E</kbd> fala; perto de um mercador, <kbd>E</kbd> abre a loja (gamepad: <kbd>Y</kbd>; toque: <b>FALAR</b> ou <b>LOJA</b>).</p>
-                <p>Espada e picareta são corpo a corpo. O arco fere mais longe; o cajado é mais forte na distância média. A arma define o alcance, o dano e o efeito.</p>
-                <p>Cada fase tem uma tarefa com um NPC e um alvo único. Fale com o NPC, derrote o alvo e receba <b>200 a 500 moedas</b>. As tarefas voltam a cada Nova Jornada.</p>
+                <h3>Lutar e conversar</h3>
+                <p><kbd>J</kbd> ou <kbd>X</kbd> para atacar. Clique esquerdo no canvas também ataca. Perto de um NPC, <kbd>E</kbd> fala; perto de um mercador, <kbd>E</kbd> abre a loja.</p>
+                <p>Cada fase tem uma tarefa: fale com o NPC, derrote o alvo e receba <b>200 a 500 moedas</b>. As tarefas voltam a cada Nova Jornada.</p>
               </article>
               <article class="how-card">
-                <h3>Armas e trajes</h3>
-                <p>Estes chefes deixam uma arma melhor. Ela é equipada automaticamente:</p>
-                <ul class="how-list">
-                  <li><b>Colosso</b> → arma <b>Épica</b></li>
-                  <li><b>Vulto</b> → arma <b>Lendária</b></li>
-                  <li><b>Corvo Cinzento</b> → arma <b>Mítica</b></li>
-                  <li><b>Ato II</b> → <b>Divina</b>, <b>Celestial</b>, <b>Ancestral</b>, <b>Suprema</b> e <b>Eterna</b></li>
-                </ul>
-                <p>As armas ficam guardadas por herói. Na aba <b>Armas</b>, clique em qualquer arma obtida para equipá-la; não há loja de armas.</p>
-                <p>O <b>Vestiário</b> tem 7 trajes por herói. Os trajes 2 a 6 dão bônus leves (2% a 4%). O 7º é o traje final: <b>250 de vida máxima</b>, sem outro bônus. Cada herói só compra e veste o próprio traje, com a própria carteira.</p>
-                <p>Nas três últimas fases do Ato II, mercadores vendem <b>encantamentos de arma</b> por moedas. Cada um dá dano ou velocidade de ataque, vale para todas as armas do herói e fica salvo no navegador. O interruptor na loja ou na pausa desliga os efeitos sem apagar as compras.</p>
+                <h3>Evoluir</h3>
+                <p>Chefes deixam armas melhores, equipadas automaticamente. Na aba <b>Armas</b>, clique em qualquer arma obtida para equipá-la.</p>
+                <p>O <b>Vestiário</b> tem <b>10 trajes</b> por herói: 7 clássicos + 3 <b>skins de prestígio</b>. As skins de prestígio dão <b>250 de vida máxima</b>, sem outro bônus.</p>
+                <p>Há <b>3 memórias</b> em cada um dos <b>10 mapas</b>. Com 15, você libera o final verdadeiro do Ato I; com 30, o do Ato II.</p>
               </article>
-              <article class="how-card">
-                <h3>Memórias e escolhas</h3>
-                <p>Há <b>3 memórias</b> em cada uma das <b>10 fases</b>. Elas não aumentam seu poder: mudam o que você sabe — e o que pode dizer no final.</p>
-                <p>As 15 memórias clássicas liberam o final verdadeiro do Rei das Cinzas. Depois, o Ato II acrescenta mais 15: com as <b>30</b>, o Arcanjo Caído tem seu próprio final verdadeiro.</p>
-              </article>
-              <article class="how-card">
-                <h3>Depois do Rei</h3>
-                <p>Os três finais clássicos continuam existindo. Depois de qualquer um deles, o botão <b>CONTINUAR PARA O ATO II</b> abre cinco novas terras: Forja Profunda, Templo Ancestral, Tumba de Vidro, Fenda do Vazio e Céu Partido.</p>
-                <p>O Ato II tem cinco chefes, cinco tarefas, cinco temas e cinco novos degraus de arma por classe. O Arcanjo Caído fecha a jornada com dois finais próprios — um deles exige todas as 30 memórias.</p>
-              </article>
-              <article class="how-card">
-                <h3>Outros controles</h3>
-                <p>Toque: setas e botões na tela. Gamepad: direcional/analógico, <kbd>A</kbd> pula, <kbd>X</kbd> ataca, <kbd>B</kbd> esquiva, <kbd>Y</kbd> fala e <kbd>Start</kbd> pausa.</p>
-                <p><kbd>Esc</kbd> pausa. A música e os efeitos são sintetizados em tempo real; use o botão ♪ para silenciar.</p>
-              </article>
-              <article class="how-card how-tip">
-                <h3>Dica de Pedro</h3>
-                <p>“Não corra para a morte. Corra para a próxima fogueira. A diferença é pequena, mas é tudo.”</p>
-              </article>
+              <p class="how-controls">Toque: setas e botões na tela. Gamepad: <kbd>A</kbd> pula, <kbd>X</kbd> ataca, <kbd>B</kbd> esquiva, <kbd>Y</kbd> fala e <kbd>Start</kbd> pausa. <kbd>Esc</kbd> pausa o jogo.</p>
+              <p class="how-quote">“Não corra para a morte. Corra para a próxima fogueira.” — Pedro</p>
             </div>
             <footer class="screen-foot">
-              <p class="foot-note">O jogo guarda sua conta local, o servidor escolhido, o som, os trajes, as armas, os encantamentos e a carteira de cada herói. Memórias, tarefas, chefes e checkpoints começam do zero a cada jornada.</p>
+              <p class="foot-note">O jogo salva neste navegador a conta, o som, as armas, os trajes, os encantamentos e a carteira de cada herói. Memórias, tarefas, chefes e checkpoints recomeçam a cada jornada.</p>
               <button id="btn-how-close" class="btn btn-primary" type="button">ENTENDI <span>›</span></button>
             </footer>
           </div>
@@ -352,6 +331,16 @@
                   </div>
                   <div id="wardrobe-char-tabs" class="shop-class-tabs wardrobe-char-tabs" role="tablist" aria-label="Heróis"></div>
                   <div id="wardrobe-grid" class="weapon-path outfit-grid"></div>
+                  <section id="wardrobe-prestige" class="prestige-section" aria-label="Skins de prestígio">
+                    <div class="prestige-head">
+                      <div>
+                        <p class="kicker">ACIMA DO FIM</p>
+                        <h4>Skins de prestígio</h4>
+                      </div>
+                      <p class="prestige-note">3 skins por herói · 250 de vida máxima</p>
+                    </div>
+                    <div id="wardrobe-prestige-grid" class="weapon-path outfit-grid prestige-grid"></div>
+                  </section>
                   <div id="wardrobe-detail" class="forge-next"></div>
                   <div id="wardrobe-action" class="forge-action"></div>
                 </div>
@@ -498,6 +487,7 @@
                 <p id="ending-result-note" class="foot-note"></p>
                 <div class="ending-footer-actions">
                   <button id="btn-ending-act2" class="btn btn-primary hidden" type="button">CONTINUAR PARA O ATO II <span>›</span></button>
+                  <button id="btn-ending-character" class="btn btn-ghost hidden" type="button">ESCOLHER PERSONAGEM</button>
                   <button id="btn-ending-new" class="btn btn-primary" type="button">NOVA JORNADA <span>›</span></button>
                   <button id="btn-ending-title" class="btn btn-ghost" type="button">VOLTAR AO TÍTULO</button>
                 </div>

@@ -80,6 +80,7 @@
       interactText: q("interact-text"), touchInteract: q("touch-interact"),
       levelCard: q("level-card"), levelNumeral: q("level-card-numeral"),
       levelName: q("level-card-name"), levelSubtitle: q("level-card-subtitle"),
+      levelLore: q("level-card-lore"), levelSkip: q("btn-level-skip"),
       fade: q("fade"), charGrid: q("char-grid"), diffGrid: q("diff-grid"),
       charNext: q("btn-char-next"), charNote: q("char-selected-note"),
       diffStart: q("btn-diff-start"), diffHeroNote: q("diff-hero-note"),
@@ -90,6 +91,7 @@
       campTabs: q("camp-tabs"), campForgePanel: q("camp-forge-panel"),
       campWardrobePanel: q("camp-wardrobe-panel"), wardrobeCharTabs: q("wardrobe-char-tabs"),
       wardrobeCurrent: q("wardrobe-current"), wardrobeGrid: q("wardrobe-grid"),
+      wardrobePrestige: q("wardrobe-prestige"), wardrobePrestigeGrid: q("wardrobe-prestige-grid"),
       wardrobeDetail: q("wardrobe-detail"), wardrobeAction: q("wardrobe-action"),
       campContinue: q("btn-camp-continue"),
       enchantScreen: q("screen-enchant"), enchantTitle: q("enchant-title"),
@@ -104,7 +106,7 @@
       endingTrue: q("btn-ending-true"), trueNote: q("true-choice-note"),
       endingResultKicker: q("ending-result-kicker"), endingResultTitle: q("ending-result-title"),
       endingResultText: q("ending-result-text"), endingResultNote: q("ending-result-note"),
-      endingAct2: q("btn-ending-act2"),
+      endingAct2: q("btn-ending-act2"), endingCharacter: q("btn-ending-character"),
       journalGrid: q("journal-grid"), journalCount: q("journal-count"), journalNote: q("journal-note"),
       touch: q("touch-controls"),
       accountSigned: q("account-signed"), accountAuth: q("account-auth"),
@@ -227,8 +229,17 @@
     q("btn-ending-break").addEventListener("click", function () { TP.audio.sfx("click"); call("chooseEnding", "break"); });
     q("btn-ending-true").addEventListener("click", function () { TP.audio.sfx("click"); call("chooseEnding", "true"); });
     q("btn-ending-act2").addEventListener("click", function () { TP.audio.sfx("click"); call("continueToAct2"); });
+    q("btn-ending-character").addEventListener("click", function () { TP.audio.sfx("click"); call("chooseCharacterAfterAct2"); });
     q("btn-ending-new").addEventListener("click", function () { TP.audio.sfx("click"); call("newJourney"); });
     q("btn-ending-title").addEventListener("click", function () { TP.audio.sfx("click"); call("returnToTitle"); });
+    if (UI.el.levelSkip) {
+      UI.el.levelSkip.addEventListener("click", function (e) {
+        e.preventDefault();
+        e.stopPropagation();
+        TP.audio.sfx("click");
+        call("skipLevelCutscene");
+      });
+    }
 
     // Delegação para os cartões de personagem/dificuldade/forja.
     UI.el.charGrid.addEventListener("click", function (e) {
@@ -260,13 +271,18 @@
       TP.audio.sfx("click");
       UI.refreshCamp();
     });
-    UI.el.wardrobeGrid.addEventListener("click", function (e) {
-      const card = e.target.closest("[data-wardrobe-outfit]");
-      if (!card) return;
-      UI.wardrobeSelected = card.getAttribute("data-wardrobe-outfit");
-      TP.audio.sfx("click");
-      UI.refreshCamp();
-    });
+    function bindWardrobeGrid(grid) {
+      if (!grid) return;
+      grid.addEventListener("click", function (e) {
+        const card = e.target.closest("[data-wardrobe-outfit]");
+        if (!card) return;
+        UI.wardrobeSelected = card.getAttribute("data-wardrobe-outfit");
+        TP.audio.sfx("click");
+        UI.refreshCamp();
+      });
+    }
+    bindWardrobeGrid(UI.el.wardrobeGrid);
+    bindWardrobeGrid(UI.el.wardrobePrestigeGrid);
     UI.el.wardrobeAction.addEventListener("click", function (e) {
       const btn = e.target.closest("[data-wardrobe-act]");
       if (!btn) return;
@@ -562,6 +578,9 @@
     clothed.outfitBonus = bonus;
     clothed.outfitFx = def ? (def.fx || null) : null;
     clothed.outfitFinal = !!(def && def.final);
+    clothed.outfitPrestige = !!(def && def.prestige);
+    clothed.outfitSkin = def && def.skin ? def.skin : 0;
+    clothed.outfitStyle = def && def.style ? def.style : null;
     clothed.outfitDesc = def ? def.desc : "";
     clothed.outfitPrice = def ? def.price : 0;
     clothed.maxHp = def && def.maxHp ? def.maxHp : (char.hp || 100);
@@ -1159,28 +1178,28 @@
   };
 
   /* ============================================================
-     CARTÃO DE FASE
+     CUTSCENE DE FASE
      ============================================================ */
-  UI.showLevelCard = function (level, done) {
-    UI.el.levelNumeral.textContent = "FASE " + level.def.numeral;
-    UI.el.levelName.textContent = level.def.name;
-    UI.el.levelSubtitle.textContent = level.def.subtitle;
+  UI.showLevelCutscene = function (level) {
+    const def = level && level.def ? level.def : level;
+    if (!def) return;
+    UI.el.levelNumeral.textContent = "FASE " + def.numeral;
+    UI.el.levelName.textContent = def.name;
+    UI.el.levelSubtitle.textContent = def.subtitle;
+    if (UI.el.levelLore) UI.el.levelLore.textContent = def.cutscene || "";
     UI.el.levelCard.classList.remove("hidden", "out");
+    UI.el.levelCard.classList.add("cutscene");
+    UI.el.levelCard.setAttribute("aria-hidden", "false");
     clearTimeout(UI.levelCardTimer);
-    UI.levelCardTimer = setTimeout(function () {
-      UI.el.levelCard.classList.add("out");
-      UI.levelCardTimer = setTimeout(function () {
-        UI.el.levelCard.classList.add("hidden");
-        UI.el.levelCard.classList.remove("out");
-        if (done) done();
-      }, 500);
-    }, 1350);
   };
-  UI.hideLevelCard = function () {
+  UI.hideLevelCutscene = function () {
     clearTimeout(UI.levelCardTimer);
     UI.el.levelCard.classList.add("hidden");
-    UI.el.levelCard.classList.remove("out");
+    UI.el.levelCard.classList.remove("out", "cutscene");
+    UI.el.levelCard.setAttribute("aria-hidden", "true");
   };
+  UI.showLevelCard = UI.showLevelCutscene;
+  UI.hideLevelCard = UI.hideLevelCutscene;
 
   /* ============================================================
      ACAMPAMENTO / FORJA
@@ -1306,6 +1325,31 @@
     UI.updateSoundLabels();
   };
 
+  function outfitCardHtml(char, outfit, equippedId) {
+    const owned = UI.outfitOwned(char.id, outfit.id);
+    const equippedNow = equippedId === outfit.id;
+    const selected = UI.wardrobeSelected === outfit.id;
+    let cardCls = "wp-card shop-card outfit-card";
+    if (owned) cardCls += " owned";
+    if (equippedNow) cardCls += " equipped";
+    if (selected) cardCls += " selected";
+    if (outfit.final) cardCls += " final-outfit";
+    if (outfit.prestige) cardCls += " prestige-outfit";
+    const fxStyle = outfit.fx ? ' style="--fx-color:' + outfit.fx.color + ';--fx-glow:' + outfit.fx.glow + '"' : "";
+    const badge = equippedNow ? "EM USO" : owned ? "SEU" : outfit.final ? "TRAJE FINAL" : "À VENDA";
+    const preview = withOutfit(char, outfit.id);
+    const priceLine = owned ? (equippedNow ? "Vestido agora" : "Desbloqueado") : formatCoins(outfit.price) + " moedas";
+    return '<button class="' + cardCls + '" type="button" data-wardrobe-outfit="' + outfit.id + '" aria-pressed="' + (selected ? "true" : "false") + '"' + fxStyle + '>' +
+      '<span class="wp-badge">' + badge + '</span>' +
+      (outfit.prestige ? '<span class="wp-badge prestige-badge">PRESTÍGIO</span>' : "") +
+      (outfit.final ? '<span class="wp-badge final-badge">250 VIDA</span>' : "") +
+      '<div class="outfit-portrait" style="background-image:url(\'' + art.makePortrait(preview) + '\')"></div>' +
+      '<div class="wp-name">' + esc(outfit.name) + '</div>' +
+      '<div class="wp-stat">' + priceLine + '</div>' +
+      '<div class="wp-bonus">' + esc(outfitBonusLabel(outfit)) + '</div>' +
+    '</button>';
+  }
+
   function refreshWardrobe(d) {
     const chars = TP.DATA.CHARACTERS;
     let charId = UI.wardrobeChar;
@@ -1337,28 +1381,19 @@
     const equipped = UI.getOutfit(charId, equippedId) || outfits[0];
     UI.el.wardrobeCurrent.textContent = equipped ? equipped.name : "Traje inicial";
 
-    UI.el.wardrobeGrid.innerHTML = outfits.map(function (outfit) {
-      const owned = UI.outfitOwned(charId, outfit.id);
-      const equippedNow = equippedId === outfit.id;
-      const selected = UI.wardrobeSelected === outfit.id;
-      let cardCls = "wp-card shop-card outfit-card";
-      if (owned) cardCls += " owned";
-      if (equippedNow) cardCls += " equipped";
-      if (selected) cardCls += " selected";
-      if (outfit.final) cardCls += " final-outfit";
-      const fxStyle = outfit.fx ? ' style="--fx-color:' + outfit.fx.color + ';--fx-glow:' + outfit.fx.glow + '"' : "";
-      const badge = equippedNow ? "EM USO" : owned ? "SEU" : outfit.final ? "TRAJE FINAL" : "À VENDA";
-      const preview = withOutfit(char, outfit.id);
-      const priceLine = owned ? (equippedNow ? "Vestido agora" : "Desbloqueado") : formatCoins(outfit.price) + ' moedas';
-      return '<button class="' + cardCls + '" type="button" data-wardrobe-outfit="' + outfit.id + '" aria-pressed="' + (selected ? "true" : "false") + '"' + fxStyle + '>' +
-        '<span class="wp-badge">' + badge + '</span>' +
-        (outfit.final ? '<span class="wp-badge final-badge">250 VIDA</span>' : "") +
-        '<div class="outfit-portrait" style="background-image:url(\'' + art.makePortrait(preview) + '\')"></div>' +
-        '<div class="wp-name">' + esc(outfit.name) + '</div>' +
-        '<div class="wp-stat">' + priceLine + '</div>' +
-        '<div class="wp-bonus">' + esc(outfitBonusLabel(outfit)) + '</div>' +
-      '</button>';
+    const classicOutfits = outfits.filter(function (outfit) { return !outfit.prestige; });
+    const prestigeOutfits = outfits.filter(function (outfit) { return outfit.prestige; });
+    UI.el.wardrobeGrid.innerHTML = classicOutfits.map(function (outfit) {
+      return outfitCardHtml(char, outfit, equippedId);
     }).join("");
+    if (UI.el.wardrobePrestigeGrid) {
+      UI.el.wardrobePrestigeGrid.innerHTML = prestigeOutfits.map(function (outfit) {
+        return outfitCardHtml(char, outfit, equippedId);
+      }).join("");
+    }
+    if (UI.el.wardrobePrestige) {
+      UI.el.wardrobePrestige.classList.toggle("hidden", prestigeOutfits.length === 0);
+    }
 
     const selected = UI.getOutfit(charId, UI.wardrobeSelected) || outfits[0];
     if (!selected) return;
@@ -1368,9 +1403,11 @@
     const activeWallet = UI.walletFor(d.char.id);
     const heroWallet = UI.walletFor(charId);
     const shortName = char.name.replace(/^O /, "");
-    const bonusBlock = selected.final
-      ? '<div class="outfit-bonus final"><span>TRAJE FINAL</span><b>250 DE VIDA MÁXIMA</b><small>Sem outro bônus de combate.</small></div>'
-      : '<div class="outfit-bonus">' + esc(outfitBonusLabel(selected)) + '</div>';
+    const bonusBlock = selected.prestige
+      ? '<div class="outfit-bonus prestige"><span>SKIN DE PRESTÍGIO</span><b>250 DE VIDA MÁXIMA</b><small>Sem outro bônus de combate.</small></div>'
+      : selected.final
+        ? '<div class="outfit-bonus final"><span>TRAJE FINAL</span><b>250 DE VIDA MÁXIMA</b><small>Sem outro bônus de combate.</small></div>'
+        : '<div class="outfit-bonus">' + esc(outfitBonusLabel(selected)) + '</div>';
     UI.el.wardrobeDetail.innerHTML =
       '<b>' + esc(selected.name) + '</b> · ' + (selected.price > 0 ? formatCoins(selected.price) + ' moedas' : 'traje inicial') +
       '.<br>' + esc(selected.desc) +
@@ -1393,7 +1430,7 @@
     } else if (activeWallet >= selected.price) {
       UI.el.wardrobeAction.innerHTML = '<span class="forge-price">CUSTO: ' + formatCoins(selected.price) + '</span>' +
         '<button class="btn btn-primary" type="button" data-wardrobe-act="buy"' + attrs + '>' +
-        (selected.final ? "COMPRAR TRAJE FINAL" : "COMPRAR E VESTIR") + ' <span>›</span></button>';
+        (selected.prestige ? "COMPRAR SKIN" : selected.final ? "COMPRAR TRAJE FINAL" : "COMPRAR E VESTIR") + ' <span>›</span></button>';
     } else {
       UI.el.wardrobeAction.innerHTML = '<span class="forge-price missing">FALTAM ' + formatCoins(selected.price - activeWallet) + ' MOEDAS</span>' +
         '<button class="btn" type="button" disabled>SEM MOEDAS</button>';
@@ -1611,6 +1648,7 @@
     UI.el.endingResultView.classList.add("hidden");
     UI.el.endingResultView.classList.remove("act2");
     if (UI.el.endingAct2) UI.el.endingAct2.classList.add("hidden");
+    if (UI.el.endingCharacter) UI.el.endingCharacter.classList.add("hidden");
     UI.el.endingMemories.textContent = run.memories;
     UI.el.endingCoins.textContent = run.coins;
     UI.el.endingCls.textContent = run.char.name + " · " + run.diff.name;
@@ -1636,6 +1674,10 @@
       UI.el.endingAct2.classList.toggle("hidden", !canContinue);
       UI.el.endingAct2.disabled = !canContinue;
     }
+    if (UI.el.endingCharacter) {
+      UI.el.endingCharacter.classList.toggle("hidden", !act2);
+      UI.el.endingCharacter.disabled = !act2;
+    }
     void key;
   };
 
@@ -1644,6 +1686,7 @@
     UI.el.endingResultView.classList.add("hidden");
     UI.el.endingResultView.classList.remove("act2");
     if (UI.el.endingAct2) UI.el.endingAct2.classList.add("hidden");
+    if (UI.el.endingCharacter) UI.el.endingCharacter.classList.add("hidden");
   };
 
   /* ============================================================

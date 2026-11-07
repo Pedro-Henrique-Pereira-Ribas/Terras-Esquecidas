@@ -178,6 +178,211 @@
     if (opts.scar) art.rect(ctx, x + 7, y + 4, 1, 7, "#8b4f3e");
   }
 
+  function drawPrestigeBust(ctx, char) {
+    const pal = char.palette || {};
+    const accent = pal.accent || "#ffd36e";
+    const metal = pal.metal || "#c9c9d8";
+    const dark = pal.dark || "#171410";
+    const cloth = pal.hood || pal.cloak || pal.robe2 || pal.armor || "#3a3a42";
+    const glow = (char.outfitFx && (char.outfitFx.glow || char.outfitFx.color)) || accent;
+    switch (char.outfitStyle) {
+      case "archaeologist":
+        art.rect(ctx, -28, 20, 56, 5, pal.helmet || "#7a5a38");
+        art.rect(ctx, -18, 14, 36, 7, pal.helmet || "#7a5a38");
+        art.rect(ctx, -20, 25, 40, 2, dark);
+        art.rect(ctx, -23, 69, 6, 3, accent);
+        art.rect(ctx, 17, 67, 10, 17, "#5a3f2a");
+        art.rect(ctx, 16, 72, 12, 3, accent);
+        art.rect(ctx, 23, 55, 2, 12, metal);
+        break;
+      case "mountaineer":
+        [[-16, 18, 7], [-8, 13, 6], [2, 12, 7], [11, 15, 6], [17, 22, 6]].forEach(function (p) {
+          art.pixelCircle(ctx, p[0], p[1], p[2], "#e8f2f5");
+        });
+        art.rect(ctx, -25, 24, 50, 6, "#d8e8ee");
+        art.rect(ctx, -27, 29, 7, 34, "#c8d8e0");
+        art.rect(ctx, 20, 29, 7, 34, "#c8d8e0");
+        ctx.strokeStyle = accent;
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.arc(0, 78, 9, 0, Math.PI * 2);
+        ctx.stroke();
+        art.rect(ctx, -4, 62, 8, 3, metal);
+        break;
+      case "streetthief":
+        art.rect(ctx, -24, 21, 48, 7, cloth);
+        art.rect(ctx, -27, 27, 7, 22, cloth);
+        art.rect(ctx, 20, 27, 7, 22, cloth);
+        art.rect(ctx, -14, 40, 28, 5, dark);
+        art.rect(ctx, -5, 45, 10, 2, accent);
+        art.rect(ctx, 24, 62, 2, 20, metal);
+        art.rect(ctx, 21, 60, 8, 3, accent);
+        art.rect(ctx, -26, 65, 2, 16, metal);
+        break;
+      case "stormarcher":
+        art.rect(ctx, -23, 23, 46, 6, cloth);
+        art.rect(ctx, -26, 28, 7, 24, cloth);
+        art.rect(ctx, 19, 28, 7, 24, cloth);
+        ctx.fillStyle = glow;
+        ctx.beginPath();
+        ctx.moveTo(2, 55); ctx.lineTo(-4, 66); ctx.lineTo(1, 66); ctx.lineTo(-2, 77);
+        ctx.lineTo(7, 63); ctx.lineTo(2, 63); ctx.closePath(); ctx.fill();
+        art.rect(ctx, 18, 57, 8, 24, "#3a2a20");
+        art.rect(ctx, 19, 54, 6, 5, accent);
+        art.rect(ctx, 21, 49, 2, 8, metal);
+        art.rect(ctx, 25, 50, 2, 7, metal);
+        break;
+      case "northwalker":
+        [[-17, 20, 6], [-9, 14, 6], [0, 12, 7], [9, 14, 6], [17, 20, 6]].forEach(function (p) {
+          art.pixelCircle(ctx, p[0], p[1], p[2], "#f0f7fa");
+        });
+        art.rect(ctx, -26, 25, 52, 6, "#e6f2f7");
+        art.rect(ctx, -28, 30, 8, 38, "#d6e8f0");
+        art.rect(ctx, 20, 30, 8, 38, "#d6e8f0");
+        art.rect(ctx, -20, 70, 40, 4, accent);
+        art.pixelCircle(ctx, 0, 80, 5, "rgba(255,255,255,.28)");
+        break;
+      case "shadowthief":
+        art.rect(ctx, -23, 20, 46, 8, cloth);
+        art.rect(ctx, -27, 27, 7, 24, cloth);
+        art.rect(ctx, 20, 27, 7, 24, cloth);
+        art.rect(ctx, -16, 41, 32, 5, "#2a1a24");
+        art.rect(ctx, -22, 66, 44, 4, accent);
+        art.rect(ctx, 23, 60, 2, 22, metal);
+        art.rect(ctx, -25, 60, 2, 22, metal);
+        art.rect(ctx, 20, 58, 8, 3, accent);
+        art.rect(ctx, -28, 58, 8, 3, accent);
+        break;
+      case "arcane":
+        art.rect(ctx, -20, 14, 40, 8, metal);
+        art.rect(ctx, -23, 21, 7, 8, metal);
+        art.rect(ctx, 16, 21, 7, 8, metal);
+        art.rect(ctx, -3, 7, 6, 7, accent);
+        ctx.strokeStyle = glow;
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.moveTo(-24, 13); ctx.lineTo(-29, 5);
+        ctx.moveTo(24, 13); ctx.lineTo(29, 5);
+        ctx.stroke();
+        art.pixelCircle(ctx, 0, 78, 6, "rgba(185,138,255,.22)");
+        art.rect(ctx, -4, 74, 8, 8, accent);
+        art.rect(ctx, -2, 76, 4, 4, dark);
+        break;
+      case "nordic":
+        art.rect(ctx, -20, 15, 40, 8, metal);
+        art.rect(ctx, -24, 21, 7, 9, metal);
+        art.rect(ctx, 17, 21, 7, 9, metal);
+        art.rect(ctx, -3, 8, 6, 7, accent);
+        [[-22, 10], [22, 10]].forEach(function (p) {
+          ctx.fillStyle = metal;
+          ctx.beginPath();
+          ctx.moveTo(p[0], p[1]);
+          ctx.lineTo(p[0] + (p[0] < 0 ? -8 : 8), p[1] - 8);
+          ctx.lineTo(p[0] + (p[0] < 0 ? 4 : -4), p[1] + 2);
+          ctx.closePath(); ctx.fill();
+        });
+        art.rect(ctx, -30, 66, 60, 7, "#d8e6ec");
+        art.rect(ctx, -26, 70, 52, 4, "#b8ccd8");
+        break;
+      case "imperial":
+        art.rect(ctx, -18, 12, 36, 7, accent);
+        art.rect(ctx, -13, 6, 5, 7, accent);
+        art.rect(ctx, -2, 3, 4, 10, accent);
+        art.rect(ctx, 9, 6, 5, 7, accent);
+        art.rect(ctx, -23, 22, 7, 8, metal);
+        art.rect(ctx, 16, 22, 7, 8, metal);
+        art.rect(ctx, -30, 64, 60, 5, accent);
+        art.rect(ctx, -26, 69, 52, 18, "#6a4a20");
+        art.rect(ctx, -24, 67, 48, 3, "#ffefb0");
+        art.pixelCircle(ctx, 0, 78, 5, "rgba(255,211,110,.3)");
+        break;
+      case "time":
+        ctx.save();
+        ctx.globalAlpha = 0.5;
+        ctx.strokeStyle = glow;
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.arc(0, 31, 30, 0, Math.PI * 2);
+        ctx.stroke();
+        ctx.restore();
+        for (let i = 0; i < 8; i++) {
+          const a = i * Math.PI / 4;
+          art.rect(ctx, Math.round(Math.cos(a) * 30) - 1, Math.round(31 + Math.sin(a) * 30) - 1, 2, 2, glow);
+        }
+        art.rect(ctx, -9, 62, 18, 3, accent);
+        art.rect(ctx, -6, 66, 12, 12, "rgba(20,16,10,.75)");
+        art.rect(ctx, -4, 68, 8, 4, accent);
+        art.rect(ctx, -4, 73, 8, 3, accent);
+        break;
+      case "astral":
+        [[-18, 12, 3], [-7, 5, 4], [6, 7, 3], [17, 13, 3], [0, 2, 3]].forEach(function (p) {
+          art.pixelCircle(ctx, p[0], p[1], p[2], glow);
+        });
+        art.rect(ctx, -22, 20, 44, 4, accent);
+        art.rect(ctx, -24, 24, 48, 3, "rgba(143,230,255,.4)");
+        art.pixelCircle(ctx, 0, 78, 7, "rgba(143,230,255,.2)");
+        art.rect(ctx, -5, 73, 10, 10, accent);
+        art.rect(ctx, -2, 76, 4, 4, "#1a2a34");
+        break;
+      case "flame":
+        ctx.fillStyle = glow;
+        ctx.beginPath();
+        ctx.moveTo(-20, 17); ctx.lineTo(-14, 4); ctx.lineTo(-7, 14);
+        ctx.lineTo(0, 0); ctx.lineTo(7, 14); ctx.lineTo(15, 4); ctx.lineTo(20, 17);
+        ctx.closePath(); ctx.fill();
+        art.rect(ctx, -22, 18, 44, 4, accent);
+        art.rect(ctx, -29, 66, 12, 6, glow);
+        art.rect(ctx, 17, 66, 12, 6, glow);
+        art.rect(ctx, -30, 64, 10, 3, accent);
+        art.rect(ctx, 20, 64, 10, 3, accent);
+        art.pixelCircle(ctx, 0, 78, 5, "rgba(255,138,78,.28)");
+        break;
+      case "runemaster":
+        art.rect(ctx, -20, 14, 40, 8, pal.helmet || "#5a4a6a");
+        art.rect(ctx, -24, 21, 7, 10, metal);
+        art.rect(ctx, 17, 21, 7, 10, metal);
+        art.rect(ctx, -6, 9, 12, 5, metal);
+        ctx.strokeStyle = glow;
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.moveTo(-7, 17); ctx.lineTo(-3, 20); ctx.lineTo(-7, 23);
+        ctx.moveTo(7, 17); ctx.lineTo(3, 20); ctx.lineTo(7, 23);
+        ctx.stroke();
+        art.pixelCircle(ctx, 0, 78, 6, "rgba(143,230,255,.2)");
+        art.rect(ctx, -4, 73, 8, 9, accent);
+        art.rect(ctx, -1, 76, 2, 3, dark);
+        break;
+      case "frostdigger":
+        [[-16, 18, 7], [-7, 12, 6], [3, 12, 7], [12, 16, 6]].forEach(function (p) {
+          art.pixelCircle(ctx, p[0], p[1], p[2], "#e6f7ff");
+        });
+        art.rect(ctx, -25, 24, 50, 6, "#d8eef8");
+        art.rect(ctx, -27, 29, 7, 34, "#c8e0e8");
+        art.rect(ctx, 20, 29, 7, 34, "#c8e0e8");
+        art.rect(ctx, -7, 63, 14, 3, accent);
+        ctx.strokeStyle = glow;
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.moveTo(-24, 52); ctx.lineTo(-20, 46); ctx.lineTo(-16, 52);
+        ctx.moveTo(20, 58); ctx.lineTo(24, 51); ctx.lineTo(28, 58);
+        ctx.stroke();
+        break;
+      case "hardminer":
+        art.rect(ctx, -20, 15, 40, 9, pal.helmet || "#8a7a5e");
+        art.rect(ctx, -23, 22, 7, 9, metal);
+        art.rect(ctx, 16, 22, 7, 9, metal);
+        art.rect(ctx, -6, 8, 12, 5, metal);
+        art.rect(ctx, -3, 10, 6, 5, accent);
+        art.pixelCircle(ctx, 0, 12, 6, "rgba(255,154,78,.2)");
+        art.rect(ctx, -30, 66, 60, 7, "#6a5238");
+        art.rect(ctx, -26, 71, 52, 4, "#c9b08a");
+        art.rect(ctx, -20, 78, 40, 14, "#4a3a2e");
+        break;
+      default:
+        break;
+    }
+  }
+
   art.drawCharacterBust = function (ctx, char, w, h) {
     const pal = char.palette;
     ctx.save();
@@ -196,7 +401,8 @@
     // aura do traje: o retrato também veste a peça equipada.
     if (char.outfitFx) {
       const fx = char.outfitFx;
-      art.glow(ctx, 0, 48, char.outfitFinal ? 52 : 38, fx.glow || fx.color, char.outfitFinal ? 0.2 : 0.1);
+      const strong = !!(char.outfitFinal || char.outfitPrestige);
+      art.glow(ctx, 0, 48, strong ? 50 : 38, fx.glow || fx.color, strong ? 0.2 : 0.1);
       if (char.outfitFinal) {
         ctx.save();
         ctx.globalAlpha = 0.28;
@@ -209,6 +415,14 @@
         for (let i = 0; i < 10; i++) {
           const a = i * (Math.PI * 2 / 10);
           art.rect(ctx, Math.round(Math.cos(a) * 36) - 1, Math.round(32 + Math.sin(a) * 32) - 1, 2, 2, fx.color);
+        }
+        ctx.restore();
+      } else if (char.outfitPrestige) {
+        ctx.save();
+        ctx.globalAlpha = 0.36;
+        for (let i = 0; i < 6; i++) {
+          const a = i * (Math.PI * 2 / 6) + 0.3;
+          art.rect(ctx, Math.round(Math.cos(a) * 33) - 1, Math.round(44 + Math.sin(a) * 27) - 1, 2, 2, fx.glow || fx.color);
         }
         ctx.restore();
       } else {
@@ -319,6 +533,8 @@
 
     // brilho de fogueira
     art.glow(ctx, -30, 85, 55, "#ff9d54", 0.1);
+
+    if (char.outfitPrestige) drawPrestigeBust(ctx, char);
 
     // Coroa de luz do traje final, desenhada depois do corpo.
     if (char.outfitFinal && char.outfitFx) {

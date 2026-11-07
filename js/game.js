@@ -29,7 +29,8 @@
     campContext: null,
     nearNpc: null,
     enchantNpc: null,
-    deathTimer: 0
+    deathTimer: 0,
+    mapCutscene: null
   };
   TP.state = state;
 
@@ -178,6 +179,8 @@
     campContinue: campContinue,
     chooseEnding: chooseEnding,
     continueToAct2: continueToAct2,
+    chooseCharacterAfterAct2: chooseCharacterAfterAct2,
+    skipLevelCutscene: skipLevelCutscene,
     newJourney: newJourney
   };
   TP.game = G;
@@ -225,6 +228,8 @@
       updatePlaying();
     } else if (state.mode === "dying") {
       updateDying();
+    } else if (state.mode === "mapCutscene") {
+      updateMapCutscene();
     } else if (state.mode === "cutscene") {
       updateParticles();
       if (state.level) updateCamera();
@@ -241,7 +246,7 @@
       }
     }
 
-    if (state.level && state.mode !== "camp" && state.mode !== "enchant" && state.mode !== "ending" && state.mode !== "endingText" && state.mode !== "title") {
+    if (state.level && state.mode !== "camp" && state.mode !== "enchant" && state.mode !== "ending" && state.mode !== "endingText" && state.mode !== "title" && state.mode !== "mapCutscene") {
       if (state.mode === "playing") TP.ui.setHUD({ player: state.player, run: state.run, level: state.level });
       else TP.ui.setHUD({ player: state.player, run: state.run, level: state.level });
     }
@@ -271,13 +276,14 @@
     state.campContext = null;
     state.nearNpc = null;
     state.endingTone = "dark";
+    state.mapCutscene = null;
     state.camera.x = 0;
     state.camera.shake = 0;
     TP.ui.showHUD(false);
     TP.ui.showTouch(false);
     TP.ui.showGameOver(false);
     TP.ui.hideDialogue(false);
-    TP.ui.hideLevelCard();
+    TP.ui.hideLevelCutscene();
     document.body.classList.remove("playing");
   }
 
@@ -380,6 +386,7 @@
       deaths: 0,
       quests: createQuestState(),
       enchantments: TP.ui.enchantmentsFor(char.id),
+      npcPositions: {},
       startedAt: state.time,
       ending: null,
       act1Ending: null,
@@ -419,6 +426,7 @@
     if (!run) return;
     run.levelIndex = index;
     state.mode = "cutscene";
+    state.mapCutscene = null;
     clearFlow();
     state.projectiles = [];
     state.particles = [];
@@ -431,34 +439,74 @@
     state.enchantNpc = null;
     buildLevel(index);
     TP.ui.hideScreens();
-    TP.ui.showHUD(true);
+    TP.ui.showHUD(false);
     TP.ui.showGameOver(false);
     TP.ui.hideDialogue(false);
+    TP.ui.hideLevelCutscene();
     TP.ui.invalidateHUD();
     TP.audio.startTheme(index);
     document.body.classList.add("playing");
 
     if (restart) {
       state.mode = "playing";
-      TP.ui.hideLevelCard();
+      TP.ui.showHUD(true);
       TP.ui.showTouch(true);
       return;
     }
 
     TP.ui.showTouch(false);
     const level = state.level;
-    const token = state.level.token;
-    TP.ui.showLevelCard(level, function () {
-      if (!state.level || state.level.token !== token) return;
-      state.mode = "dialogue";
-      const lines = formatLines(level.def.intro, run);
-      TP.ui.showDialogue(lines, function () {
-        if (!state.level || state.level.token !== token) return;
-        state.mode = "playing";
-        TP.ui.showTouch(true);
-        TP.ui.hideDialogue(false);
-      });
+    const token = level.token;
+    const reduceMotion = !!(window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches);
+    const from = state.camera.x;
+    const to = reduceMotion ? from : clamp(level.arena.start - W * 0.72, 0, Math.max(0, level.width - W));
+    state.mode = "mapCutscene";
+    state.mapCutscene = {
+      token: token,
+      t: 0,
+      duration: reduceMotion ? 90 : 300,
+      from: from,
+      to: to
+    };
+    TP.ui.showLevelCutscene(level);
+  }
+
+  function finishMapCutscene() {
+    const cut = state.mapCutscene;
+    if (!cut) return;
+    state.mapCutscene = null;
+    TP.ui.hideLevelCutscene();
+    const level = state.level;
+    const run = state.run;
+    if (!level || !run || level.token !== cut.token) return;
+    TP.ui.showHUD(true);
+    state.mode = "dialogue";
+    const lines = formatLines(level.def.intro, run);
+    TP.ui.showDialogue(lines, function () {
+      if (!state.level || state.level.token !== cut.token) return;
+      state.mode = "playing";
+      TP.ui.showTouch(true);
+      TP.ui.hideDialogue(false);
     });
+  }
+
+  function skipLevelCutscene() {
+    if (state.mode !== "mapCutscene") return;
+    finishMapCutscene();
+  }
+
+  function updateMapCutscene() {
+    const cut = state.mapCutscene;
+    if (!cut) return;
+    if (TP.input.advancePressed) {
+      finishMapCutscene();
+      return;
+    }
+    cut.t++;
+    const p = Math.min(1, cut.t / cut.duration);
+    const eased = 0.5 - Math.cos(Math.PI * p) / 2;
+    state.camera.x = cut.from + (cut.to - cut.from) * eased;
+    if (cut.t >= cut.duration) finishMapCutscene();
   }
 
   function formatLines(lines, run) {
@@ -471,6 +519,86 @@
      CONSTRUÇÃO DAS FASES
      ============================================================ */
   let levelToken = 0;
+
+  function npcSpotFree(level, x, taken) {
+    const w = 20;
+    const center = x + w / 2;
+    if (x < 110) return false;
+    if (x + w > level.width - 36) return false;
+    if (x + w > level.arena.start - 24) return false;
+    let grounded = false;
+    for (let i = 0; i < level.grounds.length; i++) {
+      const g = level.grounds[i];
+      if (x >= g.x + 18 && x + w <= g.x + g.w - 18) { grounded = true; break; }
+    }
+    if (!grounded) return false;
+    for (let i = 0; i < level.spikes.length; i++) {
+      const s = level.spikes[i];
+      if (x + w + 28 > s.x && x - 28 < s.x + s.w) return false;
+    }
+    for (let i = 0; i < level.checkpoints.length; i++) {
+      const c = level.checkpoints[i];
+      if (Math.abs(center - (c.x + 8)) < 90) return false;
+    }
+    if (level.questTarget && Math.abs(center - (level.questTarget.x + level.questTarget.w / 2)) < 150) return false;
+    for (let i = 0; i < level.memories.length; i++) {
+      if (Math.abs(center - level.memories[i].x) < 34) return false;
+    }
+    for (let i = 0; i < level.heals.length; i++) {
+      if (Math.abs(center - level.heals[i].x) < 34) return false;
+    }
+    for (let i = 0; i < taken.length; i++) {
+      if (Math.abs(x - taken[i]) < 180) return false;
+    }
+    for (let i = 0; i < level.enemies.length; i++) {
+      const e = level.enemies[i];
+      if (Math.abs(center - (e.x + e.w / 2)) < 50) return false;
+    }
+    return true;
+  }
+
+  function pickNpcX(level, taken) {
+    const segments = level.grounds.filter(function (g) {
+      return g.x + g.w > 150 && g.x < level.arena.start - 40;
+    });
+    if (!segments.length) return null;
+    for (let attempt = 0; attempt < 120; attempt++) {
+      const g = segments[irand(0, segments.length - 1)];
+      const min = g.x + 22;
+      const max = g.x + g.w - 22 - 20;
+      if (max <= min) continue;
+      const x = Math.round(rand(min, max));
+      if (npcSpotFree(level, x, taken)) return x;
+    }
+    return null;
+  }
+
+  function assignNpcPositions(level, run) {
+    if (!run.npcPositions) run.npcPositions = {};
+    const key = level.def.id;
+    const stored = run.npcPositions[key];
+    if (stored) {
+      if (level.questNpc && Number.isFinite(stored.quest)) level.questNpc.x = stored.quest;
+      if (level.merchantNpc && Number.isFinite(stored.merchant)) level.merchantNpc.x = stored.merchant;
+      return;
+    }
+    const taken = [];
+    if (level.questNpc) {
+      const x = pickNpcX(level, taken);
+      if (x != null) level.questNpc.x = x;
+      taken.push(level.questNpc.x);
+    }
+    if (level.merchantNpc) {
+      const x = pickNpcX(level, taken);
+      if (x != null) level.merchantNpc.x = x;
+      taken.push(level.merchantNpc.x);
+    }
+    run.npcPositions[key] = {
+      quest: level.questNpc ? level.questNpc.x : null,
+      merchant: level.merchantNpc ? level.merchantNpc.x : null
+    };
+  }
+
   function buildLevel(index) {
     const def = DATA.LEVELS[index];
     const run = state.run;
@@ -598,6 +726,8 @@
       level.enemies.push(createEnemy(e, index, diff));
     });
     if (questTarget) level.enemies.push(questTarget);
+
+    assignNpcPositions(level, run);
 
     // Memórias já coletadas não voltam a brilhar.
     memories.forEach(function (m) { if (m.taken) m.taken = true; });
@@ -735,6 +865,9 @@
     run.char.outfitBonus = clothed.outfitBonus;
     run.char.outfitFx = clothed.outfitFx;
     run.char.outfitFinal = clothed.outfitFinal;
+    run.char.outfitPrestige = clothed.outfitPrestige;
+    run.char.outfitSkin = clothed.outfitSkin;
+    run.char.outfitStyle = clothed.outfitStyle;
     run.char.outfitDesc = clothed.outfitDesc;
     run.char.outfitPrice = clothed.outfitPrice;
     run.char.maxHp = clothed.maxHp;
@@ -1053,6 +1186,24 @@
     TP.ui.resetEnding();
     TP.ui.showGameOver(false);
     startLevel(5, false);
+  }
+
+  function chooseCharacterAfterAct2() {
+    const run = state.run;
+    if (!run) return;
+    saveWallet(run);
+    persistArmory(run);
+    resetFlowState();
+    state.selectedChar = null;
+    state.selectedDiff = null;
+    TP.ui.selectedChar = null;
+    TP.ui.selectedDiff = null;
+    state.mode = "characters";
+    TP.ui.resetEnding();
+    showCharacters();
+    TP.ui.updateDifficultySelection(null);
+    TP.ui.updateDiffHeroNote();
+    if (TP.audio && TP.audio.startTheme) TP.audio.startTheme(0);
   }
 
   function newJourney() {

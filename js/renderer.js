@@ -57,7 +57,8 @@
     const level = state.level;
     const t = state.time;
     const cam = state.camera.x;
-    const shake = state.camera.shake || 0;
+    const cinematic = state.mode === "mapCutscene";
+    const shake = cinematic ? 0 : (state.camera.shake || 0);
     const sx = shake ? (Math.random() * 2 - 1) * shake : 0;
     const sy = shake ? (Math.random() * 2 - 1) * shake : 0;
 
@@ -69,46 +70,49 @@
     drawGround(ctx, level, t);
     drawArenaGate(ctx, level, state, t);
     drawSpikes(ctx, level, t);
-    drawCheckpoints(ctx, level, t);
-    drawPickups(ctx, level, t);
 
-    // NPC da tarefa
-    if (level.questNpc) {
-      const qs = state.run && state.run.quests ? state.run.quests[level.questNpc.questId] : null;
-      TP.sprites.drawNpc(ctx, level.questNpc, t, qs);
+    if (!cinematic) {
+      drawCheckpoints(ctx, level, t);
+      drawPickups(ctx, level, t);
+
+      // NPC da tarefa
+      if (level.questNpc) {
+        const qs = state.run && state.run.quests ? state.run.quests[level.questNpc.questId] : null;
+        TP.sprites.drawNpc(ctx, level.questNpc, t, qs);
+      }
+
+      // Mercador de encantamentos
+      if (level.merchantNpc) {
+        TP.sprites.drawNpc(ctx, level.merchantNpc, t, null);
+      }
+
+      // inimigos
+      for (let i = 0; i < level.enemies.length; i++) {
+        const e = level.enemies[i];
+        if (!e.dead) TP.sprites.drawEnemy(ctx, e, level.def.theme);
+      }
+
+      // chefe
+      if (level.boss && !level.boss.dead) TP.sprites.drawBoss(ctx, level.boss, t);
+
+      // projéteis atrás do jogador quando são "shock"
+      for (let i = 0; i < state.projectiles.length; i++) {
+        const p = state.projectiles[i];
+        if (p.kind === "shock") TP.sprites.drawProjectile(ctx, p, t);
+      }
+
+      // jogador
+      if (state.player && !state.player.dead) TP.sprites.drawPlayer(ctx, state.player, t);
+
+      // projéteis na frente
+      for (let i = 0; i < state.projectiles.length; i++) {
+        const p = state.projectiles[i];
+        if (p.kind !== "shock") TP.sprites.drawProjectile(ctx, p, t);
+      }
+
+      drawParticles(ctx, state);
+      drawFloaters(ctx, state);
     }
-
-    // Mercador de encantamentos
-    if (level.merchantNpc) {
-      TP.sprites.drawNpc(ctx, level.merchantNpc, t, null);
-    }
-
-    // inimigos
-    for (let i = 0; i < level.enemies.length; i++) {
-      const e = level.enemies[i];
-      if (!e.dead) TP.sprites.drawEnemy(ctx, e, level.def.theme);
-    }
-
-    // chefe
-    if (level.boss && !level.boss.dead) TP.sprites.drawBoss(ctx, level.boss, t);
-
-    // projéteis atrás do jogador quando são "shock"
-    for (let i = 0; i < state.projectiles.length; i++) {
-      const p = state.projectiles[i];
-      if (p.kind === "shock") TP.sprites.drawProjectile(ctx, p, t);
-    }
-
-    // jogador
-    if (state.player && !state.player.dead) TP.sprites.drawPlayer(ctx, state.player, t);
-
-    // projéteis na frente
-    for (let i = 0; i < state.projectiles.length; i++) {
-      const p = state.projectiles[i];
-      if (p.kind !== "shock") TP.sprites.drawProjectile(ctx, p, t);
-    }
-
-    drawParticles(ctx, state);
-    drawFloaters(ctx, state);
 
     // detalhes de primeiro plano
     drawForeground(ctx, level, cam, t);
@@ -118,7 +122,7 @@
     drawWeather(ctx, level, t, cam);
     drawScreenLighting(ctx, state);
 
-    if (state.bossIntro && state.bossIntro > 0) {
+    if (!cinematic && state.bossIntro && state.bossIntro > 0) {
       drawBossIntro(ctx, level, state);
     }
   }
