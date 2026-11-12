@@ -43,8 +43,12 @@ function logLevelEnv(value: string | undefined, fallback: LogLevel): LogLevel {
 export function loadConfig(env: NodeJS.ProcessEnv = process.env): AppConfig {
   const databaseUrl = String(env.DATABASE_URL || "").trim();
   if (!databaseUrl) {
-    throw new Error(
-      "DATABASE_URL não configurada. Defina a connection string do Postgres do Render no ambiente."
+    // A API sobe mesmo sem banco: o site e o /health continuam respondendo
+    // e o /api/health avisa que o banco esta indisponivel. Sem isso, o
+    // processo morre no boot e o servico inteiro fica fora do ar.
+    console.warn(
+      "[api] DATABASE_URL nao configurada: as rotas de conta e save vao falhar " +
+        "enquanto o Postgres nao for configurado."
     );
   }
 

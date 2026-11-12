@@ -210,6 +210,15 @@ export function createApp(options: CreateAppOptions) {
 
   // Readiness: testa o banco de verdade.
   const readiness = asyncHandler(async (_req, res) => {
+    if (!config.databaseUrl) {
+      sendError(
+        res,
+        503,
+        "Banco de dados não configurado: defina DATABASE_URL no ambiente do serviço.",
+        "database_unavailable"
+      );
+      return;
+    }
     try {
       await ping(pool);
       res.json({

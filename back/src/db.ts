@@ -7,7 +7,7 @@ let sharedPool: Pool | null = null;
 export function createPool(): Pool {
   const config = getConfig();
   const pool = new Pool({
-    connectionString: config.databaseUrl,
+    connectionString: config.databaseUrl || undefined,
     ssl: config.databaseSsl ? { rejectUnauthorized: false } : undefined,
     max: 10,
     idleTimeoutMillis: 30_000,
@@ -24,8 +24,19 @@ export function getPool(): Pool {
   return sharedPool;
 }
 
-export async function ensureSchema(pool: Pool = getPool()): Promise<void> {
+/** Verdadeiro quando existe uma connection string configurada. */
+export function hasDatabase(): boolean {
+  return Boolean(getConfig().databaseUrl);
+}
+
+/** Aplica o schema. Devolve false quando nao ha banco configurado. */
+export async function ensureSchema(pool: Pool = getPool()): Promise<boolean> {
+  if (!hasDatabase()) {
+    console.warn("[api] schema nao aplicado: DATABASE_URL nao configurada.");
+    return false;
+  }
   await pool.query(SCHEMA_SQL);
+  return true;
 }
 
 export async function checkDatabase(pool: Pool = getPool()): Promise<void> {

@@ -1,13 +1,20 @@
 import { createApp } from "./app";
 import { getConfig } from "./config";
-import { closePool, ensureSchema, getPool } from "./db";
+import { closePool, ensureSchema, getPool, hasDatabase } from "./db";
 import { resolveFrontDir } from "./static";
 
 async function main(): Promise<void> {
   const config = getConfig();
+  console.log(
+    hasDatabase()
+      ? "[api] Postgres configurado."
+      : "[api] ATENCAO: sem DATABASE_URL; o site sobe, mas contas e saves nao funcionam."
+  );
   if (config.autoMigrate) {
-    await ensureSchema();
-    console.log("[api] schema verificado no Postgres.");
+    const applied = await ensureSchema();
+    if (applied) {
+      console.log("[api] schema verificado no Postgres.");
+    }
   }
 
   const frontDir = config.serveFront ? resolveFrontDir(config.frontDir) : null;

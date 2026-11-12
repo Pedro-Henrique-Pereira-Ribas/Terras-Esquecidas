@@ -1,8 +1,12 @@
 import { closePool, ensureSchema } from "./db";
 
 async function main(): Promise<void> {
-  await ensureSchema();
-  console.log("[api] schema aplicado com sucesso.");
+  const applied = await ensureSchema();
+  console.log(
+    applied
+      ? "[api] schema aplicado com sucesso."
+      : "[api] schema nao aplicado: configure o DATABASE_URL."
+  );
 }
 
 main()

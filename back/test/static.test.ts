@@ -111,6 +111,25 @@ test("a raiz da API lista o serviço", async () => {
   assert.equal(response.body.service, "terra-perdida-api");
 });
 
+test("sem DATABASE_URL o serviço sobe e avisa no health", async () => {
+  const db = newDb();
+  db.public.none(SCHEMA_SQL);
+  const adapter = db.adapters.createPg();
+  const pool = new adapter.Pool() as unknown as Pool;
+  const withoutDb = createApp({
+    pool,
+    config: { ...config, databaseUrl: "" },
+    frontDir: null
+  });
+
+  const liveness = await request(withoutDb).get("/health");
+  assert.equal(liveness.status, 200, "o serviço precisa responder mesmo sem banco");
+
+  const readiness = await request(withoutDb).get("/api/health");
+  assert.equal(readiness.status, 503);
+  assert.equal(readiness.body.error.code, "database_unavailable");
+});
+
 test("encontrar a pasta front do repositorio", () => {
   const found = resolveFrontDir();
   assert.ok(found, "a pasta front/ deveria ser encontrada a partir de back/");
