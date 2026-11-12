@@ -7,6 +7,9 @@ package-lock.json
 back/dist/
 dist/
 
+# Site montado para publicar
+_site/
+
 # Variáveis de ambiente (nunca commitar segredos)
 .env
 .env.*

@@ -4,6 +4,7 @@
   "private": true,
   "description": "Terra Perdida — plataforma 2D em pixel art, com arte e áudio procedurais.",
   "scripts": {
+    "build": "node scripts/build-static.mjs",
     "serve": "node scripts/static-server.mjs front 4173",
     "dev": "node scripts/dev.mjs",
     "dev:front": "node scripts/static-server.mjs front 4173",
