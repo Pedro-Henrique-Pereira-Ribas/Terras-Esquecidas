@@ -144,9 +144,9 @@ inteiro saia do ar por causa de uma variável de ambiente faltando.
 
 ### Banco no Neon
 
-O projeto usa o Postgres gerenciado do [Neon](https://neon.tech) (plano gratuito).
-Pegue a connection string em **Neon Console → Connection Details → Pooled connection** e
-use no `DATABASE_URL`:
+O projeto usa o Postgres gerenciado do [Neon](https://neon.tech) (plano gratuito),
+no projeto **`terra-perdida`**. Pegue a connection string em
+**Neon Console → Connection Details → Pooled connection** e use no `DATABASE_URL`:
 
 ```text
 postgresql://neondb_owner:SENHA@ep-xxxx-pooler.us-east-2.aws.neon.tech/neondb?sslmode=verify-full

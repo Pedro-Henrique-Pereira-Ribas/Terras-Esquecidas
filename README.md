@@ -174,7 +174,11 @@ Site e API são publicados como **dois recursos separados** no Render, com o ban
 | --- | --- | --- |
 | Jogo | Static Site no Render, pasta `front/` | `https://terras-esquecidas.onrender.com` |
 | API | Web Service no Render, pasta `back/` | `https://terra-perdida-api.onrender.com` |
-| Banco | Postgres gerenciado no Neon | connection string no painel do Neon |
+| Banco | Postgres gerenciado no Neon, projeto `terra-perdida` | connection string no painel do Neon |
+
+O Web Service também serve a pasta `front/`, então `https://terra-perdida-api.onrender.com`
+entrega o jogo completo na mesma origem da API — é o endereço de reserva caso o
+Static Site demore a publicar.
 
 O frontend chama a API pela URL em `front/js/config.js` (`apiBase`), em outra origem — por isso a API libera a origem do site em `CORS_ORIGIN`, que o `render.yaml` já define. Se a API for movida para a mesma origem do site, é só deixar `apiBase` vazio e apagar a origem do site da lista de CORS.
 
