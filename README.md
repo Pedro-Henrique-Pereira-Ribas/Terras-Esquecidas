@@ -183,17 +183,15 @@ Static Site demore a publicar.
 O frontend chama a API pela URL em `front/js/config.js` (`apiBase`), em outra origem — por isso a API libera a origem do site em `CORS_ORIGIN`, que o `render.yaml` já define. Se a API for movida para a mesma origem do site, é só deixar `apiBase` vazio e apagar a origem do site da lista de CORS.
 
 1. No Render, escolha **New → Blueprint** e conecte este repositório.
-2. O `render.yaml` cria o Web Service `terras-esquecidas-back`.
-3. Em **Environment**, cole a `DATABASE_URL` do Neon (o Blueprint deixa a variável como `sync: false`).
-4. Crie o **Static Site** com estas settings:
-   - Root Directory: `/` (a raiz do repositório)
-   - Publish Path: `front`
-   - (ou Build Command `npm run build` com Publish Path `_site`)
-5. Aguarde os deploys e confira `GET /health` na URL da API.
+2. O `render.yaml` cria os dois recursos: o Web Service `terras-esquecidas-back` e o Static Site `terras-esquecidas`.
+3. Em **Environment** do Web Service, cole a `DATABASE_URL` do Neon (o Blueprint deixa a variável como `sync: false`).
+4. Aguarde os deploys e confira `GET /health` na URL da API.
 
-O *Publish Path* precisa apontar para `front/`. Se ficar vazio, o Static Site publica
-o repositório inteiro — o `/` passa a responder com a cópia antiga do site que
-sobrou no cache do CDN, e o `config.js` continua apontando para a API errada.
+O Static Site usa `npm run build` (que monta a pasta `_site/` copiando `front/`,
+sem dependência nenhuma) e publica o resultado. O Web Service também serve a
+pasta `front/`, então `https://terras-esquecidas-back.onrender.com` entrega o
+jogo completo na mesma origem da API — é o endereço de reserva caso o Static
+Site demore a publicar.
 
 Instruções completas, endpoints, variáveis de ambiente e exemplos de `curl` estão em [`back/README.md`](back/README.md).
 

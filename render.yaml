@@ -1,9 +1,12 @@
 # Blueprint do Render para o Terra Perdida.
 # No Render: New + Blueprint, conecte este repositório e confirme os recursos.
 #
-# A API é um Web Service Node e o banco é um Postgres gerenciado no Neon
-# (plano gratuito). O site é um Static Site separado, publicado a partir da
-# pasta front/.
+# Dois recursos:
+# - a API, um Web Service Node que também serve a pasta front/
+# - o site, um Static Site que publica a pasta _site/ (mesmo conteúdo)
+#
+# O banco é um Postgres gerenciado no Neon (plano gratuito): cole a
+# DATABASE_URL em Dashboard > Environment do Web Service.
 services:
   - type: web
     name: terras-esquecidas-back
@@ -15,7 +18,7 @@ services:
     buildCommand: npm --prefix back ci && npm --prefix back run build
     startCommand: npm --prefix back start
     healthCheckPath: /health
-    autoDeploy: true
+    autoDeployTrigger: commit
     envVars:
       - key: NODE_VERSION
         value: "20.19.0"
@@ -45,3 +48,16 @@ services:
         value: "1"
       - key: LOG_LEVEL
         value: "info"
+
+  - type: web
+    name: terras-esquecidas
+    runtime: static
+    rootDir: .
+    # npm run build copia a pasta front/ para _site/ (scripts/build-static.mjs),
+    # sem nenhuma dependência. O Static Site publica o resultado.
+    buildCommand: npm run build
+    staticPublishPath: ./_site
+    autoDeployTrigger: commit
+    envVars:
+      - key: NODE_VERSION
+        value: "20.19.0"
