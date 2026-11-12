@@ -113,18 +113,41 @@ frontend (em `http://localhost:4173`) juntos.
 
 | Variável | Padrão | Descrição |
 | --- | --- | --- |
-| `DATABASE_URL` | obrigatória | Connection string do Postgres |
-| `DATABASE_SSL` | `false` | `true` para conexões externas que exigem SSL |
+| `DATABASE_URL` | obrigatória | Connection string do Postgres (Neon) |
+| `DATABASE_SSL` | `false` | `true` para o Neon e outras conexões externas com TLS |
 | `PORT` | `3001` | Porta HTTP (o Render define automaticamente) |
 | `HOST` | `0.0.0.0` | Interface de escuta |
 | `CORS_ORIGIN` | `*` | Origens permitidas, separadas por vírgula |
 | `SESSION_DAYS` | `30` | Validade da sessão em dias |
 | `BCRYPT_ROUNDS` | `12` | Custo do bcrypt (4 a 15) |
-| `AUTO_MIGRATE` | `true` | Aplica o schema ao iniciar |
+| `AUTO_MIGRATE` | `true` | Aplica o schema e as migrações ao iniciar |
 | `SERVE_FRONT` | `true` | Serve o frontend estático na mesma porta |
 | `FRONT_DIR` | automático | Pasta do frontend; vazio = detecta `../front` |
 | `TRUST_PROXY` | `1` | Quantidade de proxies confiáveis à frente do app |
 | `LOG_LEVEL` | `info` | Log de requisições: `silent`, `info` ou `debug` |
+
+Sem `DATABASE_URL` a API **ainda sobe**: o `/health` responde 200 e o `/api/health`
+responde 503 avisando que o banco não foi configurado. Isso evita que o serviço
+inteiro saia do ar por causa de uma variável de ambiente faltando.
+
+### Banco no Neon
+
+O projeto usa o Postgres gerenciado do [Neon](https://neon.tech) (plano gratuito).
+Pegue a connection string em **Neon Console → Connection Details → Pooled connection** e
+use no `DATABASE_URL`:
+
+```text
+postgresql://neondb_owner:SENHA@ep-xxxx-pooler.us-east-2.aws.neon.tech/neondb?sslmode=verify-full
+```
+
+Dois cuidados:
+
+- Use a conexão **Pooled** (o host contém `-pooler`): é ela que aguenta many connections.
+- Use `sslmode=verify-full`: o `node-postgres` não implementa `channel_binding=require`,
+  que a string padrão do Neon traz e quebraria a autenticação.
+
+O schema é aplicado sozinho no boot (`AUTO_MIGRATE=true`) e as migrações rodam
+sem perder as contas já existentes.
 
 Em produção o frontend é servido pela própria API, então as chamadas saem na
 mesma origem e o CORS nem é aplicado. O `CORS_ORIGIN` só importa quando o
@@ -155,11 +178,10 @@ npm run api:start
 
 ## Deploy no Render
 
-A API é publicada como um **Web Service** separado do site. O repositório inclui
-um Blueprint em `render.yaml` que cria:
+A API é publicada como um **Web Service** do Render e o banco é o Postgres do
+Neon. O repositório inclui um Blueprint em `render.yaml` que cria:
 
 - **Web Service** `terra-perdida-api` (Node, `rootDir: .`)
-- **Postgres** `terra-perdida-db`
 
 O `rootDir` é a **raiz do repositório**, e não `back/`, porque o serviço
 também serve a pasta `front/` (o site fica disponível também na URL da API,
@@ -174,9 +196,11 @@ healthCheckPath: /health
 Passos:
 
 1. No Render, escolha **New → Blueprint** e conecte este repositório.
-2. Confirme a criação dos dois recursos.
-3. Aguarde o deploy. O health check usa `GET /health`, que não depende do banco.
-4. A URL pública do Web Service é `https://terra-perdida-api.onrender.com`.
+2. Confirme a criação do Web Service.
+3. Em **Environment**, cole a `DATABASE_URL` do Neon. O Blueprint já deixa
+   a variável como `sync: false`, então o Render não sobrescreve o valor.
+4. Aguarde o deploy. O health check usa `GET /health`, que não depende do banco.
+5. A URL pública do Web Service é `https://terra-perdida-api.onrender.com`.
 
 O site é um **Static Site** separado, com *Publish Path* `.` apontando para a
 pasta `front/`. Como as chamadas `/api/*` saem de outra origem, a API precisa
@@ -196,13 +220,13 @@ e cai para o save local nesse intervalo.
 
 ### Deploy manual (sem Blueprint)
 
-1. Crie um **Postgres** no Render e copie a **Internal Database URL**.
-2. Crie um **Web Service** com:
+1. Crie um **Web Service** no Render apontando para este repositório.
+2. Configure:
    - Root Directory: `/` (a raiz do repositório)
    - Build Command: `npm --prefix back ci && npm --prefix back run build`
    - Start Command: `npm --prefix back start`
    - Health Check Path: `/health`
-3. Adicione `DATABASE_URL` com a URL interna e `DATABASE_SSL=false`.
+3. Adicione `DATABASE_URL` (Neon) e `DATABASE_SSL=true`.
 4. Adicione `CORS_ORIGIN` com a origem do site.
 5. Faça o deploy.
 

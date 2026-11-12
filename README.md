@@ -166,19 +166,21 @@ O canvas tem resolução interna de **640 × 360** e é ampliado preservando 16:
 
 ## Publicação
 
-Site e API são publicados como **dois recursos separados** no Render:
+Site e API são publicados como **dois recursos separados** no Render, com o banco no Neon:
 
-| Recurso | Tipo | URL |
+| Recurso | Onde | URL |
 | --- | --- | --- |
-| Jogo | Static Site (pasta `front/`) | `https://terras-esquecidas.onrender.com` |
-| API | Web Service (pasta `back/`) | `https://terra-perdida-api.onrender.com` |
+| Jogo | Static Site no Render, pasta `front/` | `https://terras-esquecidas.onrender.com` |
+| API | Web Service no Render, pasta `back/` | `https://terra-perdida-api.onrender.com` |
+| Banco | Postgres gerenciado no Neon | connection string no painel do Neon |
 
-O frontend chama a API pela URL em `front/js/config.js` (`apiBase`), em outra origem — por isso a API precisa liberar a origem do site em `CORS_ORIGIN`, que o `render.yaml` já define. Se a API for movida para a mesma origem do site, é só deixar `apiBase` vazio e apagar a origem do site da lista de CORS.
+O frontend chama a API pela URL em `front/js/config.js` (`apiBase`), em outra origem — por isso a API libera a origem do site em `CORS_ORIGIN`, que o `render.yaml` já define. Se a API for movida para a mesma origem do site, é só deixar `apiBase` vazio e apagar a origem do site da lista de CORS.
 
 1. No Render, escolha **New → Blueprint** e conecte este repositório.
-2. O `render.yaml` cria o Web Service `terra-perdida-api` e o Postgres `terra-perdida-db`.
-3. Crie também o **Static Site** apontando para a pasta `front/`, com *Publish Path* `.`.
-4. Aguarde os dois deploys e confira `GET /health` na URL da API.
+2. O `render.yaml` cria o Web Service `terra-perdida-api`.
+3. Em **Environment**, cole a `DATABASE_URL` do Neon (o Blueprint deixa a variável como `sync: false`).
+4. Crie o **Static Site** apontando para a pasta `front/`, com *Publish Path* `.`.
+5. Aguarde os deploys e confira `GET /health` na URL da API.
 
 Instruções completas, endpoints, variáveis de ambiente e exemplos de `curl` estão em [`back/README.md`](back/README.md).
 
