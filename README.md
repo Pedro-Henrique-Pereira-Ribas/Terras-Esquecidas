@@ -32,7 +32,7 @@ O jogo abre direto no título e pode ser jogado como **Visitante**, sem criar co
 
 O `localStorage` continua sendo usado como cache e como fallback: se o servidor estiver fora ou demorar demais, o jogo avisa e permite criar/entrar com uma conta local, sem perder o que já estava no navegador. Para voltar depois, use a aba **Entrar** com o mesmo nome e chave; o botão **Conta** no título permite trocar de perfil ou voltar a jogar sem conta.
 
-O site e a API são publicados no mesmo serviço: o backend serve a pasta `front/` na mesma porta, então o jogo chama `/api/*` na própria origem — sem CORS e sem ida e volta entre domínios.
+O site é publicado como Static Site e a API como Web Service, em domínios diferentes. Por isso a API libera a origem do site em `CORS_ORIGIN` e o frontend aponta para ela em `front/js/config.js`.
 
 A API e as instruções de deploy ficam em [`back/README.md`](back/README.md). O Blueprint do Render está em [`render.yaml`](render.yaml).
 
@@ -166,14 +166,19 @@ O canvas tem resolução interna de **640 × 360** e é ampliado preservando 16:
 
 ## Publicação
 
-Site e API são publicados juntos no Render, no mesmo Web Service: o backend Express serve a pasta `front/` na mesma porta da API. O `render.yaml` usa a raiz do repositório como `rootDir` porque o serviço precisa da pasta `front/` em runtime.
+Site e API são publicados como **dois recursos separados** no Render:
+
+| Recurso | Tipo | URL |
+| --- | --- | --- |
+| Jogo | Static Site (pasta `front/`) | `https://terras-esquecidas.onrender.com` |
+| API | Web Service (pasta `back/`) | `https://terra-perdida-api.onrender.com` |
+
+O frontend chama a API pela URL em `front/js/config.js` (`apiBase`), em outra origem — por isso a API precisa liberar a origem do site em `CORS_ORIGIN`, que o `render.yaml` já define. Se a API for movida para a mesma origem do site, é só deixar `apiBase` vazio e apagar a origem do site da lista de CORS.
 
 1. No Render, escolha **New → Blueprint** e conecte este repositório.
 2. O `render.yaml` cria o Web Service `terra-perdida-api` e o Postgres `terra-perdida-db`.
-3. Aguarde o deploy e confira `GET /health`.
-4. Abra a URL pública do serviço: é a mesma que responde o site e a API.
-
-O frontend usa a própria origem (`apiBase` vazio em `front/js/config.js`), então não é preciso configurar CORS para produção. Se a API for movida para outro serviço, ajuste `apiBase` com a URL completa.
+3. Crie também o **Static Site** apontando para a pasta `front/`, com *Publish Path* `.`.
+4. Aguarde os dois deploys e confira `GET /health` na URL da API.
 
 Instruções completas, endpoints, variáveis de ambiente e exemplos de `curl` estão em [`back/README.md`](back/README.md).
 

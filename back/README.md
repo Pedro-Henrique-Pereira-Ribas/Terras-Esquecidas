@@ -155,14 +155,15 @@ npm run api:start
 
 ## Deploy no Render
 
-O repositório inclui um Blueprint em `render.yaml` que cria:
+A API é publicada como um **Web Service** separado do site. O repositório inclui
+um Blueprint em `render.yaml` que cria:
 
 - **Web Service** `terra-perdida-api` (Node, `rootDir: .`)
 - **Postgres** `terra-perdida-db`
 
 O `rootDir` é a **raiz do repositório**, e não `back/`, porque o serviço
-precisa da pasta `front/` em runtime para servir o site. Por isso os comandos
-apontam para `back/` com `--prefix`:
+também serve a pasta `front/` (o site fica disponível também na URL da API,
+como redundância). Por isso os comandos usam `--prefix`:
 
 ```yaml
 buildCommand: npm --prefix back ci && npm --prefix back run build
@@ -175,11 +176,23 @@ Passos:
 1. No Render, escolha **New → Blueprint** e conecte este repositório.
 2. Confirme a criação dos dois recursos.
 3. Aguarde o deploy. O health check usa `GET /health`, que não depende do banco.
-4. A URL pública do Web Service é o site do jogo: `https://<servico>.onrender.com`.
+4. A URL pública do Web Service é `https://terra-perdida-api.onrender.com`.
 
-O frontend usa a própria origem (`apiBase` vazio em `front/js/config.js`),
-então nenhuma configuração extra é necessária. Se a API for movida para outro
-serviço, preencha `apiBase` com a URL completa.
+O site é um **Static Site** separado, com *Publish Path* `.` apontando para a
+pasta `front/`. Como as chamadas `/api/*` saem de outra origem, a API precisa
+liberar a origem do site em `CORS_ORIGIN`:
+
+```text
+https://terras-esquecidas.onrender.com,http://localhost:4173,http://127.0.0.1:4173
+```
+
+O `render.yaml` já vem com essa lista. Para publicar tudo na mesma origem
+(site servido pela própria API), é só deixar `apiBase` vazio em
+`front/js/config.js` e usar a URL do Web Service como endereço do jogo.
+
+O plano gratuito do Render pode hibernar o serviço por inatividade. O primeiro
+acesso depois da hibernação pode demorar alguns segundos; o frontend tem timeout
+e cai para o save local nesse intervalo.
 
 ### Deploy manual (sem Blueprint)
 
@@ -190,11 +203,8 @@ serviço, preencha `apiBase` com a URL completa.
    - Start Command: `npm --prefix back start`
    - Health Check Path: `/health`
 3. Adicione `DATABASE_URL` com a URL interna e `DATABASE_SSL=false`.
-4. Faça o deploy.
-
-O plano gratuito do Render pode hibernar o serviço por inatividade. O primeiro
-acesso depois da hibernação pode demorar alguns segundos; o frontend tem timeout
-e cai para o save local nesse intervalo.
+4. Adicione `CORS_ORIGIN` com a origem do site.
+5. Faça o deploy.
 
 ## Segurança
 
