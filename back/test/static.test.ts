@@ -84,7 +84,7 @@ test("sem frontend a raiz devolve as informacoes do servico", async () => {
   const { app } = makeApp(null);
   const response = await request(app).get("/");
   assert.equal(response.status, 200);
-  assert.equal(response.body.service, "terra-perdida-api");
+  assert.equal(response.body.service, "terras-esquecidas-back");
   assert.equal(response.body.docs, "/api/health");
 });
 
@@ -108,7 +108,7 @@ test("a raiz da API lista o serviço", async () => {
   const { app } = makeApp(null);
   const response = await request(app).get("/api");
   assert.equal(response.status, 200);
-  assert.equal(response.body.service, "terra-perdida-api");
+  assert.equal(response.body.service, "terras-esquecidas-back");
 });
 
 test("sem DATABASE_URL o serviço sobe e avisa no health", async () => {

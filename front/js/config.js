@@ -9,7 +9,7 @@
     // então as chamadas /api/* saem com o header de origem do site.
     // Para publicar tudo junto (mesma origem), deixe vazio: "" e apague a
     // origem do site da lista CORS_ORIGIN do Render.
-    apiBase: "https://terra-perdida-api.onrender.com",
+    apiBase: "https://terras-esquecidas-back.onrender.com",
 
     // Durante o desenvolvimento local, o jogo tenta esta API primeiro.
     localApiBase: "http://localhost:3001",

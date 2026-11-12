@@ -69,12 +69,12 @@ test("apiBase preenchido usa a URL da API", async () => {
       urls.push(url);
       return jsonResponse(200, { ok: true });
     },
-    { apiBase: "https://terra-perdida-api.onrender.com" }
+    { apiBase: "https://terras-esquecidas-back.onrender.com" }
   );
 
-  assert.equal(api.base, "https://terra-perdida-api.onrender.com");
+  assert.equal(api.base, "https://terras-esquecidas-back.onrender.com");
   await api.health();
-  assert.equal(urls[0], "https://terra-perdida-api.onrender.com/api/health");
+  assert.equal(urls[0], "https://terras-esquecidas-back.onrender.com/api/health");
 });
 
 test("resposta sem JSON e tratada como servidor indisponivel", async () => {

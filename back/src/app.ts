@@ -35,7 +35,7 @@ import {
   updateSaveSchema
 } from "./validation";
 
-export const SERVICE_NAME = "terra-perdida-api";
+export const SERVICE_NAME = "terras-esquecidas-back";
 export const SERVICE_VERSION = "1.0.0";
 
 interface AuthContext {

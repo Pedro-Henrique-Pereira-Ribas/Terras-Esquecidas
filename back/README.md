@@ -193,7 +193,7 @@ npm run api:start
 A API é publicada como um **Web Service** do Render e o banco é o Postgres do
 Neon. O repositório inclui um Blueprint em `render.yaml` que cria:
 
-- **Web Service** `terra-perdida-api` (Node, `rootDir: .`)
+- **Web Service** `terras-esquecidas-back` (Node, `rootDir: .`)
 
 O `rootDir` é a **raiz do repositório**, e não `back/`, porque o serviço
 também serve a pasta `front/` (o site fica disponível também na URL da API,
@@ -212,7 +212,7 @@ Passos:
 3. Em **Environment**, cole a `DATABASE_URL` do Neon. O Blueprint já deixa
    a variável como `sync: false`, então o Render não sobrescreve o valor.
 4. Aguarde o deploy. O health check usa `GET /health`, que não depende do banco.
-5. A URL pública do Web Service é `https://terra-perdida-api.onrender.com`.
+5. A URL pública do Web Service é `https://terras-esquecidas-back.onrender.com`.
 
 O site é um **Static Site** separado, com *Publish Path* `.` apontando para a
 pasta `front/`. Como as chamadas `/api/*` saem de outra origem, a API precisa

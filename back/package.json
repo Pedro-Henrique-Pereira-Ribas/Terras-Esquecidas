@@ -1,5 +1,5 @@
 {
-  "name": "terra-perdida-api",
+  "name": "terras-esquecidas-back",
   "version": "1.0.0",
   "private": true,
   "description": "API de contas e saves do Terra Perdida (TypeScript + Postgres).",

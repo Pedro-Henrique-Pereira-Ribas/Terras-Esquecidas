@@ -6,7 +6,7 @@
 # pasta front/.
 services:
   - type: web
-    name: terra-perdida-api
+    name: terras-esquecidas-back
     runtime: node
     plan: free
     # A raiz do repositório é usada de propósito: o Web Service também serve

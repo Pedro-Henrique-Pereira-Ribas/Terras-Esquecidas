@@ -173,17 +173,17 @@ Site e API são publicados como **dois recursos separados** no Render, com o ban
 | Recurso | Onde | URL |
 | --- | --- | --- |
 | Jogo | Static Site no Render, pasta `front/` | `https://terras-esquecidas.onrender.com` |
-| API | Web Service no Render, pasta `back/` | `https://terra-perdida-api.onrender.com` |
+| API | Web Service no Render, pasta `back/` | `https://terras-esquecidas-back.onrender.com` |
 | Banco | Postgres gerenciado no Neon, projeto `terra-perdida` | connection string no painel do Neon |
 
-O Web Service também serve a pasta `front/`, então `https://terra-perdida-api.onrender.com`
+O Web Service também serve a pasta `front/`, então `https://terras-esquecidas-back.onrender.com`
 entrega o jogo completo na mesma origem da API — é o endereço de reserva caso o
 Static Site demore a publicar.
 
 O frontend chama a API pela URL em `front/js/config.js` (`apiBase`), em outra origem — por isso a API libera a origem do site em `CORS_ORIGIN`, que o `render.yaml` já define. Se a API for movida para a mesma origem do site, é só deixar `apiBase` vazio e apagar a origem do site da lista de CORS.
 
 1. No Render, escolha **New → Blueprint** e conecte este repositório.
-2. O `render.yaml` cria o Web Service `terra-perdida-api`.
+2. O `render.yaml` cria o Web Service `terras-esquecidas-back`.
 3. Em **Environment**, cole a `DATABASE_URL` do Neon (o Blueprint deixa a variável como `sync: false`).
 4. Crie o **Static Site** apontando para a pasta `front/`, com *Publish Path* `.`.
 5. Aguarde os deploys e confira `GET /health` na URL da API.
