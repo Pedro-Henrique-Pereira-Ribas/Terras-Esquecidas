@@ -81,6 +81,13 @@ export const updateSaveSchema = z
   })
   .strict();
 
+export const changePinSchema = z
+  .object({
+    currentPin: pinSchema,
+    newPin: pinSchema
+  })
+  .strict();
+
 export function emptySave(): SaveData {
   return saveSchema.parse({});
 }

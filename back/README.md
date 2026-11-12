@@ -27,6 +27,7 @@ e o fallback quando a API está fora.
 | `POST` | `/api/accounts` | não | Cria conta + save + sessão |
 | `POST` | `/api/accounts/login` | não | Entra e devolve conta + save |
 | `POST` | `/api/accounts/logout` | Bearer | Revoga a sessão atual |
+| `PUT` | `/api/accounts/password` | Bearer | Troca a chave de acesso da conta |
 | `GET` | `/api/me` | Bearer | Conta + save completo |
 | `GET` | `/api/me/save` | Bearer | Apenas o save |
 | `PUT` | `/api/me/save` | Bearer | Substitui o save completo |
@@ -85,6 +86,17 @@ Use o token em todas as rotas protegidas:
 ```http
 Authorization: Bearer <token>
 ```
+
+### Trocar a chave de acesso
+
+```json
+{ "currentPin": "1234", "newPin": "8765" }
+```
+
+A rota exige a chave atual, então uma sessão roubada sozinha não consegue
+trocá-la. Depois da troca, as outras sessões da conta são encerradas — a
+sessão que fez a troca continua valendo. A chave antiga deixa de funcionar
+na hora, e o login passa a aceitar só a nova.
 
 ## Rodar localmente
 

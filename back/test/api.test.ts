@@ -166,3 +166,106 @@ test("valida payloads antes de tocar no banco", async () => {
   const unauthorized = await request(app).get("/api/me");
   assert.equal(unauthorized.status, 401);
 });
+
+test("troca a chave de acesso e aceita o login com a nova", async () => {
+  const { app } = makeApp();
+  const created = await request(app)
+    .post("/api/accounts")
+    .send({ name: "Troca", pin: "1234", server: "Reino Sem Nome" });
+  const token = created.body.token;
+
+  const changed = await request(app)
+    .put("/api/accounts/password")
+    .set("Authorization", `Bearer ${token}`)
+    .send({ currentPin: "1234", newPin: "9876" });
+  assert.equal(changed.status, 200);
+  assert.equal(changed.body.ok, true);
+
+  const oldLogin = await request(app)
+    .post("/api/accounts/login")
+    .send({ name: "Troca", pin: "1234" });
+  assert.equal(oldLogin.status, 401, "a chave antiga nao pode mais entrar");
+
+  const newLogin = await request(app)
+    .post("/api/accounts/login")
+    .send({ name: "Troca", pin: "9876" });
+  assert.equal(newLogin.status, 200);
+  assert.equal(newLogin.body.account.name, "Troca");
+});
+
+test("recusa trocar a chave com a chave atual errada", async () => {
+  const { app } = makeApp();
+  const created = await request(app)
+    .post("/api/accounts")
+    .send({ name: "Certa", pin: "1234", server: "Reino Sem Nome" });
+  const token = created.body.token;
+
+  const wrong = await request(app)
+    .put("/api/accounts/password")
+    .set("Authorization", `Bearer ${token}`)
+    .send({ currentPin: "0000", newPin: "5678" });
+  assert.equal(wrong.status, 401);
+  assert.equal(wrong.body.error.code, "invalid_credentials");
+
+  const same = await request(app)
+    .put("/api/accounts/password")
+    .set("Authorization", `Bearer ${token}`)
+    .send({ currentPin: "1234", newPin: "1234" });
+  assert.equal(same.status, 400);
+  assert.equal(same.body.error.code, "same_pin");
+
+  const login = await request(app)
+    .post("/api/accounts/login")
+    .send({ name: "Certa", pin: "1234" });
+  assert.equal(login.status, 200, "a chave continua valendo depois das tentativas falhas");
+});
+
+test("trocar a chave exige sessao e encerra as outras sessoes", async () => {
+  const { app } = makeApp();
+  const created = await request(app)
+    .post("/api/accounts")
+    .send({ name: "Duas Sessoes", pin: "1234", server: "Reino Sem Nome" });
+  const token = created.body.token;
+
+  const second = await request(app)
+    .post("/api/accounts/login")
+    .send({ name: "Duas Sessoes", pin: "1234" });
+  const otherToken = second.body.token;
+  assert.ok(otherToken);
+
+  const unauthorized = await request(app)
+    .put("/api/accounts/password")
+    .send({ currentPin: "1234", newPin: "5678" });
+  assert.equal(unauthorized.status, 401);
+
+  const changed = await request(app)
+    .put("/api/accounts/password")
+    .set("Authorization", `Bearer ${token}`)
+    .send({ currentPin: "1234", newPin: "5678" });
+  assert.equal(changed.status, 200);
+
+  const otherSession = await request(app)
+    .get("/api/me")
+    .set("Authorization", `Bearer ${otherToken}`);
+  assert.equal(otherSession.status, 401, "a outra sessao deve ser encerrada");
+
+  const currentSession = await request(app)
+    .get("/api/me")
+    .set("Authorization", `Bearer ${token}`);
+  assert.equal(currentSession.status, 200, "a sessao que trocou a chave continua valendo");
+});
+
+test("trocar a chave valida o formato das chaves", async () => {
+  const { app } = makeApp();
+  const created = await request(app)
+    .post("/api/accounts")
+    .send({ name: "Formato", pin: "1234", server: "Reino Sem Nome" });
+  const token = created.body.token;
+
+  const bad = await request(app)
+    .put("/api/accounts/password")
+    .set("Authorization", `Bearer ${token}`)
+    .send({ currentPin: "1234", newPin: "12" });
+  assert.equal(bad.status, 400);
+  assert.equal(bad.body.error.code, "invalid_payload");
+});

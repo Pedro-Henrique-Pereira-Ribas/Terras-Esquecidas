@@ -131,6 +131,12 @@
       accountCloudStatus: q("account-cloud-status"), accountKind: q("account-kind"),
       accountCreate: q("btn-account-create"), accountTabs: q("account-tabs"),
       accountSkip: q("btn-account-skip"),
+      accountPassword: q("btn-account-password"),
+      accountPasswordForm: q("account-password-form"),
+      accountPasswordSave: q("btn-account-password-save"),
+      accountPasswordCancel: q("btn-account-password-cancel"),
+      accountCurrentPin: q("account-current-pin"), accountNewPin: q("account-new-pin"),
+      accountPasswordError: q("account-password-error"),
       titleAccount: q("title-account"), titleAccountName: q("title-account-name"),
       titleAccountServer: q("title-account-server"), titleAccountAvatar: q("title-account-avatar"),
       titleAccountButton: q("btn-title-account"), pauseAccount: q("pause-account"),
@@ -186,6 +192,18 @@
     q("btn-account-play").addEventListener("click", function () { TP.audio.sfx("click"); call("showTitle"); });
     q("btn-account-switch").addEventListener("click", function () { TP.audio.sfx("click"); switchAccount(); });
     if (UI.el.accountSkip) UI.el.accountSkip.addEventListener("click", function () { TP.audio.sfx("click"); call("showTitle"); });
+    if (UI.el.accountPassword) {
+      UI.el.accountPassword.addEventListener("click", function () { TP.audio.sfx("click"); togglePasswordForm(true); });
+    }
+    if (UI.el.accountPasswordCancel) {
+      UI.el.accountPasswordCancel.addEventListener("click", function () { TP.audio.sfx("click"); togglePasswordForm(false); });
+    }
+    if (UI.el.accountPasswordForm) {
+      UI.el.accountPasswordForm.addEventListener("submit", function (e) {
+        e.preventDefault();
+        submitPasswordForm();
+      });
+    }
 
     UI.el.accountTabs.addEventListener("click", function (e) {
       const tab = e.target.closest("[data-account-tab]");
@@ -464,8 +482,102 @@
     UI.account = null;
     UI.accountTab = UI.accounts.length ? "login" : "create";
     if (UI.el.accountPin) UI.el.accountPin.value = "";
+    togglePasswordForm(false);
     UI.refreshAccountGate();
     UI.renderCloudStatus();
+  }
+
+  /* ============================================================
+     TROCAR A CHAVE DE ACESSO
+     ============================================================ */
+  function setPasswordMessage(message, kind) {
+    if (!UI.el.accountPasswordError) return;
+    UI.el.accountPasswordError.textContent = message || "";
+    UI.el.accountPasswordError.classList.toggle("visible", !!message);
+    UI.el.accountPasswordError.classList.toggle("ok", kind === "ok");
+  }
+  function togglePasswordForm(show) {
+    if (!UI.el.accountPasswordForm) return;
+    const open = show === undefined ? UI.el.accountPasswordForm.classList.contains("hidden") : !!show;
+    UI.el.accountPasswordForm.classList.toggle("hidden", !open);
+    setPasswordMessage("");
+    if (open) {
+      if (UI.el.accountCurrentPin) {
+        UI.el.accountCurrentPin.value = "";
+        UI.el.accountCurrentPin.focus();
+      }
+      if (UI.el.accountNewPin) UI.el.accountNewPin.value = "";
+    }
+  }
+  function setPasswordBusy(busy) {
+    const button = UI.el.accountPasswordSave;
+    if (!button) return;
+    button.disabled = !!busy;
+    button.setAttribute("aria-busy", busy ? "true" : "false");
+    button.innerHTML = busy ? "ALTERANDO..." : "ALTERAR CHAVE <span>›</span>";
+  }
+  async function submitPasswordForm() {
+    const currentPin = (UI.el.accountCurrentPin ? UI.el.accountCurrentPin.value : "").trim();
+    const newPin = (UI.el.accountNewPin ? UI.el.accountNewPin.value : "").trim();
+
+    if (!/^\d{4}$/.test(currentPin)) {
+      setPasswordMessage("Digite a chave atual com 4 números.");
+      if (UI.el.accountCurrentPin) UI.el.accountCurrentPin.focus();
+      return;
+    }
+    if (!/^\d{4}$/.test(newPin)) {
+      setPasswordMessage("A nova chave precisa ter exatamente 4 números.");
+      if (UI.el.accountNewPin) UI.el.accountNewPin.focus();
+      return;
+    }
+    if (currentPin === newPin) {
+      setPasswordMessage("A nova chave precisa ser diferente da atual.");
+      return;
+    }
+
+    const account = UI.account;
+    if (!account) {
+      setPasswordMessage("Entre na sua conta para trocar a chave.");
+      return;
+    }
+
+    setPasswordBusy(true);
+    try {
+      if (account.cloud) {
+        if (!cloudEnabled()) {
+          setPasswordMessage("Servidor indisponível. A chave não pôde ser alterada.");
+          return;
+        }
+        await TP.api.changePassword(currentPin, newPin);
+        // A conta local guarda o hash da chave para o fallback offline.
+        account.pin = hashPin(newPin);
+        saveAccountStore();
+      } else {
+        // Conta local: confere a chave atual e troca o hash no navegador.
+        if (account.pin !== hashPin(currentPin)) {
+          setPasswordMessage("Chave de acesso atual incorreta.");
+          return;
+        }
+        account.pin = hashPin(newPin);
+        saveAccountStore();
+      }
+      setPasswordMessage("Chave de acesso alterada.", "ok");
+      if (UI.el.accountCurrentPin) UI.el.accountCurrentPin.value = "";
+      if (UI.el.accountNewPin) UI.el.accountNewPin.value = "";
+      UI.renderCloudStatus("Chave de acesso alterada", "online");
+    } catch (error) {
+      if (error && error.status === 401) {
+        setPasswordMessage("Chave de acesso atual incorreta.");
+      } else if (error && error.status === 400) {
+        setPasswordMessage(error.message || "A nova chave precisa ser diferente da atual.");
+      } else if (TP.api.isUnavailable(error)) {
+        setPasswordMessage("Servidor indisponível. A chave não pôde ser alterada.");
+      } else {
+        setPasswordMessage((error && error.message) || "Não foi possível trocar a chave.");
+      }
+    } finally {
+      setPasswordBusy(false);
+    }
   }
   function findLocalAccount(name) {
     const wanted = normalizeAccountName(name);
@@ -806,6 +918,7 @@
         : "Conta guardada apenas neste navegador";
     } else {
       setAccountTab(UI.accountTab);
+      togglePasswordForm(false);
       UI.el.accountBrandServer.textContent = chosenServer() || DEFAULT_SERVER;
       if (UI.el.accountKind) UI.el.accountKind.textContent = cloudEnabled() ? "Conta online" : "Conta local";
       if (!UI.el.accountName.value && UI.accounts.length === 1) {

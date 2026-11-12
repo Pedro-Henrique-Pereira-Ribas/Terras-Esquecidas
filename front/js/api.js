@@ -211,4 +211,11 @@
     if (data && data.account) API.storeSession(API.token, data.account);
     return data;
   };
+
+  API.changePassword = async function (currentPin, newPin) {
+    return request("/api/accounts/password", {
+      method: "PUT",
+      body: { currentPin: currentPin, newPin: newPin }
+    });
+  };
 })();

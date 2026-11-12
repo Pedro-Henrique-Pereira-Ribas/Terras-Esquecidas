@@ -14,10 +14,12 @@ import {
   createAccountWithSession,
   createSession,
   findAccountByNameKey,
+  findAccountPinHash,
   findSession,
   getSave,
   revokeSession,
   touchLogin,
+  updatePin,
   upsertSave
 } from "./repository";
 import { DUMMY_PIN_HASH, hashPin, normalizeName, verifyPin } from "./security";
@@ -25,6 +27,7 @@ import { createStaticRouter, isApiPath, resolveFrontDir } from "./static";
 import type { AccountPublic } from "./types";
 import type { LogLevel } from "./config";
 import {
+  changePinSchema,
   createAccountSchema,
   emptySave,
   firstIssue,
@@ -179,6 +182,7 @@ export function createApp(options: CreateAppOptions) {
 
   const authIpLimit = rateLimit(20, 60_000);
   const saveLimit = rateLimit(180, 60_000);
+  const pinLimit = rateLimit(10, 15 * 60_000);
   const loginFailures = new Map<string, LoginFailure>();
 
   const requireAuth = asyncHandler(async (req, res, next) => {
@@ -380,6 +384,40 @@ export function createApp(options: CreateAppOptions) {
       const auth = (req as AuthedRequest).auth!;
       const stored = await upsertSave(pool, auth.account.id, body.save);
       res.json({ save: stored.save, updatedAt: stored.updatedAt });
+    })
+  );
+
+  // Troca da chave de acesso da conta. Exige a chave atual, para que uma
+  // sessao roubada nao consiga mudar a senha sozinha.
+  app.put(
+    "/api/accounts/password",
+    requireAuth,
+    pinLimit,
+    asyncHandler(async (req, res) => {
+      const body = parseBody(changePinSchema, req, res);
+      if (!body) return;
+      const auth = (req as AuthedRequest).auth!;
+
+      const currentHash = await findAccountPinHash(pool, auth.account.id);
+      if (!currentHash) {
+        sendError(res, 404, "Conta não encontrada.", "account_not_found");
+        return;
+      }
+
+      const valid = await verifyPin(body.currentPin, currentHash);
+      if (!valid) {
+        sendError(res, 401, "Chave de acesso atual incorreta.", "invalid_credentials");
+        return;
+      }
+
+      if (body.currentPin === body.newPin) {
+        sendError(res, 400, "A nova chave precisa ser diferente da atual.", "same_pin");
+        return;
+      }
+
+      const pinHash = await hashPin(body.newPin, config.bcryptRounds);
+      await updatePin(pool, auth.account.id, pinHash, auth.tokenHash);
+      res.json({ ok: true, message: "Chave de acesso alterada." });
     })
   );
 

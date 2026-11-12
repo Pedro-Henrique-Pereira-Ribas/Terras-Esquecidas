@@ -141,8 +141,23 @@
                 </div>
                 <div class="account-actions">
                   <button id="btn-account-play" class="btn btn-primary account-main-action" type="button">ENTRAR NO REINO <span>›</span></button>
+                  <button id="btn-account-password" class="btn btn-ghost" type="button">TROCAR CHAVE</button>
                   <button id="btn-account-switch" class="btn btn-ghost" type="button">TROCAR CONTA</button>
                 </div>
+                <form id="account-password-form" class="account-password-form hidden" novalidate>
+                  <p class="account-form-note">A chave tem 4 números. Trocá-la encerra as outras sessões da conta.</p>
+                  <label class="account-field" for="account-current-pin">
+                    <span>Chave atual</span>
+                    <input id="account-current-pin" type="password" inputmode="numeric" maxlength="4" autocomplete="current-password" placeholder="••••">
+                  </label>
+                  <label class="account-field" for="account-new-pin">
+                    <span>Nova chave <small>4 dígitos</small></span>
+                    <input id="account-new-pin" type="password" inputmode="numeric" maxlength="4" autocomplete="new-password" placeholder="••••">
+                  </label>
+                  <p id="account-password-error" class="account-error" role="alert"></p>
+                  <button id="btn-account-password-save" class="btn btn-primary account-main-action" type="submit">ALTERAR CHAVE <span>›</span></button>
+                  <button id="btn-account-password-cancel" class="btn btn-ghost account-main-action" type="button">CANCELAR</button>
+                </form>
               </div>
 
               <div id="account-auth" class="account-view">

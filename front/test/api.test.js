@@ -139,3 +139,34 @@ test("apiEnabled false desliga a integracao", async () => {
   assert.equal(api.enabled, false);
   await assert.rejects(() => api.health(), (error) => error.code === "offline");
 });
+
+test("changePassword envia a chave atual e a nova", async () => {
+  let captured = null;
+  const api = loadClient(async (url, options) => {
+    captured = { url, method: options.method, body: JSON.parse(options.body) };
+    return jsonResponse(200, { ok: true, message: "Chave de acesso alterada." });
+  });
+
+  const result = await api.changePassword("1234", "5678");
+  assert.equal(captured.url, "/api/accounts/password");
+  assert.equal(captured.method, "PUT");
+  assert.equal(captured.body.currentPin, "1234");
+  assert.equal(captured.body.newPin, "5678");
+  assert.equal(result.ok, true);
+});
+
+test("changePassword propaga o erro de chave incorreta", async () => {
+  const api = loadClient(async () =>
+    jsonResponse(401, { error: { code: "invalid_credentials", message: "Chave de acesso atual incorreta." } })
+  );
+
+  await assert.rejects(
+    () => api.changePassword("0000", "5678"),
+    (error) => {
+      assert.equal(error.status, 401);
+      assert.equal(error.code, "invalid_credentials");
+      assert.equal(error.message, "Chave de acesso atual incorreta.");
+      return true;
+    }
+  );
+});

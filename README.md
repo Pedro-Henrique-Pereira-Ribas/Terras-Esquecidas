@@ -32,6 +32,8 @@ O jogo abre direto no título e pode ser jogado como **Visitante**, sem criar co
 
 O `localStorage` continua sendo usado como cache e como fallback: se o servidor estiver fora ou demorar demais, o jogo avisa e permite criar/entrar com uma conta local, sem perder o que já estava no navegador. Para voltar depois, use a aba **Entrar** com o mesmo nome e chave; o botão **Conta** no título permite trocar de perfil ou voltar a jogar sem conta.
 
+Na tela de conta, o botão **TROCAR CHAVE** abre o formulário para trocar a chave de acesso. A chave atual é exigida e, depois da troca, as outras sessões da conta são encerradas.
+
 O site é publicado como Static Site e a API como Web Service, em domínios diferentes. Por isso a API libera a origem do site em `CORS_ORIGIN` e o frontend aponta para ela em `front/js/config.js`.
 
 A API e as instruções de deploy ficam em [`back/README.md`](back/README.md). O Blueprint do Render está em [`render.yaml`](render.yaml).

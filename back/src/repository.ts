@@ -134,6 +134,52 @@ export async function touchLogin(pool: Pool, accountId: string): Promise<void> {
   await pool.query("UPDATE accounts SET last_login_at = now() WHERE id = $1", [accountId]);
 }
 
+/** Hash da chave de acesso de uma conta, para conferir a chave atual. */
+export async function findAccountPinHash(pool: Pool, accountId: string): Promise<string | null> {
+  const result = await pool.query<{ pin_hash: string }>(
+    "SELECT pin_hash FROM accounts WHERE id = $1 LIMIT 1",
+    [accountId]
+  );
+  const row = result.rows[0];
+  return row ? row.pin_hash : null;
+}
+
+/**
+ * Troca a chave de acesso da conta e encerra as outras sessoes: quem
+ * tivesse roubado uma sessao perde o acesso depois da troca.
+ * A sessao que fez a troca (keepTokenHash) continua valendo.
+ */
+export async function updatePin(
+  pool: Pool,
+  accountId: string,
+  pinHash: string,
+  keepTokenHash?: string
+): Promise<void> {
+  const client = await pool.connect();
+  try {
+    await client.query("BEGIN");
+    await client.query("UPDATE accounts SET pin_hash = $1 WHERE id = $2", [pinHash, accountId]);
+    if (keepTokenHash) {
+      await client.query("DELETE FROM sessions WHERE account_id = $1 AND token_hash <> $2", [
+        accountId,
+        keepTokenHash
+      ]);
+    } else {
+      await client.query("DELETE FROM sessions WHERE account_id = $1", [accountId]);
+    }
+    await client.query("COMMIT");
+  } catch (error) {
+    try {
+      await client.query("ROLLBACK");
+    } catch {
+      // Ignora falha de rollback; o erro original é mais útil.
+    }
+    throw error;
+  } finally {
+    client.release();
+  }
+}
+
 export async function getSave(
   pool: Pool,
   accountId: string

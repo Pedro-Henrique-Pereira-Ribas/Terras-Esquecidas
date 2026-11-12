@@ -564,6 +564,10 @@ h2 { font-weight: 700; letter-spacing: .02em; }
 .account-server-custom { margin-top: 6px; }
 .account-error { min-height: 12px; margin: 4px 0 10px; color: #df8b75; font-size: 8px; line-height: 1.45; opacity: 0; transition: opacity .15s ease; }
 .account-error.visible { opacity: 1; }
+.account-error.ok { color: var(--green); }
+.account-password-form { display: grid; gap: 8px; margin-top: 14px; padding-top: 14px; border-top: 1px solid var(--line-soft); }
+.account-password-form .account-form-note { margin: 0 0 4px; text-align: left; }
+.account-password-form .account-field { margin-bottom: 0; }
 .account-cloud-status { min-height: 12px; margin: -4px 0 10px; color: var(--faint); font-size: 7.5px; letter-spacing: .08em; line-height: 1.5; text-align: center; text-transform: uppercase; transition: color .15s ease; }
 .account-cloud-status.online { color: var(--green); }
 .account-cloud-status.syncing { color: var(--gold); }
