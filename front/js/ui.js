@@ -507,6 +507,11 @@
         UI.el.accountCurrentPin.focus();
       }
       if (UI.el.accountNewPin) UI.el.accountNewPin.value = "";
+      // O painel da conta tem altura limiteda: rola ate o formulario para
+      // os botoes de confirmar e cancelar ficarem a vista.
+      if (UI.el.accountPasswordForm && UI.el.accountPasswordForm.scrollIntoView) {
+        UI.el.accountPasswordForm.scrollIntoView({ block: "end" });
+      }
     }
   }
   function setPasswordBusy(busy) {
