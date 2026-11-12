@@ -22,9 +22,17 @@
   }
   function resolveBase() {
     const config = window.TP_CONFIG || {};
-    const explicit = String(config.apiBase || "").trim();
-    const local = String(config.localApiBase || "http://localhost:3001").trim();
-    let base = isLocalHost() ? (local || explicit) : explicit;
+    const raw = config.apiBase;
+    const explicit = raw == null ? "" : String(raw).trim();
+    const local = String(config.localApiBase || "").trim();
+    let base;
+    if (!explicit) {
+      // apiBase vazio: a API vive na mesma origem do jogo (o backend serve
+      // o frontend). Em localhost, aponta para a API local de desenvolvimento.
+      base = isLocalHost() ? local : "";
+    } else {
+      base = isLocalHost() ? (local || explicit) : explicit;
+    }
     base = base.replace(/\/+$/, "");
     if (base.endsWith("/api")) base = base.slice(0, -4);
     return base;
@@ -48,13 +56,14 @@
     ApiError: ApiError
   };
   TP.api = API;
-
   try {
     const cached = JSON.parse(storageGet(ACCOUNT_KEY) || "null");
     if (cached && typeof cached.name === "string") API.account = cached;
   } catch (err) { API.account = null; }
 
-  API.enabled = !!API.base;
+  // Base vazia = mesma origem do jogo: a API continua habilitada.
+  // Só desliga quando apiEnabled for explicitamente false.
+  API.enabled = (window.TP_CONFIG || {}).apiEnabled !== false;
 
   API.isNetworkError = function (error) {
     return !!error && (!error.status || error.status === 0);
@@ -86,7 +95,7 @@
   };
 
   async function request(path, options) {
-    if (!API.base) {
+    if (!API.enabled) {
       throw new ApiError("Servidor não configurado neste cliente.", 0, "offline");
     }
     const opts = options || {};
@@ -165,7 +174,7 @@
   API.logout = async function () {
     const token = API.token;
     API.clearSession();
-    if (!API.base || !token) return;
+    if (!API.enabled || !token) return;
     try {
       await request("/api/accounts/logout", { method: "POST", token: token });
     } catch (err) {

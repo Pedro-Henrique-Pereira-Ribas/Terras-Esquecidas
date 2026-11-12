@@ -16,7 +16,11 @@ const config: AppConfig = {
   corsOrigins: ["*"],
   sessionDays: 30,
   bcryptRounds: 4,
-  autoMigrate: false
+  autoMigrate: false,
+  serveFront: false,
+  frontDir: null,
+  trustProxy: 0,
+  logLevel: "silent"
 };
 
 function makeApp() {
@@ -24,7 +28,7 @@ function makeApp() {
   db.public.none(SCHEMA_SQL);
   const adapter = db.adapters.createPg();
   const pool = new adapter.Pool() as unknown as Pool;
-  return { app: createApp({ pool, config }), pool };
+  return { app: createApp({ pool, config, frontDir: null }), pool };
 }
 
 function fullSave() {

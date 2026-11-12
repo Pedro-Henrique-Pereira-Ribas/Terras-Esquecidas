@@ -6,7 +6,7 @@ Um jogo de plataforma 2D em pixel art, feito para rodar direto no navegador. Atr
 
 > “A estrada não me assusta. Só o silêncio dela.” — Pedro, arquivista do Reino Sem Nome
 
-**Jogue agora:** https://pedro-henrique-pereira-ribas.github.io/Terras-Esquecidas/
+**Jogue agora:** https://terras-esquecidas.onrender.com/
 
 ---
 
@@ -32,7 +32,9 @@ O jogo abre direto no título e pode ser jogado como **Visitante**, sem criar co
 
 O `localStorage` continua sendo usado como cache e como fallback: se o servidor estiver fora ou demorar demais, o jogo avisa e permite criar/entrar com uma conta local, sem perder o que já estava no navegador. Para voltar depois, use a aba **Entrar** com o mesmo nome e chave; o botão **Conta** no título permite trocar de perfil ou voltar a jogar sem conta.
 
-A API e as instruções de deploy ficam em [`server/README.md`](server/README.md). O Blueprint do Render está em [`render.yaml`](render.yaml).
+O site e a API são publicados no mesmo serviço: o backend serve a pasta `front/` na mesma porta, então o jogo chama `/api/*` na própria origem — sem CORS e sem ida e volta entre domínios.
+
+A API e as instruções de deploy ficam em [`back/README.md`](back/README.md). O Blueprint do Render está em [`render.yaml`](render.yaml).
 
 ## Controles
 
@@ -100,19 +102,19 @@ As compras são permanentes no save do herói e ficam separadas por herói em `t
 O frontend não precisa de build nem de dependências para jogar:
 
 ```bash
-# opção 1: abra o index.html no navegador
+# opção 1: abra o front/index.html no navegador
 # opção 2: sirva a pasta com qualquer servidor estático
-npx serve .
+npx serve front
 ```
 
-Também funciona apenas abrindo `index.html` com dois cliques. O jogo não usa módulos ES, então não exige servidor.
+Também funciona apenas abrindo `front/index.html` com dois cliques. O jogo não usa módulos ES, então não exige servidor.
 
 ### API de contas e saves (opcional)
 
-A API fica em `server/` e usa TypeScript, Express 5 e Postgres. Os testes não precisam de banco real:
+A API fica em `back/` e usa TypeScript, Express 5 e Postgres. Os testes não precisam de banco real:
 
 ```bash
-cd server
+cd back
 npm ci
 npm test
 npm run typecheck
@@ -122,49 +124,58 @@ npm run build
 Para rodar com um Postgres:
 
 ```bash
-cd server
+cd back
 cp .env.example .env
 # edite DATABASE_URL no .env
 npm run dev
 ```
 
-A API sobe em `http://localhost:3001`. Em desenvolvimento, `js/config.js` já aponta o frontend local para essa porta. Para produção, o frontend usa `https://terras-esquecidas.onrender.com`; se o serviço do Render tiver outro nome, altere `apiBase` em `js/config.js`.
+A API sobe em `http://localhost:3001`. Em desenvolvimento, `front/js/config.js` aponta para essa porta; em produção o `apiBase` fica vazio e o jogo usa a própria origem.
+
+Para levantar o site e a API juntos, na raiz do repositório:
+
+```bash
+npm run dev
+# site em http://localhost:4173 e API em http://localhost:3001
+```
 
 ## Estrutura
 
 ```
-index.html          # telas, HUD e estrutura
-css/style.css       # identidade visual e responsividade
-js/config.js        # URL da API e tempo de timeout do cliente
-js/api.js           # cliente HTTP de contas, sessão e saves
-js/data.js          # heróis, armas, chefes, memórias, encantamentos e fases
-js/game.js          # fluxo da jornada, combate, camp, mercadores, drops e finais
-js/ui.js            # telas, HUD, conta, loja de encantamentos, cartões e diálogos
-js/art.js           # retratos, ícones de encantamento e arte procedural
-js/sprites.js       # sprites de inimigos, chefes e NPCs
-js/scenery.js       # cenários de fundo
-js/renderer.js      # desenho do mundo no canvas
-js/audio.js         # WebAudio procedural (trilha e efeitos)
-js/input.js         # teclado, mouse, toque e gamepad
-server/             # API TypeScript + Express + Postgres
-render.yaml         # Blueprint do Render (Web Service + Postgres)
+front/                # site estático servido pelo backend
+  index.html          # telas, HUD e estrutura
+  favicon.svg         # ícone do site
+  css/style.css       # identidade visual e responsividade
+  js/config.js        # URL da API e tempo de timeout do cliente
+  js/api.js           # cliente HTTP de contas, sessão e saves
+  js/data.js          # heróis, armas, chefes, memórias, encantamentos e fases
+  js/game.js          # fluxo da jornada, combate, camp, mercadores, drops e finais
+  js/ui.js            # telas, HUD, conta, loja de encantamentos, cartões e diálogos
+  js/art.js           # retratos, ícones de encantamento e arte procedural
+  js/sprites.js       # sprites de inimigos, chefes e NPCs
+  js/scenery.js       # cenários de fundo
+  js/renderer.js      # desenho do mundo no canvas
+  js/audio.js         # WebAudio procedural (trilha e efeitos)
+  js/input.js         # teclado, mouse, toque e gamepad
+back/                 # API TypeScript + Express + Postgres
+scripts/dev.mjs       # sobe site e API juntos no desenvolvimento
+render.yaml           # Blueprint do Render (Web Service + Postgres)
 ```
 
 O canvas tem resolução interna de **640 × 360** e é ampliado preservando 16:9 com `image-rendering: pixelated`. Em janelas múltiplas de 640 × 360 (como 1280 × 720) a escala é inteira e os pixels ficam sem suavização; em telas menores, o jogo se ajusta ao espaço disponível sem esticar a imagem.
 
 ## Publicação
 
-O workflow em `.github/workflows/pages.yml` publica o frontend no GitHub Pages a cada push na branch `main`. O site continua estático: a API é um serviço separado, opcional, e o jogo cai para o save local se ela não estiver disponível.
-
-### Publicar a API no Render
+Site e API são publicados juntos no Render, no mesmo Web Service: o backend Express serve a pasta `front/` na mesma porta da API. O `render.yaml` usa a raiz do repositório como `rootDir` porque o serviço precisa da pasta `front/` em runtime.
 
 1. No Render, escolha **New → Blueprint** e conecte este repositório.
 2. O `render.yaml` cria o Web Service `terra-perdida-api` e o Postgres `terra-perdida-db`.
 3. Aguarde o deploy e confira `GET /health`.
-4. Se a URL pública for diferente de `https://terras-esquecidas.onrender.com`, ajuste `apiBase` em `js/config.js`.
-5. Confira `CORS_ORIGIN` no Render: ela precisa incluir `https://pedro-henrique-pereira-ribas.github.io` (e as origens locais, se for testar).
+4. Abra a URL pública do serviço: é a mesma que responde o site e a API.
 
-Instruções completas, endpoints, variáveis de ambiente e exemplos de `curl` estão em [`server/README.md`](server/README.md).
+O frontend usa a própria origem (`apiBase` vazio em `front/js/config.js`), então não é preciso configurar CORS para produção. Se a API for movida para outro serviço, ajuste `apiBase` com a URL completa.
+
+Instruções completas, endpoints, variáveis de ambiente e exemplos de `curl` estão em [`back/README.md`](back/README.md).
 
 ## Créditos
 

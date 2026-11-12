@@ -21,7 +21,9 @@ import {
   upsertSave
 } from "./repository";
 import { DUMMY_PIN_HASH, hashPin, normalizeName, verifyPin } from "./security";
+import { createStaticRouter, isApiPath, resolveFrontDir } from "./static";
 import type { AccountPublic } from "./types";
+import type { LogLevel } from "./config";
 import {
   createAccountSchema,
   emptySave,
@@ -29,6 +31,9 @@ import {
   loginSchema,
   updateSaveSchema
 } from "./validation";
+
+export const SERVICE_NAME = "terra-perdida-api";
+export const SERVICE_VERSION = "1.0.0";
 
 interface AuthContext {
   account: AccountPublic;
@@ -40,6 +45,11 @@ type AuthedRequest = Request & { auth?: AuthContext };
 interface CreateAppOptions {
   pool: Pool;
   config: AppConfig;
+  /**
+   * Pasta do frontend a servir. Quando omitida, a API procura a pasta
+   * `front/` automaticamente. Use `null` para rodar apenas a API.
+   */
+  frontDir?: string | null;
 }
 
 const MAX_LOGIN_FAILURES = 8;
@@ -114,11 +124,35 @@ function loginFailureKey(req: Request, nameKey: string): string {
   return `${req.ip || req.socket.remoteAddress || "unknown"}|${nameKey}`;
 }
 
+/** Log de uma linha por requisicao, com status e duracao. */
+function requestLogger(level: LogLevel): RequestHandler {
+  if (level === "silent") {
+    return (_req, _res, next) => next();
+  }
+  return (req, res, next) => {
+    const startedAt = process.hrtime.bigint();
+    res.on("finish", () => {
+      const durationMs = Number(process.hrtime.bigint() - startedAt) / 1_000_000;
+      console.log(
+        `[api] ${req.method} ${req.originalUrl} ${res.statusCode} ${durationMs.toFixed(1)}ms`
+      );
+    });
+    next();
+  };
+}
+
 export function createApp(options: CreateAppOptions) {
   const { pool, config } = options;
   const app = express();
   app.disable("x-powered-by");
-  app.set("trust proxy", 1);
+  app.set("trust proxy", config.trustProxy);
+
+  const frontDir =
+    options.frontDir === undefined
+      ? config.serveFront
+        ? resolveFrontDir(config.frontDir)
+        : null
+      : options.frontDir;
 
   const corsOptions: CorsOptions = {
     origin(origin, callback) {
@@ -141,6 +175,7 @@ export function createApp(options: CreateAppOptions) {
     res.setHeader("Cache-Control", "no-store");
     next();
   });
+  app.use(requestLogger(config.logLevel));
 
   const authIpLimit = rateLimit(20, 60_000);
   const saveLimit = rateLimit(180, 60_000);
@@ -161,20 +196,52 @@ export function createApp(options: CreateAppOptions) {
     next();
   });
 
-  const health = asyncHandler(async (_req, res) => {
+  // Liveness: nao toca no banco, para o Render nao derrubar o servico
+  // quando o Postgres estiver apenas hibernando.
+  const liveness = (_req: Request, res: Response) => {
+    res.json({
+      ok: true,
+      service: SERVICE_NAME,
+      version: SERVICE_VERSION,
+      uptime: Math.round(process.uptime()),
+      time: new Date().toISOString()
+    });
+  };
+
+  // Readiness: testa o banco de verdade.
+  const readiness = asyncHandler(async (_req, res) => {
     try {
       await ping(pool);
-      res.json({ ok: true, service: "terra-perdida-api", database: "ok", time: new Date().toISOString() });
+      res.json({
+        ok: true,
+        service: SERVICE_NAME,
+        version: SERVICE_VERSION,
+        database: "ok",
+        uptime: Math.round(process.uptime()),
+        time: new Date().toISOString()
+      });
     } catch {
       sendError(res, 503, "Banco de dados indisponível.", "database_unavailable");
     }
   });
 
-  app.get("/", (_req, res) => {
-    res.json({ service: "terra-perdida-api", status: "ok", docs: "/api/health" });
+  app.get("/health", liveness);
+  app.get("/api/health", readiness);
+  app.get("/api", (_req, res) => {
+    res.json({
+      service: SERVICE_NAME,
+      version: SERVICE_VERSION,
+      status: "ok",
+      docs: "/api/health"
+    });
   });
-  app.get("/health", health);
-  app.get("/api/health", health);
+
+  if (!frontDir) {
+    // Sem frontend: a raiz continua devolvendo as informacoes do servico.
+    app.get("/", (_req, res) => {
+      res.json({ service: SERVICE_NAME, version: SERVICE_VERSION, status: "ok", docs: "/api/health" });
+    });
+  }
 
   app.post(
     "/api/accounts",
@@ -307,7 +374,18 @@ export function createApp(options: CreateAppOptions) {
     })
   );
 
-  app.use((_req, res) => {
+  // O frontend so e servido depois de todas as rotas da API, para que
+  // /api/* nunca caia no index.html do jogo.
+  if (frontDir) {
+    app.use(createStaticRouter({ frontDir }));
+  }
+
+  app.use((req, res) => {
+    if (frontDir && !isApiPath(req.path)) {
+      //Deve ser inalcancavel: o router estatico ja devolveu o index.html.
+      res.status(404).type("html").send("<h1>404</h1>");
+      return;
+    }
     sendError(res, 404, "Rota não encontrada.", "not_found");
   });
 

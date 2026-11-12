@@ -1,8 +1,11 @@
-# Terra Perdida — API de contas e saves
+# Terra Perdida — API e site
 
-API em **TypeScript + Express 5 + Postgres** para guardar contas e o save completo
-dos cinco heróis. O jogo continua funcionando sem ela: o `localStorage` é o cache
-local e o fallback quando o servidor está fora.
+Backend em **TypeScript + Express 5 + Postgres** que guarda contas e o save
+completo dos cinco heróis. O mesmo serviço também serve o frontend (a pasta
+`front/` do repositório), então o site e a API ficam na mesma origem.
+
+O jogo continua funcionando sem o servidor: o `localStorage` é o cache local
+e o fallback quando a API está fora.
 
 ## Stack
 
@@ -18,14 +21,18 @@ local e o fallback quando o servidor está fora.
 
 | Método | Rota | Autenticação | O que faz |
 | --- | --- | --- | --- |
-| `GET` | `/health` | não | Health check usado pelo Render |
-| `GET` | `/api/health` | não | Health check com teste do banco |
+| `GET` | `/health` | não | Liveness: não toca no banco |
+| `GET` | `/api` | não | Informações do serviço |
+| `GET` | `/api/health` | não | Readiness: testa o banco |
 | `POST` | `/api/accounts` | não | Cria conta + save + sessão |
 | `POST` | `/api/accounts/login` | não | Entra e devolve conta + save |
 | `POST` | `/api/accounts/logout` | Bearer | Revoga a sessão atual |
 | `GET` | `/api/me` | Bearer | Conta + save completo |
 | `GET` | `/api/me/save` | Bearer | Apenas o save |
 | `PUT` | `/api/me/save` | Bearer | Substitui o save completo |
+
+Qualquer rota fora de `/api` devolve o `index.html` do jogo (fallback de single
+page app). Rotas `/api` desconhecidas continuam devolvendo JSON com `404`.
 
 ### Corpo do cadastro
 
@@ -82,21 +89,25 @@ Authorization: Bearer <token>
 ## Rodar localmente
 
 1. Tenha um Postgres acessível (local, Docker ou a **External Database URL** do Render).
-2. Copie `server/.env.example` para `server/.env` e preencha a `DATABASE_URL`.
+2. Copie `back/.env.example` para `back/.env` e preencha a `DATABASE_URL`.
 3. Instale e rode:
 
 ```bash
-cd server
+cd back
 npm ci
 npm run dev
 ```
 
-A API sobe em `http://localhost:3001`. O schema é aplicado automaticamente no boot
-quando `AUTO_MIGRATE=true` (padrão). Para aplicar manualmente:
+A API sobe em `http://localhost:3001` e serve o frontend de `../front` na
+mesma porta. O schema é aplicado automaticamente no boot quando
+`AUTO_MIGRATE=true` (padrão). Para aplicar manualmente:
 
 ```bash
 npm run migrate
 ```
+
+Na raiz do repositório, `npm run dev` sobe a API e um servidor estático do
+frontend (em `http://localhost:4173`) juntos.
 
 ## Variáveis de ambiente
 
@@ -110,22 +121,22 @@ npm run migrate
 | `SESSION_DAYS` | `30` | Validade da sessão em dias |
 | `BCRYPT_ROUNDS` | `12` | Custo do bcrypt (4 a 15) |
 | `AUTO_MIGRATE` | `true` | Aplica o schema ao iniciar |
+| `SERVE_FRONT` | `true` | Serve o frontend estático na mesma porta |
+| `FRONT_DIR` | automático | Pasta do frontend; vazio = detecta `../front` |
+| `TRUST_PROXY` | `1` | Quantidade de proxies confiáveis à frente do app |
+| `LOG_LEVEL` | `info` | Log de requisições: `silent`, `info` ou `debug` |
 
-Em produção, configure `CORS_ORIGIN` com a URL do GitHub Pages, por exemplo:
-
-```text
-https://pedro-henrique-pereira-ribas.github.io
-```
-
-Para desenvolvimento local, inclua também `http://localhost:4173` e
-`http://127.0.0.1:4173`.
+Em produção o frontend é servido pela própria API, então as chamadas saem na
+mesma origem e o CORS nem é aplicado. O `CORS_ORIGIN` só importa quando o
+frontend é servido de outro lugar, como no desenvolvimento local
+(`http://localhost:4173`).
 
 ## Testes e build
 
 Os testes de integração usam `pg-mem`, então **não precisam de Postgres**:
 
 ```bash
-cd server
+cd back
 npm test
 npm run typecheck
 npm run build
@@ -146,34 +157,44 @@ npm run api:start
 
 O repositório inclui um Blueprint em `render.yaml` que cria:
 
-- **Web Service** `terra-perdida-api` (Node, `rootDir: server`)
+- **Web Service** `terra-perdida-api` (Node, `rootDir: .`)
 - **Postgres** `terra-perdida-db`
+
+O `rootDir` é a **raiz do repositório**, e não `back/`, porque o serviço
+precisa da pasta `front/` em runtime para servir o site. Por isso os comandos
+apontam para `back/` com `--prefix`:
+
+```yaml
+buildCommand: npm --prefix back ci && npm --prefix back run build
+startCommand: npm --prefix back start
+healthCheckPath: /health
+```
 
 Passos:
 
 1. No Render, escolha **New → Blueprint** e conecte este repositório.
 2. Confirme a criação dos dois recursos.
-3. Aguarde o deploy. O health check usa `GET /health`.
-4. Copie a URL pública do Web Service, por exemplo
-   `https://terras-esquecidas.onrender.com`.
-5. Se a URL for diferente, ajuste `apiBase` em `js/config.js`.
-6. Confira se `CORS_ORIGIN` contém a origem do GitHub Pages.
+3. Aguarde o deploy. O health check usa `GET /health`, que não depende do banco.
+4. A URL pública do Web Service é o site do jogo: `https://<servico>.onrender.com`.
 
-O plano gratuito do Render pode hibernar o serviço por inatividade. O primeiro
-acesso depois da hibernação pode demorar alguns segundos; o frontend tem timeout
-e cai para o save local nesse intervalo.
+O frontend usa a própria origem (`apiBase` vazio em `front/js/config.js`),
+então nenhuma configuração extra é necessária. Se a API for movida para outro
+serviço, preencha `apiBase` com a URL completa.
 
 ### Deploy manual (sem Blueprint)
 
 1. Crie um **Postgres** no Render e copie a **Internal Database URL**.
 2. Crie um **Web Service** com:
-   - Root Directory: `server`
-   - Build Command: `npm ci && npm run build`
-   - Start Command: `npm start`
+   - Root Directory: `/` (a raiz do repositório)
+   - Build Command: `npm --prefix back ci && npm --prefix back run build`
+   - Start Command: `npm --prefix back start`
    - Health Check Path: `/health`
 3. Adicione `DATABASE_URL` com a URL interna e `DATABASE_SSL=false`.
-4. Adicione `CORS_ORIGIN` com a origem do site.
-5. Faça o deploy.
+4. Faça o deploy.
+
+O plano gratuito do Render pode hibernar o serviço por inatividade. O primeiro
+acesso depois da hibernação pode demorar alguns segundos; o frontend tem timeout
+e cai para o save local nesse intervalo.
 
 ## Segurança
 
@@ -183,4 +204,4 @@ e cai para o save local nesse intervalo.
 - O corpo JSON é limitado a 256 KB.
 - O save é validado com `zod` antes de chegar ao Postgres.
 - Erros internos não expõem stack trace para o cliente.
-- Não commite `server/.env` nem a `DATABASE_URL`.
+- Não commite `back/.env` nem a `DATABASE_URL`.

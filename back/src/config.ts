@@ -1,5 +1,7 @@
 import "dotenv/config";
 
+export type LogLevel = "silent" | "info" | "debug";
+
 export interface AppConfig {
   port: number;
   host: string;
@@ -9,6 +11,14 @@ export interface AppConfig {
   sessionDays: number;
   bcryptRounds: number;
   autoMigrate: boolean;
+  /** Serve o frontend estatico a partir da mesma porta da API. */
+  serveFront: boolean;
+  /** Caminho absoluto ou relativo da pasta do frontend. Vazio = deteccao automatica. */
+  frontDir: string | null;
+  /** Quantidade de proxies confiaveis (Render usa 1). */
+  trustProxy: number;
+  /** Nivel de log das requisicoes HTTP. */
+  logLevel: LogLevel;
 }
 
 function intEnv(value: string | undefined, fallback: number, min: number, max: number): number {
@@ -20,6 +30,14 @@ function intEnv(value: string | undefined, fallback: number, min: number, max: n
 function boolEnv(value: string | undefined, fallback: boolean): boolean {
   if (value == null || value === "") return fallback;
   return /^(1|true|yes|on)$/i.test(value);
+}
+
+function logLevelEnv(value: string | undefined, fallback: LogLevel): LogLevel {
+  const normalized = String(value || "").trim().toLowerCase();
+  if (normalized === "silent" || normalized === "info" || normalized === "debug") {
+    return normalized;
+  }
+  return fallback;
 }
 
 export function loadConfig(env: NodeJS.ProcessEnv = process.env): AppConfig {
@@ -35,6 +53,8 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): AppConfig {
     .map((origin) => origin.trim())
     .filter(Boolean);
 
+  const frontDir = String(env.FRONT_DIR || "").trim() || null;
+
   return {
     port: intEnv(env.PORT, 3001, 1, 65535),
     host: String(env.HOST || "0.0.0.0").trim() || "0.0.0.0",
@@ -43,7 +63,11 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): AppConfig {
     corsOrigins: corsOrigins.length ? corsOrigins : ["*"],
     sessionDays: intEnv(env.SESSION_DAYS, 30, 1, 365),
     bcryptRounds: intEnv(env.BCRYPT_ROUNDS, 12, 4, 15),
-    autoMigrate: boolEnv(env.AUTO_MIGRATE, true)
+    autoMigrate: boolEnv(env.AUTO_MIGRATE, true),
+    serveFront: boolEnv(env.SERVE_FRONT, true),
+    frontDir,
+    trustProxy: intEnv(env.TRUST_PROXY, 1, 0, 10),
+    logLevel: logLevelEnv(env.LOG_LEVEL, "info")
   };
 }
 
