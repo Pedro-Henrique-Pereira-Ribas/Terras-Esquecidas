@@ -13,7 +13,9 @@
     "api:build": "npm --prefix back run build",
     "api:start": "npm --prefix back start",
     "api:test": "npm --prefix back test",
-    "api:typecheck": "npm --prefix back run typecheck"
+    "api:typecheck": "npm --prefix back run typecheck",
+    "front:test": "node --test \"front/test/*.test.js\"",
+    "test": "npm run api:test && npm run front:test"
   },
   "author": "Pedro Henrique Pereira Ribas",
   "license": "UNLICENSED",

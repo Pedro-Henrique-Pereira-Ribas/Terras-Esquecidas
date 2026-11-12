@@ -71,8 +71,12 @@
 
   // 404 e 5xx também contam como indisponibilidade: pode ser um serviço
   // do Render hibernando, uma URL errada ou uma rota ainda não publicada.
+  // Uma resposta sem JSON também é indisponibilidade: o host respondeu, mas
+  // não é a API.
   API.isUnavailable = function (error) {
     const status = Number(error && error.status) || 0;
+    const code = String((error && error.code) || "");
+    if (code === "invalid_response" || code === "offline") return true;
     return status === 0 || status === 404 || status >= 500;
   };
 
@@ -130,6 +134,16 @@
           (error && error.code) || "request_error"
         );
       }
+      // Resposta 200 sem JSON e o caso de o site estar sendo servido sem a
+      // API no mesmo host (ou em um host que nao e a API). Sem isso, o jogo
+      // quebraria em silencio ao tentar usar um token inexistente.
+      if (opts.expectJson !== false && data === null) {
+        throw new ApiError(
+          "O servidor nao respondeu no formato esperado.",
+          response.status,
+          "invalid_response"
+        );
+      }
       return data;
     } catch (error) {
       if (error instanceof ApiError) throw error;
@@ -176,7 +190,7 @@
     API.clearSession();
     if (!API.enabled || !token) return;
     try {
-      await request("/api/accounts/logout", { method: "POST", token: token });
+      await request("/api/accounts/logout", { method: "POST", token: token, expectJson: false });
     } catch (err) {
       // O token local já foi removido; a sessão remota expira sozinha.
     }
