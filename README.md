@@ -186,13 +186,14 @@ O frontend chama a API pela URL em `front/js/config.js` (`apiBase`), em outra or
 2. O `render.yaml` cria o Web Service `terras-esquecidas-back`.
 3. Em **Environment**, cole a `DATABASE_URL` do Neon (o Blueprint deixa a variável como `sync: false`).
 4. Crie o **Static Site** com estas settings:
-   - Build Command: `npm run build`
-   - Publish Path: `_site`
-   - (sem build command também funciona: use *Publish Path* `front`)
+   - Root Directory: `/` (a raiz do repositório)
+   - Publish Path: `front`
+   - (ou Build Command `npm run build` com Publish Path `_site`)
 5. Aguarde os deploys e confira `GET /health` na URL da API.
 
-O `npm run build` da raiz monta a pasta `_site/` com o conteúdo de `front/`
-(15 arquivos, sem dependência nenhuma). É o mesmo site que a API serve.
+O *Publish Path* precisa apontar para `front/`. Se ficar vazio, o Static Site publica
+o repositório inteiro — o `/` passa a responder com a cópia antiga do site que
+sobrou no cache do CDN, e o `config.js` continua apontando para a API errada.
 
 Instruções completas, endpoints, variáveis de ambiente e exemplos de `curl` estão em [`back/README.md`](back/README.md).
 
