@@ -587,6 +587,9 @@ h2 { font-weight: 700; letter-spacing: .02em; }
 .account-meta { display: flex; justify-content: center; flex-wrap: wrap; gap: 8px 16px; margin-bottom: 18px; color: var(--faint); font-size: 7px; letter-spacing: .07em; text-transform: uppercase; }
 .account-meta span { padding: 4px 7px; border: 1px solid var(--line-soft); }
 .account-actions { display: grid; gap: 8px; }
+#btn-account-admin { border-color: var(--gold-soft); color: var(--gold); }
+#btn-account-admin:hover { border-color: var(--gold); background: rgba(59, 48, 28, .55); }
+#btn-title-admin { border-color: var(--line); color: var(--gold-soft); }
 
 @media (max-width: 900px) {
   .account-wrap { grid-template-columns: minmax(0, 1fr) minmax(300px, 370px); gap: 20px; padding: 10px 16px; }

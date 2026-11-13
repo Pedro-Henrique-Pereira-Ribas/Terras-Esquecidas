@@ -53,6 +53,24 @@ async function makeAdmin(
 
 import request from "supertest";
 
+test("o login do jogo avisa se a conta e admin", async () => {
+  const { app, pool } = makeApp();
+  await makeAdmin(app, pool);
+  await request(app).post("/api/accounts").send({
+    name: "Jogador",
+    pin: "1234",
+    server: "Reino Sem Nome"
+  });
+
+  const admin = await request(app).post("/api/accounts/login").send({ name: "Chefia", pin: "1234" });
+  assert.equal(admin.status, 200);
+  assert.equal(admin.body.account.isAdmin, true);
+
+  const comum = await request(app).post("/api/accounts/login").send({ name: "Jogador", pin: "1234" });
+  assert.equal(comum.status, 200);
+  assert.equal(comum.body.account.isAdmin, false);
+});
+
 test("admin entra no painel com e-mail autorizado e chave correta", async () => {
   const { app, pool } = makeApp();
   const { email } = await makeAdmin(app, pool);

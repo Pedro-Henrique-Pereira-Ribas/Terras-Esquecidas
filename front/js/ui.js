@@ -131,6 +131,8 @@
       accountCloudStatus: q("account-cloud-status"), accountKind: q("account-kind"),
       accountCreate: q("btn-account-create"), accountTabs: q("account-tabs"),
       accountSkip: q("btn-account-skip"),
+      accountAdmin: q("btn-account-admin"),
+      titleAdmin: q("btn-title-admin"),
       accountPassword: q("btn-account-password"),
       accountPasswordForm: q("account-password-form"),
       accountPasswordSave: q("btn-account-password-save"),
@@ -203,6 +205,12 @@
         e.preventDefault();
         submitPasswordForm();
       });
+    }
+    if (UI.el.accountAdmin) {
+      UI.el.accountAdmin.addEventListener("click", function () { TP.audio.sfx("click"); openAdminPanel(); });
+    }
+    if (UI.el.titleAdmin) {
+      UI.el.titleAdmin.addEventListener("click", function () { TP.audio.sfx("click"); openAdminPanel(); });
     }
 
     UI.el.accountTabs.addEventListener("click", function (e) {
@@ -508,6 +516,18 @@
     } finally {
       if (UI.cloud) UI.cloud.applying = wasApplying;
     }
+  }
+
+  /** Abre o painel de administracao em outra aba. */
+  function openAdminPanel() {
+    window.open("admin.html", "_blank", "noopener");
+  }
+
+  /** Esconde ou mostra os atalhos de administracao. */
+  function renderAdminShortcuts() {
+    const isAdmin = !!(UI.account && UI.account.isAdmin);
+    if (UI.el.accountAdmin) UI.el.accountAdmin.classList.toggle("hidden", !isAdmin);
+    if (UI.el.titleAdmin) UI.el.titleAdmin.classList.toggle("hidden", !isAdmin);
   }
 
   /* ============================================================
@@ -1005,6 +1025,7 @@
       }
     }
     UI.renderAccountBadge();
+    renderAdminShortcuts();
     UI.renderCloudStatus();
   };
 

@@ -346,6 +346,7 @@ export function createApp(options: CreateAppOptions) {
           id: account.id,
           name: account.name,
           server: account.server,
+          isAdmin: Boolean(account.is_admin),
           createdAt: new Date(account.created_at).toISOString(),
           lastLoginAt: new Date().toISOString()
         },
