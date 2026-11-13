@@ -55,6 +55,35 @@ async function makeAdmin(
 
 import request from "supertest";
 
+test("apagar uma conta leva junto o pedido pendente dela", async () => {
+  const { app, pool } = makeApp();
+  const { token } = await makeAdmin(app, pool, "dono@reino.test", "Dono");
+
+  await request(app)
+    .post("/api/admin/request")
+    .send({ name: "Some Um Dia", pin: "2468", server: "Reino Sem Nome" });
+
+  const fila = await request(app)
+    .get("/api/admin/requests")
+    .set("Authorization", `Bearer ${token}`);
+  assert.equal(fila.body.requests.length, 1);
+
+  await request(app)
+    .post("/api/admin/accounts")
+    .set("Authorization", `Bearer ${token}`)
+    .send({ name: "Some Um Dia", pin: "2468", server: "Reino Sem Nome" });
+
+  const apagar = await request(app)
+    .delete("/api/admin/accounts/some um dia")
+    .set("Authorization", `Bearer ${token}`);
+  assert.equal(apagar.status, 204);
+
+  const depois = await request(app)
+    .get("/api/admin/requests")
+    .set("Authorization", `Bearer ${token}`);
+  assert.equal(depois.body.requests.length, 0, "o pedido pendente deve sumir com a conta");
+});
+
 test("quem ja tem conta pede administracao e o pedido vira promocao", async () => {
   const { app, pool } = makeApp();
   const { token } = await makeAdmin(app, pool, "dono@reino.test", "Dono");

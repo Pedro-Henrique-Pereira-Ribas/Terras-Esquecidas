@@ -255,8 +255,28 @@ export async function updateAccountAccess(
 
 /** Apaga uma conta (com save e sessoes em cascata). */
 export async function deleteAccount(pool: Pool, nameKey: string): Promise<boolean> {
-  const result = await pool.query("DELETE FROM accounts WHERE name_key = $1", [nameKey]);
-  return (result.rowCount || 0) > 0;
+  const client = await pool.connect();
+  try {
+    await client.query("BEGIN");
+    // Pedidos pendentes desse nome sao junto: sem a conta, nao ha o que
+    // aprovar, e o pedido voltaria a criar a conta do zero.
+    await client.query(
+      "DELETE FROM account_requests WHERE name_key = $1 AND status = 'pending'",
+      [nameKey]
+    );
+    const result = await client.query("DELETE FROM accounts WHERE name_key = $1", [nameKey]);
+    await client.query("COMMIT");
+    return (result.rowCount || 0) > 0;
+  } catch (error) {
+    try {
+      await client.query("ROLLBACK");
+    } catch {
+      // Ignora falha de rollback; o erro original é mais útil.
+    }
+    throw error;
+  } finally {
+    client.release();
+  }
 }
 
 /* ============================================================
