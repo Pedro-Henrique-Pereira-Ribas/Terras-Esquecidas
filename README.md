@@ -174,7 +174,7 @@ Site e API são publicados como **dois recursos separados** no Render, com o ban
 | --- | --- | --- |
 | Jogo | Static Site no Render, pasta `front/` | `https://terras-esquecidas.onrender.com` |
 | API | Web Service no Render, pasta `back/` | `https://terras-esquecidas-back.onrender.com` |
-| Banco | Postgres gerenciado no Neon, projeto `terra-perdida` | connection string no painel do Neon |
+| Banco | Postgres gerenciado no Neon, projeto `terras-esquecidas` | connection string no painel do Neon |
 
 O Web Service também serve a pasta `front/`, então `https://terras-esquecidas-back.onrender.com`
 entrega o jogo completo na mesma origem da API — é o endereço de reserva caso o

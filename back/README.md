@@ -145,7 +145,7 @@ inteiro saia do ar por causa de uma variável de ambiente faltando.
 ### Banco no Neon
 
 O projeto usa o Postgres gerenciado do [Neon](https://neon.tech) (plano gratuito),
-no projeto **`terra-perdida`**. Pegue a connection string em
+no projeto **`terras-esquecidas`**. Pegue a connection string em
 **Neon Console → Connection Details → Pooled connection** e use no `DATABASE_URL`:
 
 ```text
