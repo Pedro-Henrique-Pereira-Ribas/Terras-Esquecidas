@@ -35,7 +35,7 @@ function makeApp() {
 async function makeAdmin(
   app: ReturnType<typeof makeApp>["app"],
   pool: Pool,
-  email = "chefia@reino.test",
+  email = "dono@reino.test",
   name = "Chefia"
 ) {
   const created = await request(app).post("/api/accounts").send({
@@ -130,6 +130,43 @@ test("admin que nao e o dono nao ve os pedidos", async () => {
   assert.equal(dono.token.length > 0, true);
 });
 
+test("so o dono cria, altera e apaga contas", async () => {
+  const { app, pool } = makeApp();
+  const dono = await makeAdmin(app, pool, "dono@reino.test", "Dono");
+  const outro = await makeAdmin(app, pool, "outro@reino.test", "Outro");
+
+  // Listar e permitido para qualquer admin.
+  const lista = await request(app)
+    .get("/api/admin/accounts")
+    .set("Authorization", `Bearer ${outro.token}`);
+  assert.equal(lista.status, 200);
+
+  // Criar, alterar e apagar nao.
+  const criar = await request(app)
+    .post("/api/admin/accounts")
+    .set("Authorization", `Bearer ${outro.token}`)
+    .send({ name: "Nao Pode", pin: "1111", server: "Reino Sem Nome" });
+  assert.equal(criar.status, 403);
+
+  const alterar = await request(app)
+    .put("/api/admin/accounts/dono")
+    .set("Authorization", `Bearer ${outro.token}`)
+    .send({ isAdmin: true });
+  assert.equal(alterar.status, 403);
+
+  const apagar = await request(app)
+    .delete("/api/admin/accounts/dono")
+    .set("Authorization", `Bearer ${outro.token}`);
+  assert.equal(apagar.status, 403);
+
+  // O dono consegue.
+  const ok = await request(app)
+    .post("/api/admin/accounts")
+    .set("Authorization", `Bearer ${dono.token}`)
+    .send({ name: "Pode", pin: "1111", server: "Reino Sem Nome" });
+  assert.equal(ok.status, 201);
+});
+
 test("quem nao e admin nao ve os pedidos", async () => {
   const { app } = makeApp();
   const criado = await request(app).post("/api/accounts").send({
@@ -206,7 +243,7 @@ test("e-mail desconhecido ou chave errada nao entra", async () => {
 
   const chaveErrada = await request(app)
     .post("/api/admin/login")
-    .send({ email: "chefia@reino.test", pin: "0000" });
+    .send({ email: "dono@reino.test", pin: "0000" });
   assert.equal(chaveErrada.status, 401);
 });
 

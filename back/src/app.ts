@@ -728,11 +728,12 @@ export function createApp(options: CreateAppOptions) {
     })
   );
 
-  // Cadastra uma conta para outra pessoa.
+  // Cadastra uma conta para outra pessoa. Como pode liberar acesso de
+  // admin, so o dono do Reino pode.
   app.post(
     "/api/admin/accounts",
     requireAuth,
-    requireAdmin,
+    requireOwner,
     adminLimit,
     asyncHandler(async (req, res) => {
       const body = parseBody(adminCreateAccountSchema, req, res);
@@ -765,11 +766,12 @@ export function createApp(options: CreateAppOptions) {
   );
 
   // Atualiza chave, e-mail ou permissao de admin. O :nameKey e o nome
-  // normalizado (minusculas e sem espacos duplicados).
+  // normalizado (minusculas e sem espacos duplicados). Como libera acesso
+  // de admin, so o dono do Reino pode.
   app.put(
     "/api/admin/accounts/:nameKey",
     requireAuth,
-    requireAdmin,
+    requireOwner,
     adminLimit,
     asyncHandler(async (req, res) => {
       const body = parseBody(adminUpdateAccountSchema, req, res);
@@ -804,11 +806,11 @@ export function createApp(options: CreateAppOptions) {
     })
   );
 
-  // Apaga a conta (save e sessoes vao em cascata).
+  // Apaga a conta (save e sessoes vao em cascata). So o dono do Reino pode.
   app.delete(
     "/api/admin/accounts/:nameKey",
     requireAuth,
-    requireAdmin,
+    requireOwner,
     adminLimit,
     asyncHandler(async (req, res) => {
       const auth = (req as AuthedRequest).auth!;
