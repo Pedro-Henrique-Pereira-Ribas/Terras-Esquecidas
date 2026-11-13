@@ -46,4 +46,6 @@ export interface AccountRequestRow {
   status: string;
   created_at: Date;
   decided_at: Date | null;
+  /** Conta que ja existe e pediu administracao. Vazio = conta nova. */
+  account_id?: string | null;
 }

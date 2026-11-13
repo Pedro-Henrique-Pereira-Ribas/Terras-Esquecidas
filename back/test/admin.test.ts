@@ -55,6 +55,50 @@ async function makeAdmin(
 
 import request from "supertest";
 
+test("quem ja tem conta pede administracao e o pedido vira promocao", async () => {
+  const { app, pool } = makeApp();
+  const { token } = await makeAdmin(app, pool, "dono@reino.test", "Dono");
+
+  // Uma conta comum existe.
+  await request(app).post("/api/accounts").send({
+    name: "Jogador Comum",
+    pin: "4321",
+    server: "Reino Sem Nome"
+  });
+
+  // Pedido com a chave errada da conta existente e recusado.
+  const errado = await request(app)
+    .post("/api/admin/request")
+    .send({ name: "Jogador Comum", pin: "0000", server: "Reino Sem Nome" });
+  assert.equal(errado.status, 401);
+
+  // Com a chave certa, o pedido entra como promocao.
+  const pedido = await request(app)
+    .post("/api/admin/request")
+    .send({ name: "Jogador Comum", pin: "4321", server: "Reino Sem Nome" });
+  assert.equal(pedido.status, 201);
+
+  const fila = await request(app)
+    .get("/api/admin/requests")
+    .set("Authorization", `Bearer ${token}`);
+  assert.equal(fila.body.requests[0].isPromotion, true);
+
+  // Aprovar promove a conta, sem trocar a chave dela.
+  const aprovar = await request(app)
+    .post(`/api/admin/requests/${fila.body.requests[0].id}/approve`)
+    .set("Authorization", `Bearer ${token}`);
+  assert.equal(aprovar.status, 201);
+  assert.equal(aprovar.body.account.isAdmin, true);
+  assert.equal(aprovar.body.account.name, "Jogador Comum");
+
+  // A conta continua entrando com a mesma chave.
+  const login = await request(app)
+    .post("/api/accounts/login")
+    .send({ name: "Jogador Comum", pin: "4321" });
+  assert.equal(login.status, 200);
+  assert.equal(login.body.account.isAdmin, true);
+});
+
 test("quem pede conta entra na fila do dono do Reino", async () => {
   const { app } = makeApp();
 

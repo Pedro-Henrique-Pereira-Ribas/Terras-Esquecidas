@@ -272,6 +272,8 @@ export interface CreateRequestInput {
   emailKey: string | null;
   note: string | null;
   ownerEmail: string;
+  /** Conta que ja existe e quer virar admin. Vazio = conta nova. */
+  accountId?: string | null;
 }
 
 /** Pedido na fila de um dono. */
@@ -281,8 +283,8 @@ export async function createAccountRequest(
 ): Promise<AccountRequestRow> {
   const result = await pool.query<AccountRequestRow>(
     `INSERT INTO account_requests
-       (id, name, name_key, server, pin_hash, email, email_key, note, owner_email, status)
-     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, 'pending')
+       (id, name, name_key, server, pin_hash, email, email_key, note, owner_email, account_id, status)
+     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, 'pending')
      RETURNING id, name, server, email, note, owner_email, status, created_at, decided_at`,
     [
       randomUUID(),
@@ -293,7 +295,8 @@ export async function createAccountRequest(
       input.email,
       input.emailKey,
       input.note,
-      input.ownerEmail
+      input.ownerEmail,
+      input.accountId ?? null
     ]
   );
   return result.rows[0];
@@ -306,7 +309,8 @@ export async function listAccountRequests(
   status?: string
 ): Promise<AccountRequestRow[]> {
   const result = await pool.query<AccountRequestRow>(
-    `SELECT id, name, server, email, note, owner_email, status, created_at, decided_at
+    `SELECT id, name, server, email, note, owner_email, status, created_at, decided_at,
+            account_id
        FROM account_requests
       WHERE owner_email = $1
         AND ($2::text IS NULL OR status = $2)
@@ -336,10 +340,10 @@ export async function decideAccountRequest(
 export async function findAccountRequest(
   pool: Pool,
   id: string
-): Promise<(AccountRequestRow & { pin_hash: string; email_key: string | null }) | null> {
+): Promise<(AccountRequestRow & { pin_hash: string; email_key: string | null; account_id: string | null }) | null> {
   const result = await pool.query(
     `SELECT id, name, name_key, server, pin_hash, email, email_key, note, owner_email,
-            status, created_at, decided_at
+            account_id, status, created_at, decided_at
        FROM account_requests
       WHERE id = $1
       LIMIT 1`,

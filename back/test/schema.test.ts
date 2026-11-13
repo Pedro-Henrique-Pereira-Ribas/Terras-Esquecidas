@@ -15,6 +15,24 @@ const OLD_ACCOUNTS = `
   );
 `;
 
+/** Banco antigo: ja tem a tabela de pedidos, mas sem a coluna account_id. */
+const OLD_REQUESTS = `
+  CREATE TABLE account_requests (
+    id uuid PRIMARY KEY,
+    name text NOT NULL,
+    name_key text NOT NULL,
+    server text NOT NULL,
+    pin_hash text NOT NULL,
+    email text,
+    email_key text,
+    note text,
+    owner_email text NOT NULL,
+    status text NOT NULL DEFAULT 'pending',
+    created_at timestamptz NOT NULL DEFAULT now(),
+    decided_at timestamptz
+  );
+`;
+
 function makePool(): Pool {
   const db = newDb();
   const adapter = db.adapters.createPg();
@@ -29,6 +47,7 @@ function makePool(): Pool {
 test("adiciona a coluna server em tabelas que ja existiam", async () => {
   const db = newDb();
   db.public.none(OLD_ACCOUNTS);
+  db.public.none(OLD_REQUESTS);
   db.public.none(`
     CREATE TABLE sessions (
       token_hash text PRIMARY KEY,
@@ -71,6 +90,7 @@ test("adiciona a coluna server em tabelas que ja existiam", async () => {
 test("a migracao da coluna server pode rodar varias vezes", async () => {
   const db = newDb();
   db.public.none(OLD_ACCOUNTS);
+  db.public.none(OLD_REQUESTS);
   const adapter = db.adapters.createPg();
   const pool = new adapter.Pool() as unknown as Pool;
 

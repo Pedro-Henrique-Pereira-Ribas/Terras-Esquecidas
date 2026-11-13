@@ -179,7 +179,12 @@
       const title = document.createElement("strong");
       title.textContent = item.name;
       const detail = document.createElement("small");
-      const partes = [item.server, item.email || "sem e-mail", formatDate(item.createdAt)];
+      const partes = [
+        item.isPromotion ? "pede administracao" : "conta nova",
+        item.server,
+        item.email || "sem e-mail",
+        formatDate(item.createdAt)
+      ];
       if (item.note) partes.push('"' + item.note + '"');
       detail.textContent = partes.join(" · ");
       info.appendChild(title);

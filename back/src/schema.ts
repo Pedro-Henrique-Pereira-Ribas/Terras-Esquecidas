@@ -40,6 +40,8 @@ CREATE TABLE IF NOT EXISTS player_saves (
 
 -- Pedidos de conta. Quem pede nao precisa ter conta: o pedido fica na
 -- fila do dono do Reino (OWNER_EMAIL) e ele e que libera.
+-- Quando account_id esta preenchido, o pedido e para virar admin de uma
+-- conta que ja existe.
 CREATE TABLE IF NOT EXISTS account_requests (
   id uuid PRIMARY KEY,
   name text NOT NULL,
@@ -50,6 +52,7 @@ CREATE TABLE IF NOT EXISTS account_requests (
   email_key text,
   note text,
   owner_email text NOT NULL,
+  account_id uuid REFERENCES accounts(id) ON DELETE CASCADE,
   status text NOT NULL DEFAULT 'pending',
   created_at timestamptz NOT NULL DEFAULT now(),
   decided_at timestamptz
@@ -74,6 +77,9 @@ ALTER TABLE accounts ADD COLUMN IF NOT EXISTS email_key text;
 
 -- Administradores autorizados. O padrao e falso: ninguem vira admin sozinho.
 ALTER TABLE accounts ADD COLUMN IF NOT EXISTS is_admin boolean NOT NULL DEFAULT false;
+
+-- Pedido que aponta para uma conta que ja existe (pedido de admin).
+ALTER TABLE account_requests ADD COLUMN IF NOT EXISTS account_id uuid;
 
 -- O indice do e-mail vem depois das colunas: em um banco antigo a tabela
 -- ja existe e o CREATE TABLE nao a recria, entao o indice so pode ser

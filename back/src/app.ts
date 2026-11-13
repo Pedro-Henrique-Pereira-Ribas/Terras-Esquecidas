@@ -504,8 +504,18 @@ export function createApp(options: CreateAppOptions) {
       const nameKey = normalizeName(body.name);
       const existing = await findAccountByNameKey(pool, nameKey);
       if (existing) {
-        sendError(res, 409, "Já existe uma conta com esse nome. Use a aba ENTRAR.", "account_exists");
-        return;
+        // A conta ja existe: o pedido e para virar admin. So quem tem a
+        // chave da conta pode pedir isso.
+        const valid = await verifyPin(body.pin, existing.pin_hash);
+        if (!valid) {
+          sendError(
+            res,
+            401,
+            "Essa conta já existe. Use a chave de acesso dela para pedir administração.",
+            "invalid_credentials"
+          );
+          return;
+        }
       }
 
       const pending = await listAccountRequests(pool, config.ownerEmail, "pending");
@@ -527,7 +537,8 @@ export function createApp(options: CreateAppOptions) {
         email,
         emailKey,
         note: body.note ?? null,
-        ownerEmail: config.ownerEmail
+        ownerEmail: config.ownerEmail,
+        accountId: existing ? existing.id : null
       });
 
       // O pedido vai para a fila e tambem para o e-mail do dono do Reino.
@@ -570,6 +581,7 @@ export function createApp(options: CreateAppOptions) {
           email: row.email,
           note: row.note,
           status: row.status,
+          isPromotion: Boolean(row.account_id),
           createdAt: new Date(row.created_at).toISOString(),
           decidedAt: row.decided_at ? new Date(row.decided_at).toISOString() : null
         }))
@@ -597,6 +609,28 @@ export function createApp(options: CreateAppOptions) {
 
       const nameKey = normalizeName(request.name);
       const existing = await findAccountByNameKey(pool, nameKey);
+      if (request.account_id && existing) {
+        // Pedido de administracao para uma conta que ja existe: a conta
+        // continua com a chave dela e passa a valer como admin.
+        await updateAccountAccess(
+          pool,
+          nameKey,
+          request.email ?? config.ownerEmail,
+          request.email ? request.email_key : config.ownerEmail,
+          true
+        );
+        await decideAccountRequest(pool, id, "approved");
+        const promoted = await findAccountByNameKey(pool, nameKey);
+        res.status(201).json({
+          account: promoted
+            ? adminAccountView({ ...promoted, email: request.email ?? config.ownerEmail })
+            : null,
+          promoted: true,
+          notified: false
+        });
+        return;
+      }
+
       if (existing) {
         sendError(res, 409, "Já existe uma conta com esse nome.", "account_exists");
         return;
