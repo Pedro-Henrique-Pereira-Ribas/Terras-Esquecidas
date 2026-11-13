@@ -478,6 +478,9 @@
       UI.cloud.ready = false;
       UI.cloud.error = null;
     }
+    // O progresso local pertence a conta que acabou de sair. Sem limpar
+    // aqui, a proxima conta criada herdaria moedas, skins e armas dela.
+    resetLocalProgress();
     setAccountSession(null);
     UI.account = null;
     UI.accountTab = UI.accounts.length ? "login" : "create";
@@ -485,6 +488,26 @@
     togglePasswordForm(false);
     UI.refreshAccountGate();
     UI.renderCloudStatus();
+  }
+
+  /** Zera o progresso guardado no navegador (moedas, skins, armas e encantamentos). */
+  function resetLocalProgress() {
+    const wasApplying = UI.cloud ? UI.cloud.applying : false;
+    if (UI.cloud) UI.cloud.applying = true;
+    try {
+      accountStorageSet(WARDROBE_KEY, "{}");
+      accountStorageSet(ARMORY_KEY, "{}");
+      accountStorageSet(WALLET_KEY, "{}");
+      accountStorageSet(ENCHANT_KEY, "{}");
+      loadWardrobe();
+      loadArmory();
+      loadWallet();
+      loadEnchantments();
+      if (UI.cloud) UI.cloud.progress = {};
+      if (typeof rebuildCharacterCards === "function") rebuildCharacterCards();
+    } finally {
+      if (UI.cloud) UI.cloud.applying = wasApplying;
+    }
   }
 
   /* ============================================================
@@ -798,6 +821,10 @@
       if (hasCloudSave(data.save)) {
         applyCloudSave(data.save);
       } else {
+        // A conta esta vazia no servidor. O progresso que esta no navegador
+        // pode ser de outra conta, entao zera antes de sincronizar: do
+        // contrario, uma conta nova nasce com as moedas e skins de outra.
+        resetLocalProgress();
         try { await TP.api.save(exportSave()); } catch (seedError) { /* cache local continua válido */ }
       }
       UI.el.accountPin.value = "";
