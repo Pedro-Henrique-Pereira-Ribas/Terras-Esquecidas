@@ -48,6 +48,9 @@ services:
         value: "1"
       - key: LOG_LEVEL
         value: "info"
+      # Dono do Reino: e o unico e-mail que aprova pedidos e libera contas.
+      - key: OWNER_EMAIL
+        value: "p.ribas2301@gmail.com"
 
   - type: web
     name: terras-esquecidas

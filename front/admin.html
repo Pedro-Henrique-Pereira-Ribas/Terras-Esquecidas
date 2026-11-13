@@ -15,12 +15,56 @@
         <p class="kicker">TERRAS ESQUECIDAS</p>
         <h1>Administração</h1>
       </div>
-      <p class="admin-sub">Painel do Reino. Só entra quem tem e-mail cadastrado e autorizado.</p>
+      <p class="admin-sub">Peça a sua conta ou entre no painel do Reino.</p>
     </header>
 
-    <!-- Entrada -->
-    <section id="login" class="card">
+    <div class="tabs" role="tablist" aria-label="Painel do Reino">
+      <button class="tab active" type="button" role="tab" aria-selected="true" data-tab="request">PEDIR CONTA</button>
+      <button class="tab" type="button" role="tab" aria-selected="false" data-tab="login">ENTRAR</button>
+    </div>
+
+    <!-- Pedido de conta (aberto para todos) -->
+    <section id="view-request" class="card">
+      <h2>Pedir uma conta</h2>
+      <p class="hint">Escolha o nome e a chave de acesso da sua conta. O pedido vai direto para o dono do Reino, que libera o acesso.</p>
+      <form id="request-form" novalidate>
+        <div class="grid">
+          <label class="field" for="req-name">
+            <span>Nome do viajante</span>
+            <input id="req-name" type="text" maxlength="18" spellcheck="false" placeholder="Ex.: Ana">
+          </label>
+          <label class="field" for="req-pin">
+            <span>Chave de acesso <small>4 dígitos</small></span>
+            <input id="req-pin" type="password" inputmode="numeric" maxlength="4" placeholder="••••">
+          </label>
+          <label class="field" for="req-email">
+            <span>E-mail <small>opcional</small></span>
+            <input id="req-email" type="email" spellcheck="false" placeholder="para liberar o painel depois">
+          </label>
+          <label class="field" for="req-server">
+            <span>Servidor</span>
+            <select id="req-server">
+              <option value="Reino Sem Nome">Reino Sem Nome</option>
+              <option value="Terras Esquecidas">Terras Esquecidas</option>
+              <option value="Fronteira das Cinzas">Fronteira das Cinzas</option>
+              <option value="Vale dos Ecos">Vale dos Ecos</option>
+            </select>
+          </label>
+        </div>
+        <label class="field" for="req-note">
+          <span>Recado <small>opcional</small></span>
+          <textarea id="req-note" maxlength="240" rows="3" placeholder="Alguma coisa que o dono do Reino deva saber"></textarea>
+        </label>
+        <p id="request-error" class="msg" role="alert"></p>
+        <p id="request-ok" class="msg" role="status"></p>
+        <button class="btn btn-primary" type="submit">ENVIAR PEDIDO <span>›</span></button>
+      </form>
+    </section>
+
+    <!-- Entrada no painel -->
+    <section id="view-login" class="card hidden">
       <h2>Entrar no painel</h2>
+      <p class="hint">Só entra quem tem e-mail cadastrado e autorizado.</p>
       <form id="login-form" novalidate>
         <label class="field" for="admin-email">
           <span>E-mail</span>
@@ -38,7 +82,20 @@
     <!-- Painel -->
     <section id="panel" class="hidden">
       <div class="card">
-        <h2>Cadastrar pessoa</h2>
+        <div class="card-head">
+          <h2>Pedidos de conta</h2>
+          <div class="head-actions">
+            <span id="who" class="who"></span>
+            <button id="btn-logout" class="btn btn-ghost" type="button">SAIR</button>
+          </div>
+        </div>
+        <p id="requests-error" class="msg" role="alert"></p>
+        <div id="requests-list" class="requests"></div>
+        <p id="requests-empty" class="hint hidden">Nenhum pedido na fila.</p>
+      </div>
+
+      <div class="card">
+        <h2>Cadastrar direto</h2>
         <p class="hint">A conta entra no jogo com o nome e a chave definidos aqui. O e-mail só é necessário se a pessoa for administrar.</p>
         <form id="create-form" novalidate>
           <div class="grid">
@@ -76,10 +133,6 @@
       <div class="card">
         <div class="card-head">
           <h2>Contas do Reino</h2>
-          <div class="head-actions">
-            <span id="who" class="who"></span>
-            <button id="btn-logout" class="btn btn-ghost" type="button">SAIR</button>
-          </div>
         </div>
         <p id="list-error" class="msg" role="alert"></p>
         <div class="table-wrap">

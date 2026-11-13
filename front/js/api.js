@@ -267,4 +267,36 @@
       expectJson: false
     });
   };
+
+  /* ---------- pedidos de conta ---------- */
+  API.adminRequestAccount = async function (payload) {
+    return request("/api/admin/request", {
+      method: "POST",
+      body: {
+        name: payload.name,
+        pin: payload.pin,
+        server: payload.server,
+        email: payload.email || undefined,
+        note: payload.note || undefined
+      },
+      auth: false
+    });
+  };
+
+  API.adminRequests = async function () {
+    const data = await request("/api/admin/requests");
+    return (data && data.requests) || [];
+  };
+
+  API.adminApproveRequest = async function (id) {
+    return request("/api/admin/requests/" + encodeURIComponent(id) + "/approve", {
+      method: "POST"
+    });
+  };
+
+  API.adminRejectRequest = async function (id) {
+    return request("/api/admin/requests/" + encodeURIComponent(id) + "/reject", {
+      method: "POST"
+    });
+  };
 })();

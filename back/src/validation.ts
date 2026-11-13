@@ -121,6 +121,17 @@ export const adminUpdateAccountSchema = z
   })
   .strict();
 
+/** Pedido de conta feito por quem ainda nao tem conta. */
+export const accountRequestSchema = z
+  .object({
+    name: accountNameSchema,
+    pin: pinSchema,
+    server: serverSchema,
+    email: emailSchema.optional(),
+    note: z.string().trim().max(240, "O recado pode ter até 240 caracteres.").optional()
+  })
+  .strict();
+
 export function emptySave(): SaveData {
   return saveSchema.parse({});
 }

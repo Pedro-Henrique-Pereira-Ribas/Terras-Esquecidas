@@ -9,15 +9,22 @@
   let adminEmailFallback = "p.ribas2301@gmail.com";
 
   const el = {
-    login: document.getElementById("login"),
+    viewRequest: document.getElementById("view-request"),
+    viewLogin: document.getElementById("view-login"),
+    panel: document.getElementById("panel"),
+    requestForm: document.getElementById("request-form"),
+    requestError: document.getElementById("request-error"),
+    requestOk: document.getElementById("request-ok"),
     loginForm: document.getElementById("login-form"),
     loginError: document.getElementById("login-error"),
-    panel: document.getElementById("panel"),
     createForm: document.getElementById("create-form"),
     createError: document.getElementById("create-error"),
     listError: document.getElementById("list-error"),
     listEmpty: document.getElementById("list-empty"),
     rows: document.getElementById("rows"),
+    requestsList: document.getElementById("requests-list"),
+    requestsEmpty: document.getElementById("requests-empty"),
+    requestsError: document.getElementById("requests-error"),
     who: document.getElementById("who"),
     logout: document.getElementById("btn-logout"),
     newName: document.getElementById("new-name"),
@@ -58,16 +65,164 @@
     return date.toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit", year: "2-digit" });
   }
 
+  function showTab(tab) {
+    const login = tab === "login";
+    el.viewRequest.classList.toggle("hidden", login);
+    el.viewLogin.classList.toggle("hidden", !login);
+    document.querySelectorAll("[data-tab]").forEach(function (button) {
+      const on = button.getAttribute("data-tab") === tab;
+      button.classList.toggle("active", on);
+      button.setAttribute("aria-selected", on ? "true" : "false");
+    });
+  }
+
   function showLogin() {
-    el.login.classList.remove("hidden");
     el.panel.classList.add("hidden");
+    showTab("login");
   }
 
   function showPanel(account) {
-    el.login.classList.add("hidden");
     el.panel.classList.remove("hidden");
+    showTab("login");
     if (account && account.name) {
       el.who.textContent = "Conectado como " + account.name;
+    }
+  }
+
+  /* ---------- pedido de conta ---------- */
+  el.requestForm.addEventListener("submit", async function (event) {
+    event.preventDefault();
+    const name = document.getElementById("req-name").value.trim().replace(/\s+/g, " ");
+    const pin = document.getElementById("req-pin").value.trim();
+    const email = document.getElementById("req-email").value.trim();
+    const note = document.getElementById("req-note").value.trim();
+
+    if (!/^[^\u0000-\u001f<>]{3,18}$/.test(name)) {
+      setMessage(el.requestError, "O nome precisa ter entre 3 e 18 caracteres.");
+      return;
+    }
+    if (!/^\d{4}$/.test(pin)) {
+      setMessage(el.requestError, "A chave precisa ter exatamente 4 números.");
+      return;
+    }
+    if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      setMessage(el.requestError, "Informe um e-mail válido.");
+      return;
+    }
+
+    setMessage(el.requestError, "");
+    setMessage(el.requestOk, "");
+    const button = el.requestForm.querySelector("button[type=submit]");
+    button.disabled = true;
+    try {
+      await TP.api.adminRequestAccount({
+        name: name,
+        pin: pin,
+        server: document.getElementById("req-server").value,
+        email: email,
+        note: note
+      });
+      el.requestForm.reset();
+      setMessage(
+        el.requestOk,
+        "Pedido enviado. Ele foi direto para o dono do Reino, " +
+          adminEmail() +
+          ", que libera o acesso.",
+        "ok"
+      );
+    } catch (error) {
+      setMessage(
+        el.requestError,
+        error && error.message ? error.message : "Não foi possível enviar o pedido."
+      );
+    } finally {
+      button.disabled = false;
+    }
+  });
+
+  /* ---------- fila de pedidos ---------- */
+  async function loadRequests() {
+    setMessage(el.requestsError, "");
+    try {
+      const requests = await TP.api.adminRequests();
+      renderRequests(requests);
+      el.requestsEmpty.classList.toggle("hidden", requests.length > 0);
+    } catch (error) {
+      if (error && error.status === 401) {
+        writeToken("");
+        showLogin();
+        setMessage(el.loginError, "Sessão encerrada. Entre de novo.");
+        return;
+      }
+      if (error && error.status === 403) {
+        setMessage(el.requestsError, "Só o dono do Reino vê os pedidos.");
+        el.requestsList.textContent = "";
+        el.requestsEmpty.classList.remove("hidden");
+        return;
+      }
+      setMessage(el.requestsError, error && error.message ? error.message : "Não foi possível carregar os pedidos.");
+    }
+  }
+
+  function renderRequests(requests) {
+    el.requestsList.textContent = "";
+    requests.forEach(function (item) {
+      const row = document.createElement("div");
+      row.className = "request" + (item.status === "pending" ? " pending" : " " + item.status);
+
+      const info = document.createElement("div");
+      info.className = "request-info";
+      const title = document.createElement("strong");
+      title.textContent = item.name;
+      const detail = document.createElement("small");
+      const partes = [item.server, item.email || "sem e-mail", formatDate(item.createdAt)];
+      if (item.note) partes.push('"' + item.note + '"');
+      detail.textContent = partes.join(" · ");
+      info.appendChild(title);
+      info.appendChild(detail);
+      row.appendChild(info);
+
+      const actions = document.createElement("div");
+      actions.className = "request-actions";
+      if (item.status === "pending") {
+        const approve = actionButton("aprovar", "Aprovar e criar a conta");
+        approve.classList.add("good");
+        approve.addEventListener("click", function () {
+          decideRequest(item, "approve");
+        });
+        actions.appendChild(approve);
+
+        const reject = actionButton("recusar", "Recusar o pedido");
+        reject.classList.add("danger");
+        reject.addEventListener("click", function () {
+          decideRequest(item, "reject");
+        });
+        actions.appendChild(reject);
+      } else {
+        const state = document.createElement("span");
+        state.className = "request-state";
+        state.textContent = item.status === "approved" ? "aprovado" : "recusado";
+        actions.appendChild(state);
+      }
+      row.appendChild(actions);
+      el.requestsList.appendChild(row);
+    });
+  }
+
+  async function decideRequest(item, action) {
+    setMessage(el.requestsError, "");
+    try {
+      if (action === "approve") {
+        await TP.api.adminApproveRequest(item.id);
+        setMessage(el.requestsError, "Conta de " + item.name + " liberada.", "ok");
+      } else {
+        await TP.api.adminRejectRequest(item.id);
+        setMessage(el.requestsError, "Pedido de " + item.name + " recusado.", "ok");
+      }
+      loadRequests();
+      loadAccounts();
+    } catch (error) {
+      setMessage(el.requestsError, error && error.message ? error.message : "Não foi possível decidir o pedido.");
     }
   }
 
@@ -173,25 +328,9 @@
     }
   }
 
-  async function changeEmail(account) {
-    const email = window.prompt(
-      "E-mail de " + account.name + " (vazio remove o e-mail):",
-      account.email || ""
-    );
-    if (email === null) return;
-    setMessage(el.listError, "");
-    try {
-      await TP.api.adminUpdateAccount(account.name, { email: email.trim() || null });
-      setMessage(el.listError, "E-mail de " + account.name + " atualizado.", "ok");
-      loadAccounts();
-    } catch (error) {
-      setMessage(el.listError, error && error.message ? error.message : "Não foi possível trocar o e-mail.");
-    }
-  }
-
   /**
    * Libera o acesso ao painel: a conta passa a usar o mesmo e-mail autorizado
-   * do administrador e ganha a permissao de admin.
+   * do dono do Reino e ganha a permissao de admin.
    */
   async function releaseAccount(account) {
     const email = adminEmail();
@@ -211,11 +350,6 @@
     } catch (error) {
       setMessage(el.listError, error && error.message ? error.message : "Não foi possível liberar a conta.");
     }
-  }
-
-  /** E-mail do administrador conectado: e ele que libera as contas. */
-  function adminEmail() {
-    return (TP.api && TP.api.account && TP.api.account.email) || adminEmailFallback;
   }
 
   async function toggleAdmin(account) {
@@ -250,7 +384,18 @@
     }
   }
 
+  /** E-mail do administrador conectado: e ele que libera as contas. */
+  function adminEmail() {
+    return (TP.api && TP.api.account && TP.api.account.email) || adminEmailFallback;
+  }
+
   /* ---------- eventos ---------- */
+  document.querySelectorAll("[data-tab]").forEach(function (button) {
+    button.addEventListener("click", function () {
+      showTab(button.getAttribute("data-tab"));
+    });
+  });
+
   el.loginForm.addEventListener("submit", async function (event) {
     event.preventDefault();
     const email = document.getElementById("admin-email").value.trim();
@@ -270,6 +415,7 @@
       const data = await TP.api.adminLogin(email, pin);
       writeToken(data.token);
       showPanel(data.account);
+      loadRequests();
       loadAccounts();
     } catch (error) {
       setMessage(
@@ -338,8 +484,9 @@
   if (readToken()) {
     TP.api.token = readToken();
     showPanel(null);
+    loadRequests();
     loadAccounts();
   } else {
-    showLogin();
+    showTab("request");
   }
 })();

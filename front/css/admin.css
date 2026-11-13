@@ -83,6 +83,41 @@ body {
 .head-actions { display: flex; align-items: center; gap: 10px; }
 .who { color: var(--faint); font-size: 11px; }
 
+.tabs { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; margin-bottom: 18px; padding: 3px; border: 1px solid var(--line-soft); background: rgba(0, 0, 0, .3); }
+.tab {
+  padding: 9px 6px;
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--muted);
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: .16em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+.tab:hover { color: var(--gold); }
+.tab.active { border-color: var(--line); background: rgba(59, 48, 28, .55); color: var(--gold-bright); }
+
+.requests { display: grid; gap: 8px; }
+.request {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  padding: 10px 12px;
+  border: 1px solid var(--line-soft);
+  background: rgba(0, 0, 0, .22);
+}
+.request.pending { border-color: var(--gold-soft); background: rgba(59, 48, 28, .28); }
+.request.rejected { opacity: .55; }
+.request-info { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.request-info strong { color: var(--gold-bright); font-weight: normal; letter-spacing: .06em; }
+.request-info small { color: var(--faint); font-size: 10px; }
+.request-actions { display: flex; gap: 6px; flex-wrap: wrap; }
+.request-state { color: var(--faint); font-size: 10px; letter-spacing: .1em; text-transform: uppercase; }
+.mini.good:hover { border-color: var(--green); color: var(--green); }
+
 .hint { margin: 0 0 14px; color: var(--faint); font-size: 11px; }
 
 .grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
@@ -91,7 +126,8 @@ body {
 .field small { color: var(--faint); font-size: 8px; letter-spacing: .04em; text-transform: none; }
 
 .field input,
-.field select {
+.field select,
+.field textarea {
   width: 100%;
   padding: 9px 10px;
   border: 1px solid var(--line-soft);
@@ -102,8 +138,11 @@ body {
   letter-spacing: .04em;
 }
 
+.field textarea { resize: vertical; min-height: 60px; }
+
 .field input:focus,
-.field select:focus { outline: none; border-color: var(--gold-soft); box-shadow: 0 0 0 1px rgba(216, 176, 106, .18); }
+.field select:focus,
+.field textarea:focus { outline: none; border-color: var(--gold-soft); box-shadow: 0 0 0 1px rgba(216, 176, 106, .18); }
 
 .check { display: flex; align-items: center; gap: 8px; margin: 4px 0 14px; color: var(--muted); font-size: 11px; }
 .check input { width: 14px; height: 14px; accent-color: var(--gold-soft); }

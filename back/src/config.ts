@@ -19,6 +19,11 @@ export interface AppConfig {
   trustProxy: number;
   /** Nivel de log das requisicoes HTTP. */
   logLevel: LogLevel;
+  /**
+   * E-mail do dono do Reino. E o unico que pode aprovar pedidos e liberar
+   * contas de administracao. Vazio = ninguem pode liberar.
+   */
+  ownerEmail: string | null;
 }
 
 function intEnv(value: string | undefined, fallback: number, min: number, max: number): number {
@@ -58,6 +63,7 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): AppConfig {
     .filter(Boolean);
 
   const frontDir = String(env.FRONT_DIR || "").trim() || null;
+  const ownerEmail = String(env.OWNER_EMAIL || "").trim().toLowerCase() || null;
 
   return {
     port: intEnv(env.PORT, 3001, 1, 65535),
@@ -71,7 +77,8 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): AppConfig {
     serveFront: boolEnv(env.SERVE_FRONT, true),
     frontDir,
     trustProxy: intEnv(env.TRUST_PROXY, 1, 0, 10),
-    logLevel: logLevelEnv(env.LOG_LEVEL, "info")
+    logLevel: logLevelEnv(env.LOG_LEVEL, "info"),
+    ownerEmail
   };
 }
 

@@ -12,15 +12,20 @@ import type { AppConfig } from "./config";
 import { ping } from "./repository";
 import {
   activeSessionsByAccount,
-  createAccountWithSession,
   createAccountOnly,
+  createAccountRequest,
+  createAccountWithSession,
   createSession,
+  decideAccountRequest,
   deleteAccount,
+  findAccountById,
+  findAccountRequest,
   findAccountsByEmailKey,
   findAccountByNameKey,
   findAccountPinHash,
   findSession,
   getSave,
+  listAccountRequests,
   listAccounts,
   revokeSession,
   setAccountPin,
@@ -34,6 +39,7 @@ import { createStaticRouter, isApiPath, resolveFrontDir } from "./static";
 import type { AccountPublic } from "./types";
 import type { LogLevel } from "./config";
 import {
+  accountRequestSchema,
   adminCreateAccountSchema,
   adminLoginSchema,
   adminUpdateAccountSchema,
@@ -446,6 +452,171 @@ export function createApp(options: CreateAppOptions) {
     next();
   });
 
+  /**
+   * Alem de admin, e preciso ser o dono do Reino: o e-mail configurado em
+   * OWNER_EMAIL. E o dono que libera as contas de outras pessoas.
+   */
+  const requireOwner = asyncHandler(async (req, res, next) => {
+    const auth = (req as AuthedRequest).auth;
+    const ownerEmail = config.ownerEmail;
+    if (!ownerEmail) {
+      sendError(res, 503, "Nenhum dono configurado neste serviço.", "owner_not_configured");
+      return;
+    }
+    if (!auth || !auth.account.isAdmin) {
+      sendError(res, 403, "Acesso restrito ao painel de administração.", "forbidden");
+      return;
+    }
+    const email = await findAccountById(pool, auth.account.id);
+    if (!email || email.email_key !== ownerEmail) {
+      sendError(res, 403, "Só o dono do Reino pode liberar contas.", "forbidden");
+      return;
+    }
+    next();
+  });
+
+  /* ---------- pedidos de conta ---------- */
+
+  // Pedido publico: quem nao tem conta pede uma.
+  app.post(
+    "/api/admin/request",
+    authIpLimit,
+    asyncHandler(async (req, res) => {
+      const body = parseBody(accountRequestSchema, req, res);
+      if (!body) return;
+
+      if (!config.ownerEmail) {
+        sendError(res, 503, "Nenhum dono configurado neste serviço.", "owner_not_configured");
+        return;
+      }
+
+      const nameKey = normalizeName(body.name);
+      const existing = await findAccountByNameKey(pool, nameKey);
+      if (existing) {
+        sendError(res, 409, "Já existe uma conta com esse nome. Use a aba ENTRAR.", "account_exists");
+        return;
+      }
+
+      const pending = await listAccountRequests(pool, config.ownerEmail, "pending");
+      const repeated = pending.some((row) => normalizeName(row.name) === nameKey);
+      if (repeated) {
+        sendError(res, 409, "Já existe um pedido pendente com esse nome.", "request_exists");
+        return;
+      }
+
+      const email = body.email ?? null;
+      const emailKey = email ? normalizeEmail(email) : null;
+      const pinHash = await hashPin(body.pin, config.bcryptRounds);
+
+      const request = await createAccountRequest(pool, {
+        name: body.name,
+        nameKey,
+        server: body.server,
+        pinHash,
+        email,
+        emailKey,
+        note: body.note ?? null,
+        ownerEmail: config.ownerEmail
+      });
+
+      res.status(201).json({
+        request: {
+          id: request.id,
+          name: request.name,
+          server: request.server,
+          status: request.status,
+          createdAt: new Date(request.created_at).toISOString()
+        }
+      });
+    })
+  );
+
+  // Fila de pedidos do dono.
+  app.get(
+    "/api/admin/requests",
+    requireAuth,
+    requireOwner,
+    asyncHandler(async (_req, res) => {
+      const requests = await listAccountRequests(pool, config.ownerEmail as string);
+      res.json({
+        requests: requests.map((row) => ({
+          id: row.id,
+          name: row.name,
+          server: row.server,
+          email: row.email,
+          note: row.note,
+          status: row.status,
+          createdAt: new Date(row.created_at).toISOString(),
+          decidedAt: row.decided_at ? new Date(row.decided_at).toISOString() : null
+        }))
+      });
+    })
+  );
+
+  // Aprova o pedido: o pedido vira conta de administracao.
+  app.post(
+    "/api/admin/requests/:id/approve",
+    requireAuth,
+    requireOwner,
+    adminLimit,
+    asyncHandler(async (req, res) => {
+      const id = String(req.params.id || "");
+      const request = await findAccountRequest(pool, id);
+      if (!request) {
+        sendError(res, 404, "Pedido não encontrado.", "request_not_found");
+        return;
+      }
+      if (request.status !== "pending") {
+        sendError(res, 409, "Esse pedido já foi decidido.", "request_decided");
+        return;
+      }
+
+      const nameKey = normalizeName(request.name);
+      const existing = await findAccountByNameKey(pool, nameKey);
+      if (existing) {
+        sendError(res, 409, "Já existe uma conta com esse nome.", "account_exists");
+        return;
+      }
+
+      const account = await createAccountOnly(pool, {
+        name: request.name,
+        nameKey,
+        server: request.server,
+        pinHash: request.pin_hash,
+        save: emptySave(),
+        sessionDays: config.sessionDays,
+        email: request.email,
+        emailKey: request.email_key,
+        isAdmin: true
+      });
+      await decideAccountRequest(pool, id, "approved");
+
+      res.status(201).json({ account: adminAccountView({ ...account, email: request.email }) });
+    })
+  );
+
+  // Recusa o pedido.
+  app.post(
+    "/api/admin/requests/:id/reject",
+    requireAuth,
+    requireOwner,
+    adminLimit,
+    asyncHandler(async (req, res) => {
+      const id = String(req.params.id || "");
+      const request = await findAccountRequest(pool, id);
+      if (!request) {
+        sendError(res, 404, "Pedido não encontrado.", "request_not_found");
+        return;
+      }
+      if (request.status !== "pending") {
+        sendError(res, 409, "Esse pedido já foi decidido.", "request_decided");
+        return;
+      }
+      await decideAccountRequest(pool, id, "rejected");
+      res.json({ ok: true });
+    })
+  );
+
   // Entrada do painel: e-mail + chave da conta.
   app.post(
     "/api/admin/login",
@@ -676,6 +847,7 @@ function adminAccountView(row: {
   email?: string | null;
   server: string;
   is_admin?: boolean;
+  isAdmin?: boolean;
   createdAt?: string;
   created_at?: Date | string;
   lastLoginAt?: string | null;
@@ -686,7 +858,7 @@ function adminAccountView(row: {
     name: row.name,
     email: row.email ?? null,
     server: row.server,
-    isAdmin: Boolean(row.is_admin),
+    isAdmin: Boolean(row.is_admin ?? row.isAdmin),
     createdAt: isoDate(row.createdAt ?? row.created_at),
     lastLoginAt: isoDate(row.lastLoginAt ?? row.last_login_at)
   };

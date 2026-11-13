@@ -34,3 +34,16 @@ export interface AdminAccountRow extends AccountRow {
   has_save: boolean;
   has_session: boolean;
 }
+
+/** Pedido de conta esperando a liberacao do dono do Reino. */
+export interface AccountRequestRow {
+  id: string;
+  name: string;
+  server: string;
+  email: string | null;
+  note: string | null;
+  owner_email: string;
+  status: string;
+  created_at: Date;
+  decided_at: Date | null;
+}

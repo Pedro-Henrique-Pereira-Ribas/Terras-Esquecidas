@@ -37,6 +37,26 @@ CREATE TABLE IF NOT EXISTS player_saves (
   data jsonb NOT NULL DEFAULT '{}'::jsonb,
   updated_at timestamptz NOT NULL DEFAULT now()
 );
+
+-- Pedidos de conta. Quem pede nao precisa ter conta: o pedido fica na
+-- fila do dono do Reino (OWNER_EMAIL) e ele e que libera.
+CREATE TABLE IF NOT EXISTS account_requests (
+  id uuid PRIMARY KEY,
+  name text NOT NULL,
+  name_key text NOT NULL,
+  server text NOT NULL,
+  pin_hash text NOT NULL,
+  email text,
+  email_key text,
+  note text,
+  owner_email text NOT NULL,
+  status text NOT NULL DEFAULT 'pending',
+  created_at timestamptz NOT NULL DEFAULT now(),
+  decided_at timestamptz
+);
+
+CREATE INDEX IF NOT EXISTS account_requests_status_idx ON account_requests (status);
+CREATE INDEX IF NOT EXISTS account_requests_owner_idx ON account_requests (owner_email);
 `;
 
 export const MIGRATIONS_SQL = `

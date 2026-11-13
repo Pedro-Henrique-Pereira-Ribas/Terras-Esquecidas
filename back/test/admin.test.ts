@@ -18,7 +18,8 @@ const config: AppConfig = {
   serveFront: false,
   frontDir: null,
   trustProxy: 0,
-  logLevel: "silent"
+  logLevel: "silent",
+  ownerEmail: "dono@reino.test"
 };
 
 function makeApp() {
@@ -34,10 +35,11 @@ function makeApp() {
 async function makeAdmin(
   app: ReturnType<typeof makeApp>["app"],
   pool: Pool,
-  email = "chefia@reino.test"
+  email = "chefia@reino.test",
+  name = "Chefia"
 ) {
   const created = await request(app).post("/api/accounts").send({
-    name: "Chefia",
+    name,
     pin: "1234",
     server: "Reino Sem Nome"
   });
@@ -45,13 +47,101 @@ async function makeAdmin(
   // O primeiro admin e promovido direto no banco: pela API so quem ja e
   // admin pode promover alguem.
   await pool.query(
-    "UPDATE accounts SET email = $1, email_key = $2, is_admin = true WHERE name_key = 'chefia'",
-    [email, email.toLowerCase()]
+    "UPDATE accounts SET email = $1, email_key = $2, is_admin = true WHERE name_key = $3",
+    [email, email.toLowerCase(), name.toLowerCase()]
   );
   return { token, email };
 }
 
 import request from "supertest";
+
+test("quem pede conta entra na fila do dono do Reino", async () => {
+  const { app } = makeApp();
+
+  const pedido = await request(app)
+    .post("/api/admin/request")
+    .send({ name: "Quem Pede", pin: "2468", server: "Terras Esquecidas", note: "Por favor" });
+  assert.equal(pedido.status, 201);
+  assert.equal(pedido.body.request.name, "Quem Pede");
+  assert.equal(pedido.body.request.status, "pending");
+
+  // Pedido repetido com o mesmo nome nao entra duas vezes.
+  const repetido = await request(app)
+    .post("/api/admin/request")
+    .send({ name: "quem pede", pin: "2468", server: "Terras Esquecidas" });
+  assert.equal(repetido.status, 409);
+});
+
+test("so o dono do Reino ve e aprova os pedidos", async () => {
+  const { app, pool } = makeApp();
+  const { token } = await makeAdmin(app, pool, "dono@reino.test", "Dono");
+
+  await request(app)
+    .post("/api/admin/request")
+    .send({ name: "Novo Viajante", pin: "2468", server: "Reino Sem Nome" });
+
+  const fila = await request(app)
+    .get("/api/admin/requests")
+    .set("Authorization", `Bearer ${token}`);
+  assert.equal(fila.status, 200);
+  assert.equal(fila.body.requests.length, 1);
+  const pedido = fila.body.requests[0];
+  assert.equal(pedido.name, "Novo Viajante");
+  assert.equal(pedido.status, "pending");
+
+  // Aprovar transforma o pedido em conta, e ela entra no jogo.
+  const aprovar = await request(app)
+    .post(`/api/admin/requests/${pedido.id}/approve`)
+    .set("Authorization", `Bearer ${token}`);
+  assert.equal(aprovar.status, 201);
+  assert.equal(aprovar.body.account.name, "Novo Viajante");
+  assert.equal(aprovar.body.account.isAdmin, true);
+
+  const login = await request(app)
+    .post("/api/accounts/login")
+    .send({ name: "Novo Viajante", pin: "2468" });
+  assert.equal(login.status, 200);
+
+  // O pedido ja decidido nao volta.
+  const segunda = await request(app)
+    .post(`/api/admin/requests/${pedido.id}/approve`)
+    .set("Authorization", `Bearer ${token}`);
+  assert.equal(segunda.status, 409);
+});
+
+test("admin que nao e o dono nao ve os pedidos", async () => {
+  const { app, pool } = makeApp();
+  const dono = await makeAdmin(app, pool, "dono@reino.test", "Dono");
+  const outro = await makeAdmin(app, pool, "outro@reino.test", "Outro");
+
+  const fila = await request(app)
+    .get("/api/admin/requests")
+    .set("Authorization", `Bearer ${outro.token}`);
+  assert.equal(fila.status, 403);
+
+  await request(app)
+    .post("/api/admin/request")
+    .send({ name: "Alguem", pin: "1357", server: "Reino Sem Nome" });
+
+  const pedido = await request(app)
+    .post("/api/admin/requests/qualquer/approve")
+    .set("Authorization", `Bearer ${outro.token}`);
+  assert.equal(pedido.status, 403);
+  assert.equal(dono.token.length > 0, true);
+});
+
+test("quem nao e admin nao ve os pedidos", async () => {
+  const { app } = makeApp();
+  const criado = await request(app).post("/api/accounts").send({
+    name: "Jogador",
+    pin: "1234",
+    server: "Reino Sem Nome"
+  });
+  const fila = await request(app)
+    .get("/api/admin/requests")
+    .set("Authorization", `Bearer ${criado.body.token}`);
+  assert.equal(fila.status, 403);
+});
 
 test("o login do jogo avisa se a conta e admin", async () => {
   const { app, pool } = makeApp();

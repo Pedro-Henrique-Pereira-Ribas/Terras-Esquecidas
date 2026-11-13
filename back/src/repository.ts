@@ -1,7 +1,14 @@
 import { randomUUID } from "node:crypto";
 import type { Pool } from "pg";
 import { generateToken, hashToken, sessionExpiry } from "./security";
-import type { AccountPublic, AccountRow, AccountWithHashRow, AdminAccountRow, SessionRow } from "./types";
+import type {
+  AccountPublic,
+  AccountRequestRow,
+  AccountRow,
+  AccountWithHashRow,
+  AdminAccountRow,
+  SessionRow
+} from "./types";
 import { emptySave, saveSchema, type SaveData } from "./validation";
 
 function toPublicAccount(row: AccountRow): AccountPublic {
@@ -52,6 +59,27 @@ export async function findAccountsByEmailKey(
     [emailKey]
   );
   return result.rows;
+}
+
+/** Conta pelo id, com o e-mail e o que define o dono do Reino. */
+export async function findAccountById(
+  pool: Pool,
+  id: string
+): Promise<{ id: string; name: string; email: string | null; email_key: string | null; is_admin: boolean } | null> {
+  const result = await pool.query<{
+    id: string;
+    name: string;
+    email: string | null;
+    email_key: string | null;
+    is_admin: boolean;
+  }>(
+    `SELECT id, name, email, email_key, is_admin
+       FROM accounts
+      WHERE id = $1
+      LIMIT 1`,
+    [id]
+  );
+  return result.rows[0] || null;
 }
 
 export interface CreateAccountInput {
@@ -229,6 +257,95 @@ export async function updateAccountAccess(
 export async function deleteAccount(pool: Pool, nameKey: string): Promise<boolean> {
   const result = await pool.query("DELETE FROM accounts WHERE name_key = $1", [nameKey]);
   return (result.rowCount || 0) > 0;
+}
+
+/* ============================================================
+   PEDIDOS DE CONTA
+   ============================================================ */
+
+export interface CreateRequestInput {
+  name: string;
+  nameKey: string;
+  server: string;
+  pinHash: string;
+  email: string | null;
+  emailKey: string | null;
+  note: string | null;
+  ownerEmail: string;
+}
+
+/** Pedido na fila de um dono. */
+export async function createAccountRequest(
+  pool: Pool,
+  input: CreateRequestInput
+): Promise<AccountRequestRow> {
+  const result = await pool.query<AccountRequestRow>(
+    `INSERT INTO account_requests
+       (id, name, name_key, server, pin_hash, email, email_key, note, owner_email, status)
+     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, 'pending')
+     RETURNING id, name, server, email, note, owner_email, status, created_at, decided_at`,
+    [
+      randomUUID(),
+      input.name,
+      input.nameKey,
+      input.server,
+      input.pinHash,
+      input.email,
+      input.emailKey,
+      input.note,
+      input.ownerEmail
+    ]
+  );
+  return result.rows[0];
+}
+
+/** Pedidos de um dono, os pendentes primeiro. */
+export async function listAccountRequests(
+  pool: Pool,
+  ownerEmail: string,
+  status?: string
+): Promise<AccountRequestRow[]> {
+  const result = await pool.query<AccountRequestRow>(
+    `SELECT id, name, server, email, note, owner_email, status, created_at, decided_at
+       FROM account_requests
+      WHERE owner_email = $1
+        AND ($2::text IS NULL OR status = $2)
+      ORDER BY (status = 'pending') DESC, created_at DESC`,
+    [ownerEmail, status ?? null]
+  );
+  return result.rows;
+}
+
+/** Marca um pedido como decidido e devolve a linha. */
+export async function decideAccountRequest(
+  pool: Pool,
+  id: string,
+  status: "approved" | "rejected"
+): Promise<AccountRequestRow | null> {
+  const result = await pool.query<AccountRequestRow>(
+    `UPDATE account_requests
+        SET status = $2, decided_at = now()
+      WHERE id = $1 AND status = 'pending'
+      RETURNING id, name, server, email, note, owner_email, status, created_at, decided_at`,
+    [id, status]
+  );
+  return result.rows[0] || null;
+}
+
+/** Pega o pedido com o hash da chave, para transformar em conta. */
+export async function findAccountRequest(
+  pool: Pool,
+  id: string
+): Promise<(AccountRequestRow & { pin_hash: string; email_key: string | null }) | null> {
+  const result = await pool.query(
+    `SELECT id, name, name_key, server, pin_hash, email, email_key, note, owner_email,
+            status, created_at, decided_at
+       FROM account_requests
+      WHERE id = $1
+      LIMIT 1`,
+    [id]
+  );
+  return result.rows[0] || null;
 }
 
 export async function createSession(

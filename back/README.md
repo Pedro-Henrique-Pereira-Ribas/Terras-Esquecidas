@@ -29,6 +29,10 @@ e o fallback quando a API está fora.
 | `POST` | `/api/accounts/logout` | Bearer | Revoga a sessão atual |
 | `PUT` | `/api/accounts/password` | Bearer | Troca a chave de acesso da conta |
 | `POST` | `/api/admin/login` | não | Entra no painel com e-mail + chave |
+| `POST` | `/api/admin/request` | não | Pedido de conta (vai para o dono do Reino) |
+| `GET` | `/api/admin/requests` | Dono | Fila de pedidos de conta |
+| `POST` | `/api/admin/requests/:id/approve` | Dono | Aprova o pedido: vira conta de admin |
+| `POST` | `/api/admin/requests/:id/reject` | Dono | Recusa o pedido |
 | `GET` | `/api/admin/accounts` | Admin | Lista as contas do Reino |
 | `POST` | `/api/admin/accounts` | Admin | Cadastra uma conta para outra pessoa |
 | `PUT` | `/api/admin/accounts/:nameKey` | Admin | Troca chave, e-mail ou permissão de admin |
@@ -215,6 +219,19 @@ promover ou rebaixar um admin e apagar contas.
 **O que o admin ganha no jogo:** tudo liberado — todas as skins, todas as
 armas no degrau máximo, moedas e todos os encantamentos. O selo vem do banco
 (`is_admin`), então não dá para forjar pelo navegador.
+
+### Pedido de conta
+
+Quem ainda não tem conta abre **`/admin`** e usa a aba **PEDIR CONTA**: escolhe
+o nome, a chave de acesso, o reino e (opcionalmente) o e-mail. O pedido vai
+para a fila do dono do Reino — o e-mail configurado em `OWNER_EMAIL`.
+
+O dono entra no painel com esse e-mail + a chave dele, vê os pedidos pendentes
+e **aprova** (o pedido vira conta de administrador, com a chave que a pessoa
+escolheu) ou **recusa**.
+
+Só o e-mail do dono aprova pedidos e libera contas: os outros admins veem a
+lista de contas, mas a fila de pedidos e a liberação são negadas com `403`.
 
 ### Promover a primeira conta
 
