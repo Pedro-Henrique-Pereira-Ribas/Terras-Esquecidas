@@ -461,7 +461,12 @@ export function createApp(options: CreateAppOptions) {
     const auth = (req as AuthedRequest).auth;
     const ownerEmail = config.ownerEmail;
     if (!ownerEmail) {
-      sendError(res, 503, "Nenhum dono configurado neste serviço.", "owner_not_configured");
+      sendError(
+        res,
+        503,
+        "Nenhum dono configurado neste serviço. Defina OWNER_EMAIL no ambiente (Render > Environment).",
+        "owner_not_configured"
+      );
       return;
     }
     if (!auth || !auth.account.isAdmin) {
@@ -487,7 +492,12 @@ export function createApp(options: CreateAppOptions) {
       if (!body) return;
 
       if (!config.ownerEmail) {
-        sendError(res, 503, "Nenhum dono configurado neste serviço.", "owner_not_configured");
+        sendError(
+          res,
+          503,
+          "Nenhum dono configurado neste serviço. Defina OWNER_EMAIL no ambiente (Render > Environment).",
+          "owner_not_configured"
+        );
         return;
       }
 
