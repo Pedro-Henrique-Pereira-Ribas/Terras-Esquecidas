@@ -2,6 +2,13 @@ import "dotenv/config";
 
 export type LogLevel = "silent" | "info" | "debug";
 
+/**
+ * E-mail do dono do Reino quando o ambiente nao define OWNER_EMAIL.
+ * O valor no ambiente tem prioridade: e so a rede de seguranca para o
+ * servico nunca ficar sem dono.
+ */
+const DEFAULT_OWNER_EMAIL = "p.ribas2301@gmail.com";
+
 export interface AppConfig {
   port: number;
   host: string;
@@ -67,7 +74,8 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): AppConfig {
     .filter(Boolean);
 
   const frontDir = String(env.FRONT_DIR || "").trim() || null;
-  const ownerEmail = String(env.OWNER_EMAIL || "").trim().toLowerCase() || null;
+  const ownerEmail =
+    String(env.OWNER_EMAIL || DEFAULT_OWNER_EMAIL).trim().toLowerCase() || null;
 
   return {
     port: intEnv(env.PORT, 3001, 1, 65535),
