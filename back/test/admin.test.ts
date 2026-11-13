@@ -1,0 +1,220 @@
+import test from "node:test";
+import assert from "node:assert/strict";
+import { newDb } from "pg-mem";
+import type { Pool } from "pg";
+import { createApp } from "../src/app";
+import type { AppConfig } from "../src/config";
+import { SCHEMA_SQL, MIGRATIONS_SQL } from "../src/schema";
+
+const config: AppConfig = {
+  port: 0,
+  host: "127.0.0.1",
+  databaseUrl: "pg-mem",
+  databaseSsl: false,
+  corsOrigins: ["*"],
+  sessionDays: 30,
+  bcryptRounds: 4,
+  autoMigrate: false,
+  serveFront: false,
+  frontDir: null,
+  trustProxy: 0,
+  logLevel: "silent"
+};
+
+function makeApp() {
+  const db = newDb();
+  db.public.none(SCHEMA_SQL);
+  db.public.none(MIGRATIONS_SQL);
+  const adapter = db.adapters.createPg();
+  const pool = new adapter.Pool() as unknown as Pool;
+  return { app: createApp({ pool, config, frontDir: null }), pool };
+}
+
+/** Cria um admin e devolve o token de sessao dele. */
+async function makeAdmin(
+  app: ReturnType<typeof makeApp>["app"],
+  pool: Pool,
+  email = "chefia@reino.test"
+) {
+  const created = await request(app).post("/api/accounts").send({
+    name: "Chefia",
+    pin: "1234",
+    server: "Reino Sem Nome"
+  });
+  const token = created.body.token;
+  // O primeiro admin e promovido direto no banco: pela API so quem ja e
+  // admin pode promover alguem.
+  await pool.query(
+    "UPDATE accounts SET email = $1, email_key = $2, is_admin = true WHERE name_key = 'chefia'",
+    [email, email.toLowerCase()]
+  );
+  return { token, email };
+}
+
+import request from "supertest";
+
+test("admin entra no painel com e-mail autorizado e chave correta", async () => {
+  const { app, pool } = makeApp();
+  const { email } = await makeAdmin(app, pool);
+
+  const login = await request(app)
+    .post("/api/admin/login")
+    .send({ email, pin: "1234" });
+  assert.equal(login.status, 200);
+  assert.ok(login.body.token);
+  assert.equal(login.body.account.email, email);
+  assert.equal(login.body.account.isAdmin, true);
+});
+
+test("e-mail cadastrado mas nao autorizado nao entra", async () => {
+  const { app, pool } = makeApp();
+  const created = await request(app).post("/api/accounts").send({
+    name: "Comum",
+    pin: "1234",
+    server: "Reino Sem Nome"
+  });
+  const token = created.body.token;
+  // A conta tem e-mail cadastrado, mas nao esta autorizada.
+  await pool.query(
+    "UPDATE accounts SET email = $1, email_key = $2 WHERE name_key = 'comum'",
+    ["comum@reino.test", "comum@reino.test"]
+  );
+
+  const login = await request(app)
+    .post("/api/admin/login")
+    .send({ email: "comum@reino.test", pin: "1234" });
+  assert.equal(login.status, 403);
+  assert.equal(login.body.error.code, "forbidden");
+});
+
+test("e-mail desconhecido ou chave errada nao entra", async () => {
+  const { app, pool } = makeApp();
+  await makeAdmin(app, pool);
+
+  const semConta = await request(app)
+    .post("/api/admin/login")
+    .send({ email: "ninguem@reino.test", pin: "1234" });
+  assert.equal(semConta.status, 401);
+
+  const chaveErrada = await request(app)
+    .post("/api/admin/login")
+    .send({ email: "chefia@reino.test", pin: "0000" });
+  assert.equal(chaveErrada.status, 401);
+});
+
+test("quem nao e admin nao lista nem cadastra contas", async () => {
+  const { app } = makeApp();
+  const created = await request(app).post("/api/accounts").send({
+    name: "Jogador",
+    pin: "1234",
+    server: "Reino Sem Nome"
+  });
+  const token = created.body.token;
+
+  const lista = await request(app)
+    .get("/api/admin/accounts")
+    .set("Authorization", `Bearer ${token}`);
+  assert.equal(lista.status, 403);
+
+  const cadastro = await request(app)
+    .post("/api/admin/accounts")
+    .set("Authorization", `Bearer ${token}`)
+    .send({ name: "Outro", pin: "1111", server: "Reino Sem Nome" });
+  assert.equal(cadastro.status, 403);
+
+  const semToken = await request(app).get("/api/admin/accounts");
+  assert.equal(semToken.status, 401);
+});
+
+test("admin cadastra conta para outra pessoa e pode liberar o e-mail", async () => {
+  const { app, pool } = makeApp();
+  const { token } = await makeAdmin(app, pool);
+
+  const cadastro = await request(app)
+    .post("/api/admin/accounts")
+    .set("Authorization", `Bearer ${token}`)
+    .send({
+      name: "Visitante Novo",
+      pin: "5678",
+      server: "Terras Esquecidas",
+      email: "Visitante@Reino.Test",
+      isAdmin: false
+    });
+  assert.equal(cadastro.status, 201);
+  assert.equal(cadastro.body.account.name, "Visitante Novo");
+  assert.equal(cadastro.body.account.email, "Visitante@Reino.Test");
+
+  // A pessoa recem-criada ja entra no jogo com nome e chave.
+  const login = await request(app)
+    .post("/api/accounts/login")
+    .send({ name: "Visitante Novo", pin: "5678" });
+  assert.equal(login.status, 200);
+
+  // E-mail repetido e recusado.
+  const repetido = await request(app)
+    .post("/api/admin/accounts")
+    .set("Authorization", `Bearer ${token}`)
+    .send({
+      name: "Outro Nome",
+      pin: "1111",
+      server: "Reino Sem Nome",
+      email: "visitante@reino.test"
+    });
+  assert.equal(repetido.status, 409);
+  assert.equal(repetido.body.error.code, "email_exists");
+});
+
+test("admin troca a chave e promove outra conta", async () => {
+  const { app, pool } = makeApp();
+  const { token } = await makeAdmin(app, pool);
+
+  await request(app)
+    .post("/api/admin/accounts")
+    .set("Authorization", `Bearer ${token}`)
+    .send({ name: "Membro", pin: "1111", server: "Reino Sem Nome" });
+
+  const atualiza = await request(app)
+    .put("/api/admin/accounts/membro")
+    .set("Authorization", `Bearer ${token}`)
+    .send({ pin: "9999", email: "membro@reino.test", isAdmin: true });
+  assert.equal(atualiza.status, 200);
+  assert.equal(atualiza.body.account.isAdmin, true);
+
+  const login = await request(app)
+    .post("/api/accounts/login")
+    .send({ name: "Membro", pin: "9999" });
+  assert.equal(login.status, 200);
+
+  const painel = await request(app)
+    .post("/api/admin/login")
+    .send({ email: "membro@reino.test", pin: "9999" });
+  assert.equal(painel.status, 200);
+});
+
+test("admin apaga contas, mas nao a propria", async () => {
+  const { app, pool } = makeApp();
+  const { token } = await makeAdmin(app, pool);
+
+  await request(app)
+    .post("/api/admin/accounts")
+    .set("Authorization", `Bearer ${token}`)
+    .send({ name: "Temporaria", pin: "1111", server: "Reino Sem Nome" });
+
+  const propria = await request(app)
+    .delete("/api/admin/accounts/chefia")
+    .set("Authorization", `Bearer ${token}`);
+  assert.equal(propria.status, 400);
+  assert.equal(propria.body.error.code, "self_delete");
+
+  const apaga = await request(app)
+    .delete("/api/admin/accounts/temporaria")
+    .set("Authorization", `Bearer ${token}`);
+  assert.equal(apaga.status, 204);
+
+  const lista = await request(app)
+    .get("/api/admin/accounts")
+    .set("Authorization", `Bearer ${token}`);
+  const nomes = lista.body.accounts.map((a: { name: string }) => a.name);
+  assert.equal(nomes.includes("Temporaria"), false);
+  assert.equal(nomes.includes("Chefia"), true);
+});

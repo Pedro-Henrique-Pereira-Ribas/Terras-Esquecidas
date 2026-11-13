@@ -13,6 +13,9 @@ CREATE TABLE IF NOT EXISTS accounts (
   name_key text NOT NULL UNIQUE,
   server text NOT NULL,
   pin_hash text NOT NULL,
+  email text,
+  email_key text,
+  is_admin boolean NOT NULL DEFAULT false,
   created_at timestamptz NOT NULL DEFAULT now(),
   last_login_at timestamptz
 );
@@ -42,4 +45,16 @@ ALTER TABLE accounts ADD COLUMN IF NOT EXISTS server text;
 UPDATE accounts SET server = 'Reino Sem Nome' WHERE server IS NULL;
 ALTER TABLE accounts ALTER COLUMN server SET DEFAULT 'Reino Sem Nome';
 ALTER TABLE accounts ALTER COLUMN server SET NOT NULL;
+
+-- E-mail das contas. Quem nao tem e-mail nao entra no painel de admin.
+ALTER TABLE accounts ADD COLUMN IF NOT EXISTS email text;
+ALTER TABLE accounts ADD COLUMN IF NOT EXISTS email_key text;
+
+-- Administradores autorizados. O padrao e falso: ninguem vira admin sozinho.
+ALTER TABLE accounts ADD COLUMN IF NOT EXISTS is_admin boolean NOT NULL DEFAULT false;
+
+-- O indice do e-mail vem depois das colunas: em um banco antigo a tabela
+-- ja existe e o CREATE TABLE nao a recria, entao o indice so pode ser
+-- criado depois do ALTER.
+CREATE UNIQUE INDEX IF NOT EXISTS accounts_email_key_idx ON accounts (email_key);
 `;

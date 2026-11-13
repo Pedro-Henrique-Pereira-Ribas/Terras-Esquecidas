@@ -58,6 +58,11 @@ services:
     buildCommand: npm run build
     staticPublishPath: ./_site
     autoDeployTrigger: commit
+    routes:
+      # O painel de administracao responde em /admin, sem .html.
+      - type: rewrite
+        source: /admin
+        destination: /admin.html
     envVars:
       - key: NODE_VERSION
         value: "20.19.0"

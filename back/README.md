@@ -28,6 +28,11 @@ e o fallback quando a API está fora.
 | `POST` | `/api/accounts/login` | não | Entra e devolve conta + save |
 | `POST` | `/api/accounts/logout` | Bearer | Revoga a sessão atual |
 | `PUT` | `/api/accounts/password` | Bearer | Troca a chave de acesso da conta |
+| `POST` | `/api/admin/login` | não | Entra no painel com e-mail + chave |
+| `GET` | `/api/admin/accounts` | Admin | Lista as contas do Reino |
+| `POST` | `/api/admin/accounts` | Admin | Cadastra uma conta para outra pessoa |
+| `PUT` | `/api/admin/accounts/:nameKey` | Admin | Troca chave, e-mail ou permissão de admin |
+| `DELETE` | `/api/admin/accounts/:nameKey` | Admin | Apaga a conta |
 | `GET` | `/api/me` | Bearer | Conta + save completo |
 | `GET` | `/api/me/save` | Bearer | Apenas o save |
 | `PUT` | `/api/me/save` | Bearer | Substitui o save completo |
@@ -188,7 +193,41 @@ npm run api:build
 npm run api:start
 ```
 
-## Deploy no Render
+## Painel de administração
+
+O painel fica em **`/admin`** (também em `/admin.html`) e serve para cadastrar
+contas de outras pessoas.
+
+**Quem entra:** só quem tem **e-mail cadastrado e autorizado**. O login usa o
+e-mail + a chave de acesso da conta. E-mail cadastrado sem autorização dá
+`403`; e-mail desconhecido ou chave errada dão `401` (mesma mensagem nos dois
+casos, para não revelar quais e-mails existem).
+
+**O que dá para fazer:** cadastrar conta (nome, chave, reino, e-mail opcional),
+trocar a chave de alguém, liberar ou trocar o e-mail, promover ou rebaixar um
+admin e apagar contas.
+
+**O que o admin ganha no jogo:** tudo liberado — todas as skins, todas as
+armas no degrau máximo, moedas e todos os encantamentos. O selo vem do banco
+(`is_admin`), então não dá para forjar pelo navegador.
+
+### Promover a primeira conta
+
+Pela API só quem já é admin promove alguém. A primeira conta entra por um
+comando, que roda com a `DATABASE_URL` do ambiente:
+
+```bash
+cd back
+npm run promote -- "Nome da conta" "email@exemplo.com"
+```
+
+Depois disso, o painel `/admin` assume o resto.
+
+### Protected de autoexclusão
+
+O admin não pode apagar a própria conta pela API (a API recusa com
+`self_delete`), para não trancar o painel.
+
 
 A API é publicada como um **Web Service** do Render e o banco é o Postgres do
 Neon. O repositório inclui um Blueprint em `render.yaml` que cria:

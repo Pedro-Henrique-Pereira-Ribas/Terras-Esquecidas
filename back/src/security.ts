@@ -5,6 +5,11 @@ export function normalizeName(name: string): string {
   return String(name || "").trim().replace(/\s+/g, " ").toLowerCase();
 }
 
+/** E-mail normalizado para comparacao: minusculas e sem espacos nas pontas. */
+export function normalizeEmail(email: string): string {
+  return String(email || "").trim().toLowerCase();
+}
+
 export async function hashPin(pin: string, rounds = 12): Promise<string> {
   return bcrypt.hash(pin, rounds);
 }

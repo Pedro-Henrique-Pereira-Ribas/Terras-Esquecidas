@@ -11,22 +11,32 @@ import type { Pool } from "pg";
 import type { AppConfig } from "./config";
 import { ping } from "./repository";
 import {
+  activeSessionsByAccount,
   createAccountWithSession,
+  createAccountOnly,
   createSession,
+  deleteAccount,
+  findAccountByEmailKey,
   findAccountByNameKey,
   findAccountPinHash,
   findSession,
   getSave,
+  listAccounts,
   revokeSession,
+  setAccountPin,
   touchLogin,
+  updateAccountAccess,
   updatePin,
   upsertSave
 } from "./repository";
-import { DUMMY_PIN_HASH, hashPin, normalizeName, verifyPin } from "./security";
+import { DUMMY_PIN_HASH, hashPin, normalizeEmail, normalizeName, verifyPin } from "./security";
 import { createStaticRouter, isApiPath, resolveFrontDir } from "./static";
 import type { AccountPublic } from "./types";
 import type { LogLevel } from "./config";
 import {
+  adminCreateAccountSchema,
+  adminLoginSchema,
+  adminUpdateAccountSchema,
   changePinSchema,
   createAccountSchema,
   emptySave,
@@ -183,6 +193,7 @@ export function createApp(options: CreateAppOptions) {
   const authIpLimit = rateLimit(20, 60_000);
   const saveLimit = rateLimit(180, 60_000);
   const pinLimit = rateLimit(10, 15 * 60_000);
+  const adminLimit = rateLimit(60, 60_000);
   const loginFailures = new Map<string, LoginFailure>();
 
   const requireAuth = asyncHandler(async (req, res, next) => {
@@ -421,7 +432,195 @@ export function createApp(options: CreateAppOptions) {
     })
   );
 
-  // O frontend so e servido depois de todas as rotas da API, para que
+  /* ============================================================
+     PAINEL DE ADMINISTRACAO
+     Só entra quem tem e-mail cadastrado e autorizado (is_admin).
+     ============================================================ */
+  const requireAdmin = asyncHandler(async (req, res, next) => {
+    const auth = (req as AuthedRequest).auth;
+    if (!auth || !auth.account.isAdmin) {
+      sendError(res, 403, "Acesso restrito ao painel de administração.", "forbidden");
+      return;
+    }
+    next();
+  });
+
+  // Entrada do painel: e-mail + chave da conta.
+  app.post(
+    "/api/admin/login",
+    authIpLimit,
+    asyncHandler(async (req, res) => {
+      const body = parseBody(adminLoginSchema, req, res);
+      if (!body) return;
+
+      const emailKey = normalizeEmail(body.email);
+      const account = await findAccountByEmailKey(pool, emailKey);
+      if (!account) {
+        // Mesma mensagem e mesmo custo de verificacao dos e-mails inexistentes.
+        await verifyPin(body.pin, DUMMY_PIN_HASH);
+        sendError(res, 401, "E-mail ou chave de acesso incorretos.", "invalid_credentials");
+        return;
+      }
+
+      const valid = await verifyPin(body.pin, account.pin_hash);
+      if (!valid) {
+        sendError(res, 401, "E-mail ou chave de acesso incorretos.", "invalid_credentials");
+        return;
+      }
+
+      if (!account.is_admin) {
+        sendError(res, 403, "Este e-mail não está autorizado no painel.", "forbidden");
+        return;
+      }
+
+      await touchLogin(pool, account.id);
+      const session = await createSession(pool, account.id, config.sessionDays);
+      res.json({
+        token: session.token,
+        account: {
+          id: account.id,
+          name: account.name,
+          server: account.server,
+          email: account.email,
+          isAdmin: true,
+          createdAt: new Date(account.created_at).toISOString(),
+          lastLoginAt: new Date().toISOString()
+        }
+      });
+    })
+  );
+
+  // Lista de contas.
+  app.get(
+    "/api/admin/accounts",
+    requireAuth,
+    requireAdmin,
+    asyncHandler(async (_req, res) => {
+      const accounts = await listAccounts(pool);
+      const sessions = await activeSessionsByAccount(pool);
+      res.json({
+        accounts: accounts.map((row) => ({
+          ...adminAccountView(row),
+          hasSave: Boolean(row.has_save),
+          hasSession: (sessions.get(row.id) || 0) > 0
+        }))
+      });
+    })
+  );
+
+  // Cadastra uma conta para outra pessoa.
+  app.post(
+    "/api/admin/accounts",
+    requireAuth,
+    requireAdmin,
+    adminLimit,
+    asyncHandler(async (req, res) => {
+      const body = parseBody(adminCreateAccountSchema, req, res);
+      if (!body) return;
+
+      const nameKey = normalizeName(body.name);
+      const existing = await findAccountByNameKey(pool, nameKey);
+      if (existing) {
+        sendError(res, 409, "Já existe uma conta com esse nome.", "account_exists");
+        return;
+      }
+
+      const emailKey = body.email ? normalizeEmail(body.email) : null;
+      if (emailKey) {
+        const emailOwner = await findAccountByEmailKey(pool, emailKey);
+        if (emailOwner) {
+          sendError(res, 409, "Esse e-mail já está cadastrado.", "email_exists");
+          return;
+        }
+      }
+
+      const pinHash = await hashPin(body.pin, config.bcryptRounds);
+      const account = await createAccountOnly(pool, {
+        name: body.name,
+        nameKey,
+        server: body.server,
+        pinHash,
+        save: emptySave(),
+        sessionDays: config.sessionDays,
+        email: body.email ?? null,
+        emailKey,
+        isAdmin: Boolean(body.isAdmin)
+      });
+
+      res.status(201).json({ account: adminAccountView({ ...account, email: body.email ?? null }) });
+    })
+  );
+
+  // Atualiza chave, e-mail ou permissao de admin. O :nameKey e o nome
+  // normalizado (minusculas e sem espacos duplicados).
+  app.put(
+    "/api/admin/accounts/:nameKey",
+    requireAuth,
+    requireAdmin,
+    adminLimit,
+    asyncHandler(async (req, res) => {
+      const body = parseBody(adminUpdateAccountSchema, req, res);
+      if (!body) return;
+
+      const nameKey = normalizeName(String(req.params.nameKey || ""));
+      const account = await findAccountByNameKey(pool, nameKey);
+      if (!account) {
+        sendError(res, 404, "Conta não encontrada.", "account_not_found");
+        return;
+      }
+
+      if (body.pin) {
+        await setAccountPin(pool, nameKey, await hashPin(body.pin, config.bcryptRounds));
+      }
+
+      // Junta tudo em uma atualizacao so: usar os valores antigos aqui
+      // apagaria o e-mail que acabou de ser trocado.
+      const newEmail = body.email !== undefined ? body.email ?? null : account.email;
+      let newEmailKey = body.email !== undefined
+        ? body.email
+          ? normalizeEmail(body.email)
+          : null
+        : account.email_key;
+      if (newEmailKey) {
+        const owner = await findAccountByEmailKey(pool, newEmailKey);
+        if (owner && owner.name_key !== nameKey) {
+          sendError(res, 409, "Esse e-mail já está cadastrado.", "email_exists");
+          return;
+        }
+      }
+      const newIsAdmin =
+        body.isAdmin !== undefined ? Boolean(body.isAdmin) : Boolean(account.is_admin);
+
+      await updateAccountAccess(pool, nameKey, newEmail, newEmailKey, newIsAdmin);
+
+      const updated = await findAccountByNameKey(pool, nameKey);
+      res.json({ account: updated ? adminAccountView(updated) : null });
+    })
+  );
+
+  // Apaga a conta (save e sessoes vao em cascata).
+  app.delete(
+    "/api/admin/accounts/:nameKey",
+    requireAuth,
+    requireAdmin,
+    adminLimit,
+    asyncHandler(async (req, res) => {
+      const auth = (req as AuthedRequest).auth!;
+      const nameKey = normalizeName(String(req.params.nameKey || ""));
+      if (nameKey === normalizeName(auth.account.name)) {
+        sendError(res, 400, "Você não pode apagar a própria conta de admin.", "self_delete");
+        return;
+      }
+      const removed = await deleteAccount(pool, nameKey);
+      if (!removed) {
+        sendError(res, 404, "Conta não encontrada.", "account_not_found");
+        return;
+      }
+      res.status(204).end();
+    })
+  );
+
+  // O frontend estatico so e servido depois de todas as rotas da API, para que
   // /api/* nunca caia no index.html do jogo.
   if (frontDir) {
     app.use(createStaticRouter({ frontDir }));
@@ -474,4 +673,34 @@ function recordLoginFailure(
     current.count = 0;
     current.firstAt = now;
   }
+}
+
+/** Visao de conta usada no painel: inclui o e-mail e a permissao. */
+function adminAccountView(row: {
+  id: string;
+  name: string;
+  email?: string | null;
+  server: string;
+  is_admin?: boolean;
+  createdAt?: string;
+  created_at?: Date | string;
+  lastLoginAt?: string | null;
+  last_login_at?: Date | string | null;
+}) {
+  return {
+    id: row.id,
+    name: row.name,
+    email: row.email ?? null,
+    server: row.server,
+    isAdmin: Boolean(row.is_admin),
+    createdAt: isoDate(row.createdAt ?? row.created_at),
+    lastLoginAt: isoDate(row.lastLoginAt ?? row.last_login_at)
+  };
+}
+
+/** Data em ISO, aceitando Date, string ou vazio. */
+function isoDate(value: Date | string | null | undefined): string | null {
+  if (value == null) return null;
+  const date = value instanceof Date ? value : new Date(value);
+  return Number.isNaN(date.getTime()) ? null : date.toISOString();
 }

@@ -88,6 +88,39 @@ export const changePinSchema = z
   })
   .strict();
 
+/** E-mail usado para entrar no painel de administracao. */
+export const emailSchema = z
+  .string()
+  .trim()
+  .min(5, "O e-mail precisa ter pelo menos 5 caracteres.")
+  .max(120, "O e-mail precisa ter no máximo 120 caracteres.")
+  .regex(/^[^\s@]+@[^\s@]+\.[^\s@]+$/, "Informe um e-mail válido.");
+
+export const adminLoginSchema = z
+  .object({
+    email: emailSchema,
+    pin: pinSchema
+  })
+  .strict();
+
+export const adminCreateAccountSchema = z
+  .object({
+    name: accountNameSchema,
+    pin: pinSchema,
+    server: serverSchema,
+    email: emailSchema.optional(),
+    isAdmin: z.boolean().default(false)
+  })
+  .strict();
+
+export const adminUpdateAccountSchema = z
+  .object({
+    pin: pinSchema.optional(),
+    email: emailSchema.nullable().optional(),
+    isAdmin: z.boolean().optional()
+  })
+  .strict();
+
 export function emptySave(): SaveData {
   return saveSchema.parse({});
 }

@@ -77,6 +77,14 @@ export function createStaticRouter(options: StaticRouterOptions): Router {
     })
   );
 
+  // O painel de administracao responde em /admin (sem .html).
+  router.get("/admin", (_req, res, next) => {
+    res.setHeader("Cache-Control", "no-cache");
+    res.sendFile(path.join(frontDir, "admin.html"), (error) => {
+      if (error) next(error);
+    });
+  });
+
   // Fallback do jogo: qualquer rota que nao seja da API devolve o index.
   router.get("/{*splat}", (req, res, next) => {
     if (isApiPath(req.path)) {

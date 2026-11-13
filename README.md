@@ -34,6 +34,10 @@ O `localStorage` continua sendo usado como cache e como fallback: se o servidor 
 
 Na tela de conta, o botão **TROCAR CHAVE** abre o formulário para trocar a chave de acesso. A chave atual é exigida e, depois da troca, as outras sessões da conta são encerradas.
 
+### Painel de administração
+
+Em `/admin` (no site publicado) fica o painel para **cadastrar as pessoas**. Só entra quem tem **e-mail cadastrado e autorizado** — o login usa e-mail + chave de acesso, e o selo de admin vem do banco, não do navegador. De lá dá para cadastrar contas, trocar a chave de alguém, liberar o e-mail e promover outros admins. Admin também entra no jogo com **tudo liberado**: todas as skins, todas as armas no degrau máximo, moedas e todos os encantamentos.
+
 O site é publicado como Static Site e a API como Web Service, em domínios diferentes. Por isso a API libera a origem do site em `CORS_ORIGIN` e o frontend aponta para ela em `front/js/config.js`.
 
 A API e as instruções de deploy ficam em [`back/README.md`](back/README.md). O Blueprint do Render está em [`render.yaml`](render.yaml).

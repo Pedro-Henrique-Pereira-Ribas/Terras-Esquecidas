@@ -218,4 +218,53 @@
       body: { currentPin: currentPin, newPin: newPin }
     });
   };
+
+  /* ============================================================
+     PAINEL DE ADMINISTRACAO
+     ============================================================ */
+  API.adminLogin = async function (email, pin) {
+    const data = await request("/api/admin/login", {
+      method: "POST",
+      body: { email: email, pin: pin },
+      auth: false
+    });
+    if (data && data.token) API.storeSession(data.token, data.account);
+    return data;
+  };
+
+  API.adminAccounts = async function () {
+    const data = await request("/api/admin/accounts");
+    return (data && data.accounts) || [];
+  };
+
+  API.adminCreateAccount = async function (payload) {
+    return request("/api/admin/accounts", {
+      method: "POST",
+      body: {
+        name: payload.name,
+        pin: payload.pin,
+        server: payload.server,
+        email: payload.email || undefined,
+        isAdmin: !!payload.isAdmin
+      }
+    });
+  };
+
+  API.adminUpdateAccount = async function (nameKey, payload) {
+    const body = {};
+    if (payload.pin) body.pin = payload.pin;
+    if (payload.email !== undefined) body.email = payload.email;
+    if (payload.isAdmin !== undefined) body.isAdmin = !!payload.isAdmin;
+    return request("/api/admin/accounts/" + encodeURIComponent(nameKey), {
+      method: "PUT",
+      body: body
+    });
+  };
+
+  API.adminDeleteAccount = async function (nameKey) {
+    return request("/api/admin/accounts/" + encodeURIComponent(nameKey), {
+      method: "DELETE",
+      expectJson: false
+    });
+  };
 })();

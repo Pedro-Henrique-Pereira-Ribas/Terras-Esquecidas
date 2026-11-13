@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noindex, nofollow">
+  <title>Administração · Terras Esquecidas</title>
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="css/admin.css">
+</head>
+<body>
+  <div class="admin-shell">
+    <header class="admin-head">
+      <div>
+        <p class="kicker">TERRAS ESQUECIDAS</p>
+        <h1>Administração</h1>
+      </div>
+      <p class="admin-sub">Painel do Reino. Só entra quem tem e-mail cadastrado e autorizado.</p>
+    </header>
+
+    <!-- Entrada -->
+    <section id="login" class="card">
+      <h2>Entrar no painel</h2>
+      <form id="login-form" novalidate>
+        <label class="field" for="admin-email">
+          <span>E-mail</span>
+          <input id="admin-email" type="email" autocomplete="username" spellcheck="false" placeholder="voce@exemplo.com">
+        </label>
+        <label class="field" for="admin-pin">
+          <span>Chave de acesso <small>4 dígitos</small></span>
+          <input id="admin-pin" type="password" inputmode="numeric" maxlength="4" autocomplete="current-password" placeholder="••••">
+        </label>
+        <p id="login-error" class="msg" role="alert"></p>
+        <button class="btn btn-primary" type="submit">ENTRAR <span>›</span></button>
+      </form>
+    </section>
+
+    <!-- Painel -->
+    <section id="panel" class="hidden">
+      <div class="card">
+        <h2>Cadastrar pessoa</h2>
+        <p class="hint">A conta entra no jogo com o nome e a chave definidos aqui. O e-mail só é necessário se a pessoa for administrar.</p>
+        <form id="create-form" novalidate>
+          <div class="grid">
+            <label class="field" for="new-name">
+              <span>Nome do viajante</span>
+              <input id="new-name" type="text" maxlength="18" spellcheck="false" placeholder="Ex.: Ana">
+            </label>
+            <label class="field" for="new-pin">
+              <span>Chave de acesso <small>4 dígitos</small></span>
+              <input id="new-pin" type="password" inputmode="numeric" maxlength="4" placeholder="••••">
+            </label>
+            <label class="field" for="new-email">
+              <span>E-mail <small>opcional</small></span>
+              <input id="new-email" type="email" spellcheck="false" placeholder="para entrar no painel">
+            </label>
+            <label class="field" for="new-server">
+              <span>Servidor</span>
+              <select id="new-server">
+                <option value="Reino Sem Nome">Reino Sem Nome</option>
+                <option value="Terras Esquecidas">Terras Esquecidas</option>
+                <option value="Fronteira das Cinzas">Fronteira das Cinzas</option>
+                <option value="Vale dos Ecos">Vale dos Ecos</option>
+              </select>
+            </label>
+          </div>
+          <label class="check">
+            <input id="new-admin" type="checkbox">
+            <span>Esta conta pode administrar o painel</span>
+          </label>
+          <p id="create-error" class="msg" role="alert"></p>
+          <button class="btn btn-primary" type="submit">CADASTRAR <span>›</span></button>
+        </form>
+      </div>
+
+      <div class="card">
+        <div class="card-head">
+          <h2>Contas do Reino</h2>
+          <div class="head-actions">
+            <span id="who" class="who"></span>
+            <button id="btn-logout" class="btn btn-ghost" type="button">SAIR</button>
+          </div>
+        </div>
+        <p id="list-error" class="msg" role="alert"></p>
+        <div class="table-wrap">
+          <table class="accounts">
+            <thead>
+              <tr>
+                <th>Nome</th>
+                <th>E-mail</th>
+                <th>Servidor</th>
+                <th>Criada</th>
+                <th>Último acesso</th>
+                <th class="col-actions">Ações</th>
+              </tr>
+            </thead>
+            <tbody id="rows"></tbody>
+          </table>
+        </div>
+        <p id="list-empty" class="hint hidden">Nenhuma conta cadastrada ainda.</p>
+      </div>
+    </section>
+
+    <footer class="admin-foot">
+      <a href="index.html">← Voltar ao jogo</a>
+    </footer>
+  </div>
+
+  <script src="js/config.js"></script>
+  <script src="js/api.js"></script>
+  <script src="js/admin.js"></script>
+</body>
+</html>

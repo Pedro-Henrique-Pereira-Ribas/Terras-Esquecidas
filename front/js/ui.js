@@ -678,6 +678,7 @@
     local.lastLogin = account.lastLoginAt || new Date().toISOString();
     local.cloud = true;
     local.cloudId = account.id || local.cloudId || null;
+    local.isAdmin = !!account.isAdmin;
     if (pinHash) local.pin = pinHash;
     saveAccountStore();
     return local;
@@ -703,6 +704,49 @@
       progress: (UI.cloud && UI.cloud.progress) || {}
     };
   }
+  /**
+   * Libera tudo para a conta de administracao: todas as skins, todas as
+   * armas no degrau maximo, moedas e todos os encantamentos. Quem tem o
+   * selo de admin entra no Reino sem.Instance ja estar com nada.
+   */
+  function applyAdminUnlock() {
+    if (!UI.account || !UI.account.isAdmin) return;
+    TP.DATA.CHARACTERS.forEach(function (char) {
+      outfitList(char.id).forEach(function (outfit) {
+        UI.wardrobe.owned[outfitKey(char.id, outfit.id)] = true;
+      });
+
+      const cls = char.weaponClass;
+      const list = TP.DATA.WEAPONS[cls] || [];
+      if (list.length) {
+        const owned = {};
+        owned[cls + ":0"] = true;
+        list.forEach(function (weapon) {
+          owned[cls + ":" + weapon.tier] = true;
+        });
+        UI.armory[char.id] = {
+          cls: cls,
+          tier: list[list.length - 1].tier,
+          owned: owned
+        };
+      }
+
+      UI.wallet[char.id] = 999999;
+
+      const ownedEnchantments = {};
+      TP.DATA.ENCHANTMENTS.forEach(function (enchantment) {
+        ownedEnchantments[enchantment.id] = true;
+      });
+      UI.enchantments[char.id] = { owned: ownedEnchantments, enabled: true };
+    });
+
+    accountStorageSet(WARDROBE_KEY, JSON.stringify(UI.wardrobe));
+    accountStorageSet(ARMORY_KEY, JSON.stringify(UI.armory));
+    accountStorageSet(WALLET_KEY, JSON.stringify(UI.wallet));
+    accountStorageSet(ENCHANT_KEY, JSON.stringify(UI.enchantments));
+    if (typeof rebuildCharacterCards === "function") rebuildCharacterCards();
+  }
+
   function applyCloudSave(save) {
     if (!save || typeof save !== "object") return;
     UI.cloud.applying = true;
@@ -791,6 +835,7 @@
       setAccountSession(UI.account);
       if (hasCloudSave(data.save)) applyCloudSave(data.save);
       else await TP.api.save(exportSave());
+      applyAdminUnlock();
       UI.refreshAccountGate();
       UI.renderCloudStatus("Servidor conectado · save sincronizado", "online");
     } catch (error) {
@@ -827,6 +872,7 @@
         resetLocalProgress();
         try { await TP.api.save(exportSave()); } catch (seedError) { /* cache local continua válido */ }
       }
+      applyAdminUnlock();
       UI.el.accountPin.value = "";
       setAccountError("");
       UI.refreshAccountGate();
@@ -872,6 +918,7 @@
       const local = upsertLocalAccount(data.account, hashPin(pin));
       loginAccount(local);
       applyCloudSave(data.save);
+      applyAdminUnlock();
       UI.el.accountPin.value = "";
       setAccountError("");
       UI.refreshAccountGate();
