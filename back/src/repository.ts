@@ -34,20 +34,24 @@ export async function findAccountByNameKey(
   return result.rows[0] || null;
 }
 
-/** Procura a conta pelo e-mail (comparacao sem diferenciar maiusculas). */
-export async function findAccountByEmailKey(
+/**
+ * Contas com o mesmo e-mail. O e-mail nao e unico: ele e o que libera o
+ * acesso ao painel, e varias contas podem compartilhar o mesmo.
+ */
+export async function findAccountsByEmailKey(
   pool: Pool,
   emailKey: string
-): Promise<AccountWithHashRow | null> {
+): Promise<AccountWithHashRow[]> {
   const result = await pool.query<AccountWithHashRow>(
     `SELECT id, name, name_key, server, pin_hash, created_at, last_login_at, is_admin,
             email, email_key
        FROM accounts
       WHERE email_key = $1
-      LIMIT 1`,
+      ORDER BY created_at
+      LIMIT 10`,
     [emailKey]
   );
-  return result.rows[0] || null;
+  return result.rows;
 }
 
 export interface CreateAccountInput {

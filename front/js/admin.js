@@ -5,6 +5,8 @@
   "use strict";
   const TP = (window.TP = window.TP || {});
   const TOKEN_KEY = "terraPerdida.admin.token.v1";
+  // E-mail que libera as contas no painel. Pode ser trocado aqui.
+  let adminEmailFallback = "p.ribas2301@gmail.com";
 
   const el = {
     login: document.getElementById("login"),
@@ -114,11 +116,11 @@
       });
       actions.appendChild(keyBtn);
 
-      const emailBtn = actionButton(account.email ? "e-mail" : "liberar e-mail", "E-mail");
-      emailBtn.addEventListener("click", function () {
-        changeEmail(account);
+      const releaseBtn = actionButton("liberar", "Libera o acesso ao painel com o e-mail do administrador");
+      releaseBtn.addEventListener("click", function () {
+        releaseAccount(account);
       });
-      actions.appendChild(emailBtn);
+      actions.appendChild(releaseBtn);
 
       const adminBtn = actionButton(account.isAdmin ? "remover admin" : "promover", "Admin");
       adminBtn.addEventListener("click", function () {
@@ -185,6 +187,35 @@
     } catch (error) {
       setMessage(el.listError, error && error.message ? error.message : "Não foi possível trocar o e-mail.");
     }
+  }
+
+  /**
+   * Libera o acesso ao painel: a conta passa a usar o mesmo e-mail autorizado
+   * do administrador e ganha a permissao de admin.
+   */
+  async function releaseAccount(account) {
+    const email = adminEmail();
+    if (!email) {
+      setMessage(el.listError, "Seu e-mail de administrador não está definido.");
+      return;
+    }
+    const ok = window.confirm(
+      "Liberar " + account.name + " no painel com o e-mail " + email + "?"
+    );
+    if (!ok) return;
+    setMessage(el.listError, "");
+    try {
+      await TP.api.adminUpdateAccount(account.name, { email: email, isAdmin: true });
+      setMessage(el.listError, account.name + " liberada no painel.", "ok");
+      loadAccounts();
+    } catch (error) {
+      setMessage(el.listError, error && error.message ? error.message : "Não foi possível liberar a conta.");
+    }
+  }
+
+  /** E-mail do administrador conectado: e ele que libera as contas. */
+  function adminEmail() {
+    return (TP.api && TP.api.account && TP.api.account.email) || adminEmailFallback;
   }
 
   async function toggleAdmin(account) {

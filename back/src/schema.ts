@@ -20,6 +20,8 @@ CREATE TABLE IF NOT EXISTS accounts (
   last_login_at timestamptz
 );
 
+CREATE INDEX IF NOT EXISTS accounts_email_key_lookup ON accounts (email_key);
+
 CREATE TABLE IF NOT EXISTS sessions (
   token_hash text PRIMARY KEY,
   account_id uuid NOT NULL REFERENCES accounts(id) ON DELETE CASCADE,
@@ -56,5 +58,10 @@ ALTER TABLE accounts ADD COLUMN IF NOT EXISTS is_admin boolean NOT NULL DEFAULT 
 -- O indice do e-mail vem depois das colunas: em um banco antigo a tabela
 -- ja existe e o CREATE TABLE nao a recria, entao o indice so pode ser
 -- criado depois do ALTER.
-CREATE UNIQUE INDEX IF NOT EXISTS accounts_email_key_idx ON accounts (email_key);
+--
+-- O e-mail NAO e unico: o mesmo e-mail autorizado pode valer para varias
+-- contas, e e ele que libera o acesso ao painel. O indice antigo, unico,
+-- sai de cena para nao impedir isso.
+DROP INDEX IF EXISTS accounts_email_key_idx;
+CREATE INDEX IF NOT EXISTS accounts_email_key_lookup ON accounts (email_key);
 `;

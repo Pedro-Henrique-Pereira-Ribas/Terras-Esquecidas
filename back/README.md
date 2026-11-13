@@ -203,9 +203,14 @@ e-mail + a chave de acesso da conta. E-mail cadastrado sem autorização dá
 `403`; e-mail desconhecido ou chave errada dão `401` (mesma mensagem nos dois
 casos, para não revelar quais e-mails existem).
 
+**O e-mail não é único.** Ele é o que *libera* as contas: o mesmo e-mail
+autorizado pode valer para várias contas, e a chave de acesso decide qual conta
+entra. Assim o painel tem um botão "liberar" que dá acesso a uma conta nova
+usando o mesmo e-mail do administrador.
+
 **O que dá para fazer:** cadastrar conta (nome, chave, reino, e-mail opcional),
-trocar a chave de alguém, liberar ou trocar o e-mail, promover ou rebaixar um
-admin e apagar contas.
+trocar a chave de alguém, liberar uma conta (e-mail + permissão de admin),
+promover ou rebaixar um admin e apagar contas.
 
 **O que o admin ganha no jogo:** tudo liberado — todas as skins, todas as
 armas no degrau máximo, moedas e todos os encantamentos. O selo vem do banco

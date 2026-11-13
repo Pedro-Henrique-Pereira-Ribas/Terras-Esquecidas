@@ -36,7 +36,7 @@ Na tela de conta, o botão **TROCAR CHAVE** abre o formulário para trocar a cha
 
 ### Painel de administração
 
-Em `/admin` (no site publicado) fica o painel para **cadastrar as pessoas**. Só entra quem tem **e-mail cadastrado e autorizado** — o login usa e-mail + chave de acesso, e o selo de admin vem do banco, não do navegador. De lá dá para cadastrar contas, trocar a chave de alguém, liberar o e-mail e promover outros admins. Admin também entra no jogo com **tudo liberado**: todas as skins, todas as armas no degrau máximo, moedas e todos os encantamentos.
+Em `/admin` (no site publicado) fica o painel para **cadastrar as pessoas**. Só entra quem tem **e-mail cadastrado e autorizado** — o login usa e-mail + chave de acesso, e o selo de admin vem do banco, não do navegador. De lá dá para cadastrar contas, trocar a chave de alguém, liberar contas (o mesmo e-mail autorizado pode valer para várias delas) e promover outros admins. Admin também entra no jogo com **tudo liberado**: todas as skins, todas as armas no degrau máximo, moedas e todos os encantamentos.
 
 O site é publicado como Static Site e a API como Web Service, em domínios diferentes. Por isso a API libera a origem do site em `CORS_ORIGIN` e o frontend aponta para ela em `front/js/config.js`.
 

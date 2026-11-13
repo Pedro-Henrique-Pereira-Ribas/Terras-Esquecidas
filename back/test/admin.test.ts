@@ -150,7 +150,7 @@ test("admin cadastra conta para outra pessoa e pode liberar o e-mail", async () 
     .send({ name: "Visitante Novo", pin: "5678" });
   assert.equal(login.status, 200);
 
-  // E-mail repetido e recusado.
+  // O mesmo e-mail pode valer para varias contas: e ele que libera o painel.
   const repetido = await request(app)
     .post("/api/admin/accounts")
     .set("Authorization", `Bearer ${token}`)
@@ -160,8 +160,37 @@ test("admin cadastra conta para outra pessoa e pode liberar o e-mail", async () 
       server: "Reino Sem Nome",
       email: "visitante@reino.test"
     });
-  assert.equal(repetido.status, 409);
-  assert.equal(repetido.body.error.code, "email_exists");
+  assert.equal(repetido.status, 201);
+});
+
+test("o mesmo e-mail libera varias contas, e a chave decide qual entra", async () => {
+  const { app, pool } = makeApp();
+  const { token, email } = await makeAdmin(app, pool);
+
+  const outra = await request(app)
+    .post("/api/admin/accounts")
+    .set("Authorization", `Bearer ${token}`)
+    .send({ name: "Liberada", pin: "2222", server: "Reino Sem Nome", email, isAdmin: true });
+  assert.equal(outra.status, 201);
+
+  // Cada conta entra no painel com o e-mail compartilhado e a sua chave.
+  const primeira = await request(app)
+    .post("/api/admin/login")
+    .send({ email, pin: "1234" });
+  assert.equal(primeira.status, 200);
+  assert.equal(primeira.body.account.name, "Chefia");
+
+  const segunda = await request(app)
+    .post("/api/admin/login")
+    .send({ email, pin: "2222" });
+  assert.equal(segunda.status, 200);
+  assert.equal(segunda.body.account.name, "Liberada");
+
+  // Chave que nao e de nenhuma das duas nao entra.
+  const errada = await request(app)
+    .post("/api/admin/login")
+    .send({ email, pin: "9999" });
+  assert.equal(errada.status, 401);
 });
 
 test("admin troca a chave e promove outra conta", async () => {

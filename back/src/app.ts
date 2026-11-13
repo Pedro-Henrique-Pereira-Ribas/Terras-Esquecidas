@@ -16,7 +16,7 @@ import {
   createAccountOnly,
   createSession,
   deleteAccount,
-  findAccountByEmailKey,
+  findAccountsByEmailKey,
   findAccountByNameKey,
   findAccountPinHash,
   findSession,
@@ -454,16 +454,23 @@ export function createApp(options: CreateAppOptions) {
       if (!body) return;
 
       const emailKey = normalizeEmail(body.email);
-      const account = await findAccountByEmailKey(pool, emailKey);
-      if (!account) {
+      const accounts = await findAccountsByEmailKey(pool, emailKey);
+      if (!accounts.length) {
         // Mesma mensagem e mesmo custo de verificacao dos e-mails inexistentes.
         await verifyPin(body.pin, DUMMY_PIN_HASH);
         sendError(res, 401, "E-mail ou chave de acesso incorretos.", "invalid_credentials");
         return;
       }
 
-      const valid = await verifyPin(body.pin, account.pin_hash);
-      if (!valid) {
+      // O mesmo e-mail pode valer para varias contas: a chave decide qual e.
+      let account: (typeof accounts)[number] | null = null;
+      for (const candidate of accounts) {
+        if (await verifyPin(body.pin, candidate.pin_hash)) {
+          account = candidate;
+          break;
+        }
+      }
+      if (!account) {
         sendError(res, 401, "E-mail ou chave de acesso incorretos.", "invalid_credentials");
         return;
       }
@@ -526,13 +533,6 @@ export function createApp(options: CreateAppOptions) {
       }
 
       const emailKey = body.email ? normalizeEmail(body.email) : null;
-      if (emailKey) {
-        const emailOwner = await findAccountByEmailKey(pool, emailKey);
-        if (emailOwner) {
-          sendError(res, 409, "Esse e-mail já está cadastrado.", "email_exists");
-          return;
-        }
-      }
 
       const pinHash = await hashPin(body.pin, config.bcryptRounds);
       const account = await createAccountOnly(pool, {
@@ -576,18 +576,11 @@ export function createApp(options: CreateAppOptions) {
       // Junta tudo em uma atualizacao so: usar os valores antigos aqui
       // apagaria o e-mail que acabou de ser trocado.
       const newEmail = body.email !== undefined ? body.email ?? null : account.email;
-      let newEmailKey = body.email !== undefined
+      const newEmailKey = body.email !== undefined
         ? body.email
           ? normalizeEmail(body.email)
           : null
         : account.email_key;
-      if (newEmailKey) {
-        const owner = await findAccountByEmailKey(pool, newEmailKey);
-        if (owner && owner.name_key !== nameKey) {
-          sendError(res, 409, "Esse e-mail já está cadastrado.", "email_exists");
-          return;
-        }
-      }
       const newIsAdmin =
         body.isAdmin !== undefined ? Boolean(body.isAdmin) : Boolean(account.is_admin);
 
