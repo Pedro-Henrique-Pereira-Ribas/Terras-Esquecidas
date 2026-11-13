@@ -233,6 +233,30 @@ escolheu) ou **recusa**.
 Só o e-mail do dono aprova pedidos e libera contas: os outros admins veem a
 lista de contas, mas a fila de pedidos e a liberação são negadas com `403`.
 
+### E-mail do aviso (Resend)
+
+O pedido também pode chegar no e-mail do dono. Isso usa o **Resend**, um
+provedor transacional — a integração é feita com `fetch`, sem dependência nova.
+
+Setup (uma vez só):
+
+1. Crie a conta em [resend.com](https://resend.com).
+2. **Verifique um domínio** em *Domains* (ou use o endereço de onboarding,
+   que só envia para o e-mail da própria conta).
+3. Crie uma chave em [resend.com/api-keys](https://resend.com/api-keys).
+4. No Render, em **Environment** do Web Service, adicione:
+
+| Variável | Valor |
+| --- | --- |
+| `RESEND_API_KEY` | `re_...` (a chave que você criou) |
+| `EMAIL_FROM` | `Terra Perdida <nao-responda@seudominio.com>` |
+
+Sem a `RESEND_API_KEY` **nada quebra**: o pedido continua entrando na fila e
+aparece no painel — só não sai e-mail. O painel avisa se o aviso foi enviado
+ou não.
+
+A pessoa aprovada também recebe um e-mail, se deixou um endereço no pedido.
+
 ### Promover a primeira conta
 
 Pela API só quem já é admin promove alguém. A primeira conta entra por um

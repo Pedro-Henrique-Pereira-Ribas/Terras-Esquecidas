@@ -115,7 +115,7 @@
     const button = el.requestForm.querySelector("button[type=submit]");
     button.disabled = true;
     try {
-      await TP.api.adminRequestAccount({
+      const data = await TP.api.adminRequestAccount({
         name: name,
         pin: pin,
         server: document.getElementById("req-server").value,
@@ -125,9 +125,13 @@
       el.requestForm.reset();
       setMessage(
         el.requestOk,
-        "Pedido enviado. Ele foi direto para o dono do Reino, " +
-          adminEmail() +
-          ", que libera o acesso.",
+        data && data.notified
+          ? "Pedido enviado por e-mail para " +
+            adminEmail() +
+            ", que libera o acesso."
+          : "Pedido enviado. Ele foi direto para o dono do Reino, " +
+            adminEmail() +
+            ", que libera o acesso.",
         "ok"
       );
     } catch (error) {
@@ -213,8 +217,9 @@
     setMessage(el.requestsError, "");
     try {
       if (action === "approve") {
-        await TP.api.adminApproveRequest(item.id);
-        setMessage(el.requestsError, "Conta de " + item.name + " liberada.", "ok");
+        const data = await TP.api.adminApproveRequest(item.id);
+        const avisou = data && data.notified ? " A pessoa foi avisada por e-mail." : "";
+        setMessage(el.requestsError, "Conta de " + item.name + " liberada." + avisou, "ok");
       } else {
         await TP.api.adminRejectRequest(item.id);
         setMessage(el.requestsError, "Pedido de " + item.name + " recusado.", "ok");

@@ -24,6 +24,10 @@ export interface AppConfig {
    * contas de administracao. Vazio = ninguem pode liberar.
    */
   ownerEmail: string | null;
+  /** Chave do provedor transacional (Resend). Vazio = nao envia e-mail. */
+  emailApiKey: string | null;
+  /** Remetente dos e-mails, com o dominio verificado no provedor. */
+  emailFrom: string;
 }
 
 function intEnv(value: string | undefined, fallback: number, min: number, max: number): number {
@@ -78,7 +82,9 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): AppConfig {
     frontDir,
     trustProxy: intEnv(env.TRUST_PROXY, 1, 0, 10),
     logLevel: logLevelEnv(env.LOG_LEVEL, "info"),
-    ownerEmail
+    ownerEmail,
+    emailApiKey: String(env.RESEND_API_KEY || "").trim() || null,
+    emailFrom: String(env.EMAIL_FROM || "Terra Perdida <nao-responda@terras-esquecidas.com>").trim()
   };
 }
 

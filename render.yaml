@@ -51,6 +51,12 @@ services:
       # Dono do Reino: e o unico e-mail que aprova pedidos e libera contas.
       - key: OWNER_EMAIL
         value: "p.ribas2301@gmail.com"
+      # Provedor transacional de e-mail (Resend). Sem a chave, o pedido
+      # continua na fila do painel, mas nenhum e-mail sai.
+      - key: RESEND_API_KEY
+        sync: false
+      - key: EMAIL_FROM
+        value: "Terra Perdida <nao-responda@terras-esquecidas.com>"
 
   - type: web
     name: terras-esquecidas

@@ -36,7 +36,7 @@ Na tela de conta, o botão **TROCAR CHAVE** abre o formulário para trocar a cha
 
 ### Painel de administração
 
-Em `/admin` (no site publicado) fica o painel. Quem ainda não tem conta usa a aba **PEDIR CONTA**: escolhe nome e chave, e o pedido vai direto para o dono do Reino (o e-mail `OWNER_EMAIL`). Ele entra no painel com e-mail + chave, aprova o pedido — que vira conta de administrador com a chave escolhida — e pode liberar outras contas, cadastrar direto e trocar chaves. **Só o e-mail do dono aprova pedidos e libera contas.** Admin também entra no jogo com **tudo liberado**: todas as skins, todas as armas no degrau máximo, moedas e todos os encantamentos.
+Em `/admin` (no site publicado) fica o painel. Quem ainda não tem conta usa a aba **PEDIR CONTA**: escolhe nome e chave, e o pedido vai direto para o dono do Reino (o e-mail `OWNER_EMAIL`) — **por e-mail, via Resend**, e também para a fila no painel. Ele entra no painel com e-mail + chave, aprova o pedido — que vira conta de administrador com a chave escolhida — e pode liberar outras contas, cadastrar direto e trocar chaves. **Só o e-mail do dono aprova pedidos e libera contas.** Admin também entra no jogo com **tudo liberado**: todas as skins, todas as armas no degrau máximo, moedas e todos os encantamentos.
 
 O site é publicado como Static Site e a API como Web Service, em domínios diferentes. Por isso a API libera a origem do site em `CORS_ORIGIN` e o frontend aponta para ela em `front/js/config.js`.
 

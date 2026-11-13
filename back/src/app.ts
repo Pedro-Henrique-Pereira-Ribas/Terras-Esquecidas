@@ -10,6 +10,7 @@ import { z, ZodError, type ZodTypeAny } from "zod";
 import type { Pool } from "pg";
 import type { AppConfig } from "./config";
 import { ping } from "./repository";
+import { buildApprovedEmail, buildRequestEmail, sendEmail } from "./email";
 import {
   activeSessionsByAccount,
   createAccountOnly,
@@ -519,6 +520,18 @@ export function createApp(options: CreateAppOptions) {
         ownerEmail: config.ownerEmail
       });
 
+      // O pedido vai para a fila e tambem para o e-mail do dono do Reino.
+      const emailed = await sendEmail(
+        buildRequestEmail({
+          ownerEmail: config.ownerEmail,
+          name: body.name,
+          server: body.server,
+          email,
+          note: body.note ?? null
+        }),
+        { apiKey: config.emailApiKey, from: config.emailFrom }
+      );
+
       res.status(201).json({
         request: {
           id: request.id,
@@ -526,7 +539,8 @@ export function createApp(options: CreateAppOptions) {
           server: request.server,
           status: request.status,
           createdAt: new Date(request.created_at).toISOString()
-        }
+        },
+        notified: emailed.sent
       });
     })
   );
@@ -591,7 +605,24 @@ export function createApp(options: CreateAppOptions) {
       });
       await decideAccountRequest(pool, id, "approved");
 
-      res.status(201).json({ account: adminAccountView({ ...account, email: request.email }) });
+      // A pessoa aprovada recebe o aviso, se deixou um e-mail.
+      let notified = false;
+      if (request.email) {
+        const mailed = await sendEmail(
+          buildApprovedEmail({
+            email: request.email,
+            name: request.name,
+            server: request.server
+          }),
+          { apiKey: config.emailApiKey, from: config.emailFrom }
+        );
+        notified = mailed.sent;
+      }
+
+      res.status(201).json({
+        account: adminAccountView({ ...account, email: request.email }),
+        notified
+      });
     })
   );
 
